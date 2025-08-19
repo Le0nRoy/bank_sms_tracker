@@ -1,29 +1,45 @@
 package com.example.banksmstracker.parser
 
 import com.example.banksmstracker.data.PaymentRegexRule
-import java.time.LocalDate
+import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 class PaymentParserTest {
 
+    private val tbcRule = PaymentRegexRule(
+        regex = Regex(
+            """(?<amount>\d+\.\d{2})\s+(?<currency>[A-Z]{3})\s+(?<card>[\w\s]+\([^)]*\))\s+(?<merchant>\w+)\s+(?<timestamp>\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}:\d{2})\s+Balance:\s+(?<balance>\d+\.\d{2})\s+GEL"""
+        ),
+        category = "shopping"
+    )
+
     private val rules = listOf(
-        PaymentRegexRule(
-            Regex("""You spent (?<paymentAmount>\d+(\.\d+)?) USD at (?<paymentReceiver>[\w\s]+) on (?<paymentDate>\d{4}-\d{2}-\d{2})"""),
-            category = "Food"
-        )
+        tbcRule
     )
 
     private val parser = PaymentParser(rules)
 
     @Test
-    fun testParseValidMessage() {
-        val message = "You spent 25.50 USD at Starbucks on 2025-08-18"
-        val payment = parser.parse("BankName", message)
+    fun testTbcMessage() {
+        val message = """
+            64.24 GEL
+            MC GOLD (***0123)
+            Temu 13/08/2025 00:38:12
+            Balance: 16.83 GEL
+        """.trimIndent()
 
-        assertEquals("BankName", payment.sender)
-        assertEquals(25.50, payment.amount)
-        assertEquals("Starbucks", payment.receiver)
-        assertEquals(LocalDate.of(2025, 8, 18), payment.date)
-        assertEquals("Food", payment.category)
+        val payment = parser.parse(message)
+
+        assertNotNull(payment)
+        assertEquals(64.24, payment.amount)
+        assertEquals("GEL", payment.currency)
+        assertEquals("MC GOLD (***0123)", payment.card)
+        assertEquals("Temu", payment.merchant)
+        assertEquals("13/08/2025 00:38:12", payment.timestamp)
+        assertEquals(16.83, payment.balance)
+        assertEquals("shopping", payment.category)
     }
 
     @Test
@@ -31,7 +47,7 @@ class PaymentParserTest {
         val message = "Some unrelated SMS text"
 
         assertFailsWith<UnparsedMessageException> {
-            parser.parse("BankName", message)
+            parser.parse(message)
         }
     }
 }
