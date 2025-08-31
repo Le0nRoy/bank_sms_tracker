@@ -1,0 +1,23 @@
+{
+  "senders": [
+    {
+      "name": "TBC Bank",
+      "address": "TBCSMS",
+      "rules": [
+        {
+          "regex": "(\\d+\\.\\d{2}) GEL\\nMC GOLD.*\\n(.+) (\\d{2}/\\d{2}/\\d{4}.*)"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "name": "Shopping",
+      "merchants": ["Temu", "Amazon"]
+    },
+    {
+      "name": "Food",
+      "merchants": ["McDonald's", "KFC"]
+    }
+  ]
+}

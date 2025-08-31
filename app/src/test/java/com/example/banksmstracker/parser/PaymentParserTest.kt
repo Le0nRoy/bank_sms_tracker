@@ -12,7 +12,6 @@ class PaymentParserTest {
         regex = Regex(
             """(?<amount>\d+\.\d{2})\s+(?<currency>[A-Z]{3})\s+(?<card>[\w\s]+\([^)]*\))\s+(?<merchant>\w+)\s+(?<timestamp>\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}:\d{2})\s+Balance:\s+(?<balance>\d+\.\d{2})\s+GEL"""
         ),
-        category = "shopping"
     )
 
     private val rules = listOf(
@@ -39,7 +38,8 @@ class PaymentParserTest {
         assertEquals("Temu", payment.merchant)
         assertEquals("13/08/2025 00:38:12", payment.timestamp)
         assertEquals(16.83, payment.balance)
-        assertEquals("shopping", payment.category)
+        // Category is assigned later, not during message parsing
+        assertEquals(null, payment.category)
     }
 
     @Test

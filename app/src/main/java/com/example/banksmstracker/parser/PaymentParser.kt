@@ -26,7 +26,7 @@ class PaymentParser(private val rules: List<PaymentRegexRule>) {
                     merchant = merchant,
                     timestamp = timestamp,
                     balance = balance,
-                    category = rule.category
+                    category = null
                 )
             }
         }

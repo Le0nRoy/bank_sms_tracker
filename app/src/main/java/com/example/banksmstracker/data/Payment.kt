@@ -1,7 +1,5 @@
 package com.example.banksmstracker.data
 
-import java.time.LocalDate
-
 data class Payment(
     val amount: Double,
     val currency: String,
