@@ -2,6 +2,7 @@ package com.example.banksmstracker.categories
 
 import com.example.banksmstracker.data.Category
 
+// TODO Also need a PaymentRepository
 object CategoryRepository {
     private val categories = mutableListOf<Category>()
 

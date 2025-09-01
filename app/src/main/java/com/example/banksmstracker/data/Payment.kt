@@ -1,5 +1,9 @@
 package com.example.banksmstracker.data
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+
+@Serializable
 data class Payment(
     val amount: Double,
     val currency: String,
@@ -7,5 +11,5 @@ data class Payment(
     val merchant: String?,
     val timestamp: String?,
     val balance: Double?,
-    val category: String? = null
+    val categoryId: String? = null
 )

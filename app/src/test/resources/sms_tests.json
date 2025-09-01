@@ -1,0 +1,16 @@
+[
+  {
+    "id": "tc1",
+    "rawMessage": "64.24 GEL\nMC GOLD (***0123)\nTemu 13/08/2025 00:38:12\nBalance: 16.83 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 64.24,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Temu",
+      "timestamp": "13/08/2025 00:38:12",
+      "balance": 16.83,
+      "categoryId": "Shopping"
+    }
+  }
+]

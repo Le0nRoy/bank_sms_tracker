@@ -9,7 +9,7 @@ import kotlin.text.get
 class PaymentParser(private val rules: List<PaymentRegexRule>) {
     fun parse(message: String): Payment? {
         for (rule in rules) {
-            val match = rule.regex.find(message) ?: continue
+            val match = rule.regexPattern.find(message) ?: continue
 
             val amount    = match.groupValues[1].toDoubleOrNull()
             val currency  = match.groupValues[2]
@@ -26,7 +26,7 @@ class PaymentParser(private val rules: List<PaymentRegexRule>) {
                     merchant = merchant,
                     timestamp = timestamp,
                     balance = balance,
-                    category = null
+                    categoryId = null
                 )
             }
         }
