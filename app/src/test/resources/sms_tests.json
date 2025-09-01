@@ -10,7 +10,91 @@
       "merchant": "Temu",
       "timestamp": "13/08/2025 00:38:12",
       "balance": 16.83,
-      "categoryId": "Shopping"
+      "categoryId": "Marketplaces"
+    }
+  },
+  {
+    "id": "tc2",
+    "rawMessage": "37.00 GEL\nMC GOLD (***0123)\nMEQANIKA 31/08/2025 23:13:12\nBalance: 17.99 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 37.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "MEQANIKA",
+      "timestamp": "31/08/2025 23:13:12",
+      "balance": 17.99,
+      "categoryId": "Bars & Restaurants"
+    }
+  },
+  {
+    "id": "tc3",
+    "rawMessage": "8.99 GEL\nMC GOLD (***0123)\nWolt 31/08/2025 16:39:51\nBalance: 17.90 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 8.99,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Wolt",
+      "timestamp": "31/08/2025 16:39:51",
+      "balance": 17.90,
+      "categoryId": "Delivery"
+    }
+  },
+  {
+    "id": "tc4",
+    "rawMessage": "12.10 GEL\nMC GOLD (***0123)\nVip Pay*YANDEX.GO 31/08/2025 21:24:33\nBalance: 5.80 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 12.10,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Vip Pay*YANDEX.GO",
+      "timestamp": "31/08/2025 21:24:33",
+      "balance": 5.80,
+      "categoryId": "Transport"
+    }
+  },
+  {
+    "id": "tc5",
+    "rawMessage": "9.90 GEL\nMC GOLD (***0123)\nMAGNITI 31/08/2025 14:10:51\nBalance: 27.89 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 9.90,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "MAGNITI",
+      "timestamp": "31/08/2025 14:10:51",
+      "balance": 27.89,
+      "categoryId": "Groceries"
+    }
+  },
+  {
+    "id": "tc6",
+    "rawMessage": "50.00 GEL\nMC GOLD (***0123)\nI/M GVANTSA NADARAIA 30/08/2025 13:17:50\nBalance: 25.97 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 50.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "I/M GVANTSA NADARAIA",
+      "timestamp": "30/08/2025 13:17:50",
+      "balance": 25.97,
+      "categoryId": "Groceries"
+    }
+  },
+  {
+    "id": "tc7",
+    "rawMessage": "50.00 GEL\nMC GOLD (***0123)\nUncategorized 30/08/2025 00:00:00\nBalance: 25.97 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 50.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Uncategorized",
+      "timestamp": "30/08/2025 00:00:00",
+      "balance": 25.97,
+      "categoryId": null
     }
   }
 ]

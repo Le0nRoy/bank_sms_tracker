@@ -5,19 +5,31 @@
       "address": "TBC SMS",
       "rules": [
         {
-          "regex": "(\\d+\\.\\d{2})\\s+([A-Z]{3})\\s*\\n([\\w\\s]+\\([^)]*\\))\\s*\\n(\\w+)\\s+(\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}:\\d{2})\\s*\\nBalance:\\s+(\\d+\\.\\d{2})\\s+[A-Z]{3}"
+          "regex": "(\\d+\\.\\d{2})\\s+([A-Z]{3})\\s*\\n([\\w\\s]+\\([^)]*\\))\\s*\\n([\\w\\s\\*\\/]+)\\s+(\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}:\\d{2})\\s*\\nBalance:\\s+(\\d+\\.\\d{2})\\s+[A-Z]{3}"
         }
       ]
     }
   ],
   "categories": [
     {
-      "name": "Shopping",
+      "name": "Marketplaces",
       "merchants": ["Temu", "Amazon"]
     },
     {
-      "name": "Food",
-      "merchants": ["McDonald's", "KFC"]
+      "name": "Bars & Restaurants",
+      "merchants": ["MEQANIKA", "McDonald's", "KFC"]
+    },
+    {
+      "name": "Delivery",
+      "merchants": ["Wolt"]
+    },
+    {
+      "name": "Transport",
+      "merchants": ["Vip Pay*YANDEX.GO"]
+    },
+    {
+      "name": "Groceries",
+      "merchants": ["MAGNITI", "I/M GVANTSA NADARAIA"]
     }
   ]
 }

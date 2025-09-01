@@ -12,12 +12,24 @@
   ],
   "categories": [
     {
-      "name": "Shopping",
-      "merchants": ["Temu", "Amazon"]
+      "name": "Marketplaces",
+      "merchants": ["Temu"]
     },
     {
-      "name": "Food",
-      "merchants": ["McDonald's", "KFC"]
+      "name": "Bars & Restaurants",
+      "merchants": ["MEQANIKA"]
+    },
+    {
+      "name": "Delivery",
+      "merchants": ["Wolt"]
+    },
+    {
+      "name": "Transport",
+      "merchants": ["Vip Pay*YANDEX.GO"]
+    },
+    {
+      "name": "Groceries",
+      "merchants": ["MAGNITI", "I/M GVANTSA NADARAIA"]
     }
   ]
 }
