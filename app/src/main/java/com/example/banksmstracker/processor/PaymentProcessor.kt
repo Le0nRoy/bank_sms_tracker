@@ -2,13 +2,13 @@ package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Payment
+import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.PaymentRepository
-import com.example.banksmstracker.data.PaymentRegexRule
 
 class UnparsedMessageException(message: String) : Exception("Cannot parse message: $message")
 
 class PaymentProcessor(
-    private val rules: List<PaymentRegexRule>,
+    private val senders: List<Sender>,
     private val categories: List<Category>,
     val paymentRepository: PaymentRepository
 ) {
@@ -16,8 +16,11 @@ class PaymentProcessor(
         private const val TAG = "PaymentProcessor"
     }
 
-    fun getPaymentFromMessage(message: String): Payment? {
-        for (rule in rules) {
+    fun getPaymentFromMessage(message: String, address: String): Payment? {
+        val sender = senders.find { sender -> sender.addresses.any { it.equals(address, ignoreCase = true) } }
+            ?: throw UnparsedMessageException("No sender found for address: $address")
+
+        for (rule in sender.rules) {
             val pattern = rule.regexPattern
             val match = pattern.find(message) ?: continue
 
@@ -44,8 +47,8 @@ class PaymentProcessor(
         throw UnparsedMessageException(message)
     }
 
-    fun processMessage(message: String): Payment {
-        val payment = this.getPaymentFromMessage(message)
+    fun processMessage(message: String, address: String): Payment {
+        val payment = this.getPaymentFromMessage(message, address)
         val categorizedPayment = assignCategory(payment!!)
         paymentRepository.savePayment(categorizedPayment)
         return categorizedPayment

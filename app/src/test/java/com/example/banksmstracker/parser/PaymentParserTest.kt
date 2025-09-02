@@ -58,7 +58,7 @@ class PaymentParserTest {
     @ParameterizedTest(name = "Parsing SMS case {index}: {0}")
     @MethodSource("smsTestCases")
     fun testPaymentParsing(testCase: SmsTestCase) {
-        val payment = processor.getPaymentFromMessage(testCase.rawMessage)
+        val payment = processor.getPaymentFromMessage(testCase.rawMessage, testCase.address)
 
         assertNotNull(payment, "Parsing failed for case ${testCase.id}")
 
@@ -74,16 +74,17 @@ class PaymentParserTest {
     @Test
     fun testParseInvalidMessage() {
         val message = "Some unrelated SMS text"
+        val address = "some address"
 
         assertFailsWith<UnparsedMessageException> {
-            processor.getPaymentFromMessage(message)
+            processor.getPaymentFromMessage(message, address)
         }
     }
     
     @ParameterizedTest(name = "Categorizing payment case {index}: {0}")
     @MethodSource("smsTestCases")
     fun testCategoryAssignment(testCase: SmsTestCase) {
-        val processedPayment = processor.processMessage(testCase.rawMessage)
+        val processedPayment = processor.processMessage(testCase.rawMessage, testCase.address)
         assertNotNull(processedPayment, "Parsing failed for case ${testCase.id}")
 
         // Verify the payment was stored

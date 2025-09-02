@@ -11,7 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Category name"
-        android:background="@drawable/edit_text_background"
         android:padding="12dp" />
 
     <LinearLayout
@@ -19,6 +18,7 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@drawable/edit_text_background"
         android:paddingTop="8dp" />
 
     <Button

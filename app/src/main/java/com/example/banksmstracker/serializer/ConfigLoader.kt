@@ -47,8 +47,7 @@ object ConfigLoader {
     }
 
     fun createPaymentProcessor(config: SmsConfig): PaymentProcessor {
-        val allRules = config.senders.flatMap { it.rules }
         val repository = InMemoryPaymentRepository()
-        return PaymentProcessor(allRules, config.categories, repository)
+        return PaymentProcessor(config.senders, config.categories, repository)
     }
 }

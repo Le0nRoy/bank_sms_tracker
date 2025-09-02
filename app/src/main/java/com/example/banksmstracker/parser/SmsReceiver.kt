@@ -6,31 +6,35 @@ import android.content.Intent
 import android.os.Build
 import android.telephony.SmsMessage
 import android.util.Log
-import android.widget.Toast
-
-val allowedSenders = listOf("YourBank1", "YourBank2")
-val allowedKeywords = listOf("BankName", "VISA")
-
+import com.example.banksmstracker.processor.PaymentProcessor
+import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.serializer.ConfigLoader
 
 class SmsReceiver : BroadcastReceiver() {
 
-    fun parseMessage(context: Context?, sender: String, body: String) {
-        Log.d("SmsReceiver", "SMS received from $sender: '$body'")
-        Toast.makeText(context, "SMS from $sender: '$body'", Toast.LENGTH_LONG).show()
+    private lateinit var paymentProcessor: PaymentProcessor
+
+    private fun initializePaymentProcessor(context: Context) {
+        if (!::paymentProcessor.isInitialized) {
+            ConfigRepository.load(context.applicationContext as android.app.Application)
+            paymentProcessor = ConfigLoader.createPaymentProcessor(ConfigRepository.config)
+        }
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent?.action != "android.provider.Telephony.SMS_RECEIVED") return
+        if (context == null || intent?.action != "android.provider.Telephony.SMS_RECEIVED") return
+
+        initializePaymentProcessor(context)
 
         val bundle = intent.extras ?: return
-        
+
         val pdus: Array<*>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             bundle.getSerializable("pdus", Array<Any>::class.java)
         } else {
             @Suppress("DEPRECATION")
             bundle.getSerializable("pdus") as? Array<*>
         }
-        
+
         val format = bundle.getString("format")
 
         val messages = pdus?.mapNotNull {
@@ -41,12 +45,19 @@ class SmsReceiver : BroadcastReceiver() {
             val sender = message.originatingAddress ?: continue
             val body = message.messageBody
 
-            val allowedSenders = listOf("YourBank1", "YourBank2")
-            val allowedKeywords = listOf("BankName", "VISA")
-
-            if (sender in allowedSenders || allowedKeywords.any { body.contains(it, ignoreCase = true) }) {
-                // TODO: parse and categorize
-                parseMessage(context, sender, body)
+            try {
+                val payment = paymentProcessor.processMessage(body, sender)
+                Log.d(
+                    "SmsReceiver", "SMS from $sender processed successfully." +
+                        "\nMessage: $body" +
+                        "\nParsed payment: $payment"
+                )
+            } catch (e: Exception) {
+                Log.e(
+                    "SmsReceiver", "Error processing SMS from $sender:\n" +
+                        "${e.message}" +
+                        "\nMessage: $body"
+                )
             }
         }
     }

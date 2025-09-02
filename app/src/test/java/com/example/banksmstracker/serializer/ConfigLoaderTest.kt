@@ -12,7 +12,7 @@ class ConfigLoaderTest {
               "senders": [
                 {
                   "name": "TBC Bank",
-                  "address": "TBC SMS",
+                  "addresses": ["TBC SMS"],
                   "rules": [
                     {
                       "regex": "test"
@@ -45,7 +45,7 @@ class ConfigLoaderTest {
               "senders": [
                 {
                   "name": "TBC Bank",
-                  "address": "TBC SMS",
+                  "addresses": ["TBC SMS"],
                   "rules": [
                     {
                       "regex": "test"

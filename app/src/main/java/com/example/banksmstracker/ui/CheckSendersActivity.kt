@@ -63,7 +63,7 @@ class CheckSendersActivity : BaseActivity() {
 
     private fun checkSenders() {
         try {
-            val configuredSenders = ConfigRepository.config.senders.map { it.address }.toSet()
+            val configuredSenders = ConfigRepository.config.senders.flatMap { it.addresses }.toSet()
             val smsSenders = getSmsSenders()
             
             val matchingSenders = smsSenders.intersect(configuredSenders)

@@ -63,7 +63,7 @@ class SendersAdapter : RecyclerView.Adapter<SendersAdapter.SenderViewHolder>() {
             val text1 = itemView.findViewById<android.widget.TextView>(android.R.id.text1)
             val text2 = itemView.findViewById<android.widget.TextView>(android.R.id.text2)
             
-            text1.text = "${sender.name} (${sender.address})"
+            text1.text = "${sender.name} (${sender.addresses.joinToString(", ")})"
             text2.text = "Rules: ${sender.rules.size}\n${sender.rules.joinToString("\n") { "• ${it.regex}" }}"
         }
     }

@@ -66,7 +66,7 @@ class ApplyRulesActivity : BaseActivity() {
             val config = ConfigRepository.config
             val processor = ConfigLoader.createPaymentProcessor(config)
             
-            val configuredSenders = config.senders.map { it.address }.toSet()
+            val configuredSenders = config.senders.flatMap { it.addresses }.toSet()
             val smsMessages = getSmsMessages(configuredSenders)
             
             val result = StringBuilder()
@@ -85,7 +85,7 @@ class ApplyRulesActivity : BaseActivity() {
                     
                     messages.forEach { message ->
                         try {
-                            val payment = processor.processMessage(message)
+                            val payment = processor.processMessage(message, sender)
                             parsedCount++
 
                             result.append("  ✅ Parsed: ${payment.amount} ${payment.currency}\n")
