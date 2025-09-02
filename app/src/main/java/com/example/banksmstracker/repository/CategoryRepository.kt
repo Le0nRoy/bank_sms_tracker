@@ -1,4 +1,4 @@
-package com.example.banksmstracker.categories
+package com.example.banksmstracker.repository
 
 import com.example.banksmstracker.data.Category
 

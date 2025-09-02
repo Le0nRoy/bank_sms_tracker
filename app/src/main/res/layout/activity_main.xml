@@ -1,20 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.MainActivity">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
 
     <TextView
-        android:id="@+id/helloText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello, Bank SMS Tracker!"
-        android:textSize="18sp"
-        android:layout_margin="16dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        android:text="Bank SMS Tracker"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <Button
+        android:id="@+id/btnCategories"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Categories"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp" />
+
+    <Button
+        android:id="@+id/btnSenders"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Senders"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp" />
+
+    <Button
+        android:id="@+id/btnCheckSenders"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Check Senders"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp" />
+
+    <Button
+        android:id="@+id/btnApplyRules"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Apply Rules"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp" />
+
+</LinearLayout>

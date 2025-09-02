@@ -25,6 +25,22 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.CategoriesActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.SendersActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.CheckSendersActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.ApplyRulesActivity"
+            android:exported="false" />
+
         <receiver
             android:name=".parser.SmsReceiver"
             android:permission="android.permission.BROADCAST_SMS"

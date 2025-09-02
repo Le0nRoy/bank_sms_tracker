@@ -2,7 +2,6 @@ package com.example.banksmstracker.serializer
 
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Sender
-import com.example.banksmstracker.parser.PaymentParser
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.InMemoryPaymentRepository
 import kotlinx.serialization.Serializable
@@ -54,14 +53,10 @@ object ConfigLoader {
         }
         return config
     }
-    
-    fun createPaymentParser(config: SmsConfig): PaymentParser {
-        val allRules = config.senders.flatMap { it.rules }
-        return PaymentParser(allRules)
-    }
-    
+
     fun createPaymentProcessor(config: SmsConfig): PaymentProcessor {
+        val allRules = config.senders.flatMap { it.rules }
         val repository = InMemoryPaymentRepository()
-        return PaymentProcessor(config.categories, repository)
+        return PaymentProcessor(allRules, config.categories, repository)
     }
 }

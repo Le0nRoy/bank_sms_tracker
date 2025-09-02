@@ -40,7 +40,7 @@ android {
 }
 
 dependencies {
-
+    // --- main ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -50,10 +50,20 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.kotlinx.serialization.json)
-    testImplementation(libs.junit)
-    testImplementation(libs.junit.jupiter)
-    testImplementation(libs.junit.jupiter.params)
-    testImplementation(libs.kotlin.test)
+
+    // --- unit tests ---
+    testImplementation(libs.junit.jupiter.api)
+    testImplementation(libs.junit.jupiter.params.v5113)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+
+    // (optional) Kotlin test assertions
+    testImplementation(kotlin("test"))
+
+    // --- Android instrumented tests ---
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }

@@ -3,18 +3,50 @@ package com.example.banksmstracker.processor
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.repository.PaymentRepository
-import android.util.Log
+import com.example.banksmstracker.data.PaymentRegexRule
+
+class UnparsedMessageException(message: String) : Exception("Cannot parse message: $message")
 
 class PaymentProcessor(
+    private val rules: List<PaymentRegexRule>,
     private val categories: List<Category>,
-    private val paymentRepository: PaymentRepository
+    val paymentRepository: PaymentRepository
 ) {
     companion object {
         private const val TAG = "PaymentProcessor"
     }
-    
-    fun processPayment(payment: Payment): Payment {
-        val categorizedPayment = assignCategory(payment)
+
+    fun getPaymentFromMessage(message: String): Payment? {
+        for (rule in rules) {
+            val pattern = rule.regexPattern
+            val match = pattern.find(message) ?: continue
+
+            val amount    = match.groupValues[1].toDoubleOrNull()
+            val currency  = match.groupValues[2]
+            val card      = match.groupValues[3]
+            val merchant  = match.groupValues[4]
+            val timestamp = match.groupValues[5]
+            val balance   = match.groupValues[6].toDoubleOrNull()
+
+            if (amount != null) {
+                return Payment(
+                    amount = amount,
+                    currency = currency,
+                    card = card,
+                    merchant = merchant,
+                    timestamp = timestamp,
+                    balance = balance,
+                    categoryId = null
+                )
+            }
+        }
+
+        throw UnparsedMessageException(message)
+    }
+
+    fun processMessage(message: String): Payment {
+        val payment = this.getPaymentFromMessage(message)
+        val categorizedPayment = assignCategory(payment!!)
         paymentRepository.savePayment(categorizedPayment)
         return categorizedPayment
     }
@@ -29,12 +61,7 @@ class PaymentProcessor(
         return if (category != null) {
             payment.copy(categoryId = category.name)
         } else {
-            Log.w(TAG, "No category found for merchant: $merchant")
             payment
         }
-    }
-    
-    fun getUncategorizedPayments(): List<Payment> {
-        return paymentRepository.getUncategorizedPayments()
     }
 }
