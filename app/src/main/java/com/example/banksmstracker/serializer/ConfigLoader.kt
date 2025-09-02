@@ -1,17 +1,9 @@
 package com.example.banksmstracker.serializer
 
-import com.example.banksmstracker.data.Category
-import com.example.banksmstracker.data.Sender
+import com.example.banksmstracker.data.SmsConfig
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.InMemoryPaymentRepository
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-
-@Serializable
-data class SmsConfig(
-    val senders: List<Sender>,
-    val categories: List<Category>
-)
 
 fun SmsConfig.validate(): List<String> {
     val errors = mutableListOf<String>()

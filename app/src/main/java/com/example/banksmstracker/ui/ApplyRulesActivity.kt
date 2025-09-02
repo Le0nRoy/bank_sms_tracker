@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.banksmstracker.R
+import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.serializer.ConfigLoader
 
 class ApplyRulesActivity : BaseActivity() {
@@ -62,9 +63,7 @@ class ApplyRulesActivity : BaseActivity() {
 
     private fun applyRules() {
         try {
-            val configJson = assets.open("default_rules.json").bufferedReader().readText()
-            val config = ConfigLoader.load(configJson)
-            
+            val config = ConfigRepository.config
             val processor = ConfigLoader.createPaymentProcessor(config)
             
             val configuredSenders = config.senders.map { it.address }.toSet()

@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.R
 import com.example.banksmstracker.serializer.ConfigLoader
 import com.example.banksmstracker.data.Sender
+import com.example.banksmstracker.repository.ConfigRepository
 
 class SendersActivity : BaseActivity() {
 
@@ -30,9 +31,7 @@ class SendersActivity : BaseActivity() {
 
     private fun loadSenders() {
         try {
-            val configJson = assets.open("default_rules.json").bufferedReader().readText()
-            val config = ConfigLoader.load(configJson)
-            adapter.submitList(config.senders)
+            adapter.submitList(ConfigRepository.config.senders)
         } catch (e: Exception) {
             e.printStackTrace()
         }

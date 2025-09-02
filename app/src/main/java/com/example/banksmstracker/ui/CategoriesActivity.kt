@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.R
 import com.example.banksmstracker.serializer.ConfigLoader
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.repository.ConfigRepository
 
 class CategoriesActivity : BaseActivity() {
 
@@ -30,9 +31,7 @@ class CategoriesActivity : BaseActivity() {
 
     private fun loadCategories() {
         try {
-            val configJson = assets.open("default_rules.json").bufferedReader().readText()
-            val config = ConfigLoader.load(configJson)
-            adapter.submitList(config.categories)
+            adapter.submitList(ConfigRepository.config.categories)
         } catch (e: Exception) {
             // Handle error - could show a toast or dialog
             e.printStackTrace()

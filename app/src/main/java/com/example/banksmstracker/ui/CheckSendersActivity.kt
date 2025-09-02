@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.banksmstracker.R
+import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.serializer.ConfigLoader
 
 class CheckSendersActivity : BaseActivity() {
@@ -62,10 +63,7 @@ class CheckSendersActivity : BaseActivity() {
 
     private fun checkSenders() {
         try {
-            val configJson = assets.open("default_rules.json").bufferedReader().readText()
-            val config = ConfigLoader.load(configJson)
-            
-            val configuredSenders = config.senders.map { it.address }.toSet()
+            val configuredSenders = ConfigRepository.config.senders.map { it.address }.toSet()
             val smsSenders = getSmsSenders()
             
             val matchingSenders = smsSenders.intersect(configuredSenders)
