@@ -8,7 +8,7 @@ import com.example.banksmstracker.R
 import com.example.banksmstracker.serializer.ConfigLoader
 import com.example.banksmstracker.data.Sender
 
-class SendersActivity : AppCompatActivity() {
+class SendersActivity : BaseActivity() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: SendersAdapter

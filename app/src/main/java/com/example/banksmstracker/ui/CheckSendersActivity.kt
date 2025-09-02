@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat
 import com.example.banksmstracker.R
 import com.example.banksmstracker.serializer.ConfigLoader
 
-class CheckSendersActivity : AppCompatActivity() {
+class CheckSendersActivity : BaseActivity() {
 
     private lateinit var textView: TextView
     private val SMS_PERMISSION_REQUEST = 123
