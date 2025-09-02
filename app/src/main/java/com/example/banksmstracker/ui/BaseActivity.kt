@@ -1,5 +1,6 @@
 package com.example.banksmstracker.ui
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
@@ -9,6 +10,12 @@ abstract class BaseActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         if (this !is MainActivity) {
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        }
+        try {
+            val activityInfo = packageManager.getActivityInfo(componentName, 0)
+            supportActionBar?.title = activityInfo.loadLabel(packageManager).toString()
+        } catch (e: PackageManager.NameNotFoundException) {
+            // Handle exception
         }
     }
 
