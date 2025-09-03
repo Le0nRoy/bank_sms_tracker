@@ -55,6 +55,8 @@ dependencies {
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.params.v5113)
     testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.junit.jupiter)
 
     // (optional) Kotlin test assertions
     testImplementation(kotlin("test"))
