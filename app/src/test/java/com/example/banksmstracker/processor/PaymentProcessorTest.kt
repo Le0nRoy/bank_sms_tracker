@@ -1,7 +1,6 @@
-package com.example.banksmstracker.parser
+package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Payment
-import com.example.banksmstracker.processor.UnparsedMessageException
 import com.example.banksmstracker.serializer.ConfigLoader
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

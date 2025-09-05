@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
+    id("de.mannodermaus.android-junit5")
 }
 
 android {
@@ -53,19 +54,21 @@ dependencies {
 
     // --- unit tests ---
     testImplementation(libs.junit.jupiter.api)
-    testImplementation(libs.junit.jupiter.params.v5113)
+    testImplementation(libs.junit.jupiter.params)
     testRuntimeOnly(libs.junit.jupiter.engine)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.junit.jupiter)
-
-    // (optional) Kotlin test assertions
     testImplementation(kotlin("test"))
 
     // --- Android instrumented tests ---
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-}
+    androidTestImplementation(libs.junit.jupiter.api)
+    androidTestRuntimeOnly(libs.junit.jupiter.engine)
+    androidTestImplementation(libs.junit5.android.core)
+    androidTestRuntimeOnly(libs.junit5.android.runner)
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+    // AndroidX test utilities
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

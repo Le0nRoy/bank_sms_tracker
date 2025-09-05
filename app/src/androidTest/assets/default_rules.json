@@ -1,0 +1,19 @@
+{
+  "senders": [
+    {
+      "name": "TestBank",
+      "addresses": ["+1234567890"],
+      "rules": [
+        {
+          "regex": "Payment of (\d+\.\d{2}) for (.+)"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "name": "General",
+      "merchants": []
+    }
+  ]
+}

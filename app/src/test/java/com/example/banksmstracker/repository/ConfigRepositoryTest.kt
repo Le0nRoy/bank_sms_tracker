@@ -84,8 +84,8 @@ class ConfigRepositoryTest {
             assertEquals(2, config.senders[0].addresses.size)
             assertEquals("12345", config.senders[0].addresses[0])
             assertEquals(2, config.senders[0].rules.size)
-            assertEquals(""""Payment of (\d+\.\d{2}) made"""", config.senders[0].rules[0].regex)
-            assertEquals(""""Spent (\d+\.\d{2})"""", config.senders[0].rules[1].regex)
+            assertEquals("""Payment of (\d+\.\d{2}) made""", config.senders[0].rules[0].regex)
+            assertEquals("""Spent (\d+\.\d{2})""", config.senders[0].rules[1].regex)
             assertEquals(1, config.categories.size)
             assertEquals("Groceries", config.categories[0].name)
         }
@@ -157,7 +157,7 @@ class ConfigRepositoryTest {
             assertEquals("Failed to deserialize config", exception.message)
             assertNotNull(exception.cause)
             assertEquals(SerializationException::class.java, exception.cause!!::class.java)
-            assertEquals("Test IO Exception", exception.cause!!.message)
+            assertEquals("Test SerializationException Exception", exception.cause!!.message)
         }
 
         @Test
@@ -174,7 +174,7 @@ class ConfigRepositoryTest {
             assertEquals("Failed to find config file", exception.message)
             assertNotNull(exception.cause)
             assertEquals(FileNotFoundException::class.java, exception.cause!!::class.java)
-            assertEquals("Test IO Exception", exception.cause!!.message)
+            assertEquals("Test FileNotFoundException Exception", exception.cause!!.message)
         }
     }
 }
