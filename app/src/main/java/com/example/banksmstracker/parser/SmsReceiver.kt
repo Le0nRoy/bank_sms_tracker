@@ -12,7 +12,20 @@ import com.example.banksmstracker.serializer.ConfigLoader
 
 class SmsReceiver : BroadcastReceiver() {
 
+    companion object {
+        private const val TAG = "SmsReceiver"
+        const val EXTRA_TEST_SENDER =
+            "com.example.banksmstracker.parser.SmsReceiver.EXTRA_TEST_SENDER"
+        const val EXTRA_TEST_BODY =
+            "com.example.banksmstracker.parser.SmsReceiver.EXTRA_TEST_BODY"
+    }
+
     private lateinit var paymentProcessor: PaymentProcessor
+
+    // For testing only TODO remove it from the prod version
+    fun setPaymentProcessorForTest(processor: PaymentProcessor) {
+        this.paymentProcessor = processor
+    }
 
     private fun initializePaymentProcessor(context: Context) {
         if (!::paymentProcessor.isInitialized) {
@@ -25,6 +38,14 @@ class SmsReceiver : BroadcastReceiver() {
         if (context == null || intent?.action != "android.provider.Telephony.SMS_RECEIVED") return
 
         initializePaymentProcessor(context)
+
+        val testSender = intent.getStringExtra(EXTRA_TEST_SENDER)
+        val testBody = intent.getStringExtra(EXTRA_TEST_BODY)
+
+        if (!testSender.isNullOrBlank() && !testBody.isNullOrBlank()) {
+            handleMessage(testSender, testBody)
+            return
+        }
 
         val bundle = intent.extras ?: return
 
@@ -45,20 +66,22 @@ class SmsReceiver : BroadcastReceiver() {
             val sender = message.originatingAddress ?: continue
             val body = message.messageBody
 
-            try {
-                val payment = paymentProcessor.processMessage(body, sender)
-                Log.d(
-                    "SmsReceiver", "SMS from $sender processed successfully." +
-                        "\nMessage: $body" +
-                        "\nParsed payment: $payment"
-                )
-            } catch (e: Exception) {
-                Log.e(
-                    "SmsReceiver", "Error processing SMS from $sender:\n" +
-                        "${e.message}" +
-                        "\nMessage: $body"
-                )
-            }
+            handleMessage(sender, body)
+        }
+    }
+
+    private fun handleMessage(sender: String, body: String) {
+        try {
+            val payment = paymentProcessor.processMessage(body, sender)
+            Log.d(
+                TAG,
+                "SMS from $sender processed successfully.\nMessage: $body\nParsed payment: $payment"
+            )
+        } catch (e: Exception) {
+            Log.e(
+                TAG,
+                "Error processing SMS from $sender:\n${e.message}\nMessage: $body"
+            )
         }
     }
 }
