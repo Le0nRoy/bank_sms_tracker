@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ktlint)
     id("de.mannodermaus.android-junit5")
     kotlin("kapt")
 }
@@ -38,6 +39,20 @@ android {
     }
     buildFeatures {
         viewBinding = true
+    }
+}
+
+ktlint {
+    version.set("1.5.0")
+    android.set(true)
+    outputColorName.set("RED")
+    reporters {
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.PLAIN)
+        reporter(org.jlleitschuh.gradle.ktlint.reporter.ReporterType.CHECKSTYLE)
+    }
+    filter {
+        exclude("**/generated/**")
+        include("**/kotlin/**")
     }
 }
 

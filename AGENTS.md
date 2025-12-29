@@ -1,35 +1,85 @@
 # BankSMSTracker Agent Playbook
 
+> **Related Documentation:**
+> - [docs/DESIGN.md](docs/DESIGN.md) - High-level architecture and feature specs
+> - [TODO.md](TODO.md) - Project progress tracking
+> - [ISSUES.md](ISSUES.md) - Known issues and blockers
+
 ## Architecture Highlights
 
-- **Entry points**  
-  - `MainActivity` routes to category/sender management screens (`app/src/main/java/com/example/banksmstracker/ui/MainActivity.kt`).  
+- **Entry points**
+  - `MainActivity` routes to category/sender management screens (`app/src/main/java/com/example/banksmstracker/ui/MainActivity.kt`).
   - `SmsReceiver` processes incoming SMS, bootstrapping `PaymentProcessor` from `ConfigRepository` (`app/src/main/java/com/example/banksmstracker/parser/SmsReceiver.kt`).
-- **Persistence**  
-  - Configuration + payments live in a Room database (`app/src/main/java/com/example/banksmstracker/database/*`).  
+- **Persistence**
+  - Configuration + payments live in a Room database (`app/src/main/java/com/example/banksmstracker/database/*`).
   - `ConfigRepository` is the single source of truth; always use its suspend helpers to read/update categories or senders.
-- **Domain model**  
-  - Configuration lives in `SmsConfig` (`data/` package) and is loaded from `assets/default_rules.json`.  
+- **Domain model**
+  - Configuration lives in `SmsConfig` (`data/` package) and is loaded from `assets/default_rules.json`.
   - `PaymentProcessor` parses/categorises messages using regex rules supplied by the config and persists via `PaymentRepository`.
-- **Repositories**  
-  - `ConfigRepository` lazily loads + caches config; always call `ConfigRepository.load(app)` before accessing `config`.  
-  - `InMemoryPaymentRepository` is the only implementation; plans for a real DB should respect existing interface methods.
+- **Repositories**
+  - `ConfigRepository` lazily loads + caches config; always call `ConfigRepository.load(app)` before accessing `config`.
+  - `RoomPaymentRepository` is the production implementation; respects `PaymentRepository` interface methods.
 
 ## Coding Rules
 
-- **Language & style**  
-  - All app code is Kotlin; match existing nullability + `data class` conventions.  
-  - Keep Android logging via `android.util.Log`; unit tests rely on the stub at `app/src/test/java/android/util/Log.kt`.  
-  - When modifying configuration models, update both asset (`app/src/main/assets/default_rules.json`) and mirrored test fixtures (`app/src/test/resources/default_rules.json`, `sms_tests.json`).
-- **Payment parsing**  
-  - Extend parsing by adding regex rules to `PaymentRegexRule` instances; ensure `SmsConfig.validate()` continues to pass (no duplicate category names, duplicate regex per sender, or merchants in multiple categories).  
-  - For categorisation, update `categories` in config; `PaymentProcessor.assignCategory` performs case-insensitive merchant lookup.  
-  - `PaymentRepository.savePayment` requires the raw message + sender for deduping; duplicates are ignored by hash.
-- **Config editing**  
-  - Use `ConfigRepository.addCategory/updateCategory` and `addSender/updateSender`; they handle DB writes and refresh in-memory caches/processor.  
-  - UI helpers call these on every edit; keep payloads mutable so adapters can mirror local state before persistence.
-- **Broadcast receiver**  
-  - `SmsReceiver` now supports debug extras (`EXTRA_TEST_SENDER`, `EXTRA_TEST_BODY`) for instrumentation tests. Preserve this pathway when refactoring; it is how `SmsReceptionE2ETest` injects messages.
+### Language & Style
+- All app code is Kotlin; match existing nullability + `data class` conventions.
+- Keep Android logging via `android.util.Log`; unit tests rely on the stub at `app/src/test/java/android/util/Log.kt`.
+- When modifying configuration models, update both asset (`app/src/main/assets/default_rules.json`) and mirrored test fixtures (`app/src/test/resources/default_rules.json`, `sms_tests.json`).
+
+### Code Quality Standards
+
+**DO NOT:**
+- **Duplicate code** - Extract common logic into functions or extension methods
+- **Deep nesting** - Max 3 levels of nesting for conditions and loops; use early returns, guard clauses, or extract methods
+- **Long functions** - Keep functions under 30 lines; extract complex logic into smaller units
+- **Magic numbers/strings** - Use named constants or enums
+- **Ignore nullability** - Handle nullable types explicitly with `?.`, `?:`, or `requireNotNull()`
+- **Suppress warnings** without justification - Add comment explaining why suppression is necessary
+
+**DO:**
+- **Use extension functions** for reusable utility code
+- **Prefer immutable data** - Use `val` over `var`, immutable collections where possible
+- **Write self-documenting code** - Clear function/variable names over comments
+- **Follow Kotlin idioms** - Use `when`, `let`, `also`, `apply` appropriately
+- **Handle errors explicitly** - Use sealed classes or Result types for expected failures
+
+### Formatting Standards (enforced by ktlint)
+```kotlin
+// Correct indentation: 4 spaces
+class Example {
+    fun method() {
+        if (condition) {
+            doSomething()
+        }
+    }
+}
+
+// Max line length: 120 characters
+// Trailing commas in multiline constructs
+data class Payment(
+    val amount: Double,
+    val currency: String,
+    val merchant: String?,  // trailing comma
+)
+
+// Blank line between functions
+fun first() { }
+
+fun second() { }
+```
+
+### Payment Parsing
+- Extend parsing by adding regex rules to `PaymentRegexRule` instances.
+- For categorisation, update `categories` in config; `PaymentProcessor.assignCategory` performs case-insensitive merchant lookup.
+- `PaymentRepository.savePayment` requires the raw message + sender for deduping; duplicates are ignored by hash.
+
+### Config Editing
+- Use `ConfigRepository.addCategory/updateCategory` and `addSender/updateSender`; they handle DB writes and refresh in-memory caches/processor.
+- UI helpers call these on every edit; keep payloads mutable so adapters can mirror local state before persistence.
+
+### Broadcast Receiver
+- `SmsReceiver` supports debug extras (`EXTRA_TEST_SENDER`, `EXTRA_TEST_BODY`) for instrumentation tests. Preserve this pathway when refactoring.
 
 ## Testing Expectations
 
