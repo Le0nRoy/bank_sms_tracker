@@ -53,33 +53,33 @@
 
 ---
 
-## Phase 3: Extended Features (TODO)
+## Phase 3: Extended Features
 
 ### 3.1 Config Import/Export
 - [x] Export configuration to JSON
-- [ ] Import configuration from JSON file
-- [ ] Merge imported rules with existing (append, not replace)
-- [ ] Handle duplicate senders/categories during import
+- [x] Import configuration from JSON file
+- [x] Merge imported rules with existing (append, not replace)
+- [x] Handle duplicate senders/categories during import
 
 ### 3.2 Enable/Disable Functionality
-- [ ] Add `enabled` field to Sender entity
-- [ ] Add `enabled` field to PaymentRegexRule entity
-- [ ] Add `enabled` field to Category entity
-- [ ] UI toggles for enable/disable
-- [ ] Filter disabled items during processing
+- [x] Add `enabled` field to Sender entity
+- [x] Add `enabled` field to PaymentRegexRule entity
+- [x] Add `enabled` field to Category entity
+- [x] UI toggles for enable/disable
+- [x] Filter disabled items during processing
 
 ### 3.3 Regex Builder UI
-- [ ] Create RegexBuilderActivity
-- [ ] Real-time regex matching preview
-- [ ] Highlight captured groups
-- [ ] Save regex to sender rules
+- [x] Create RegexBuilderActivity
+- [x] Real-time regex matching preview
+- [x] Highlight captured groups
+- [ ] Save regex to sender rules (future enhancement)
 
 ### 3.4 Payments Management
-- [ ] Create PaymentsActivity (list view)
+- [x] Create PaymentsActivity (list view)
 - [ ] Filter payments by sender
-- [ ] Filter payments by category
+- [x] Filter payments by category
 - [ ] Filter payments by date range
-- [ ] Payment CSV export
+- [x] Payment CSV export
 
 ### 3.5 Category Cascade
 - [ ] Track which rule parsed each payment
@@ -87,16 +87,16 @@
 - [ ] Batch category reassignment
 
 ### 3.6 Retrospective SMS Processing
-- [ ] Request READ_SMS permission
+- [x] Request READ_SMS permission (ApplyRulesActivity)
 - [ ] Date range selector UI
-- [ ] Query SMS inbox
-- [ ] Process historical messages
+- [x] Query SMS inbox (ApplyRulesActivity)
+- [x] Process historical messages (ApplyRulesActivity)
 
 ### 3.7 Bug Report
-- [ ] Configure bug report email in BuildConfig
-- [ ] Create bug report activity/dialog
-- [ ] Collect device info and logs
-- [ ] Send via email intent
+- [x] Configure bug report email in BuildConfig
+- [x] Create bug report activity/dialog
+- [x] Collect device info and logs
+- [x] Send via email intent
 
 ---
 
@@ -107,8 +107,16 @@
 - [x] PaymentRepositoryTest
 - [x] PaymentProcessorTest
 - [x] ConfigLoaderTest
+- [x] PaymentProcessorEnabledTest (enabled/disabled functionality)
 - [ ] Add missing edge case tests
 - [ ] Achieve 80%+ code coverage
+
+### 4.1.1 Code Coverage
+- [x] Add JaCoCo coverage plugin
+- [x] Configure local coverage reports (./gradlew jacocoTestReport)
+- [x] Add coverage to CI workflow
+- [ ] Add coverage badge to README
+- [ ] Set up Codecov or similar service for PR coverage tracking
 
 ### 4.2 Integration Tests
 - [x] ConfigRepositoryRoomTest
@@ -175,3 +183,10 @@
 | 2025-12-29 | GitHub CI lint workflow added | - |
 | 2025-12-29 | TestReporter classes created | - |
 | 2025-12-29 | AGENTS.md code style rules added | - |
+| 2025-12-30 | Phase 3 features: enabled toggles, import, payments | 94ab266 |
+| 2025-12-30 | RegexBuilderActivity created | 94ab266 |
+| 2025-12-30 | BugReportActivity created | 94ab266 |
+| 2025-12-30 | PaymentProcessorEnabledTest added | 94ab266 |
+| 2025-12-30 | JaCoCo coverage configured | - |
+| 2025-12-30 | CI workflow updated with tests + coverage | - |
+| 2025-12-30 | AGENTS.md task tracking rule added | - |

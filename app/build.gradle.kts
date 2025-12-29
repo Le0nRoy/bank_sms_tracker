@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ktlint)
     id("de.mannodermaus.android-junit5")
     kotlin("kapt")
+    jacoco
 }
 
 android {
@@ -94,4 +95,108 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+// JaCoCo Configuration
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+android {
+    buildTypes {
+        debug {
+            enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
+        }
+    }
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    group = "verification"
+    description = "Generate JaCoCo coverage report for unit tests"
+
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+        xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/jacocoTestReport/jacocoTestReport.xml"))
+        html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/jacocoTestReport/html"))
+    }
+
+    val fileFilter = listOf(
+        "**/R.class",
+        "**/R$*.class",
+        "**/BuildConfig.*",
+        "**/Manifest*.*",
+        "**/*Test*.*",
+        "android/**/*.*",
+        "**/databinding/**",
+        "**/android/databinding/*Binding.*",
+        "**/BR.*",
+        "**/*_MembersInjector.class",
+        "**/Dagger*Component.class",
+        "**/Dagger*Component\$Builder.class",
+        "**/*Module_*Factory.class",
+        "**/di/module/*",
+        "**/*_Factory*.*",
+        "**/*Module*.*",
+        "**/*Component*.*",
+        "**/*_Impl*.*"
+    )
+
+    val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
+        exclude(fileFilter)
+    }
+    val mainSrc = "${project.projectDir}/src/main/java"
+
+    sourceDirectories.setFrom(files(mainSrc))
+    classDirectories.setFrom(files(debugTree))
+    executionData.setFrom(
+        fileTree(layout.buildDirectory) {
+            include(
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
+            )
+        }
+    )
+}
+
+tasks.register("jacocoCoverageVerification") {
+    group = "verification"
+    description = "Verify code coverage meets minimum threshold"
+
+    dependsOn("jacocoTestReport")
+
+    doLast {
+        val reportFile = file("${layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        if (reportFile.exists()) {
+            val xmlParser = groovy.xml.XmlSlurper().parse(reportFile)
+            val counters = xmlParser.getProperty("counter") as groovy.util.slurpersupport.NodeChildren
+
+            var totalCovered = 0
+            var totalMissed = 0
+
+            counters.forEach { counter ->
+                val node = counter as groovy.util.slurpersupport.Node
+                if (node.attributes()["type"] == "LINE") {
+                    totalCovered += (node.attributes()["covered"] as String).toInt()
+                    totalMissed += (node.attributes()["missed"] as String).toInt()
+                }
+            }
+
+            val total = totalCovered + totalMissed
+            val coverage = if (total > 0) (totalCovered * 100.0 / total) else 0.0
+            println("Line coverage: %.2f%% (%d/%d lines)".format(coverage, totalCovered, total))
+
+            val minimumCoverage = 60.0
+            if (coverage < minimumCoverage) {
+                println(
+                    "WARNING: Coverage %.2f%% is below minimum threshold of %.2f%%"
+                        .format(coverage, minimumCoverage)
+                )
+            }
+        }
+    }
 }

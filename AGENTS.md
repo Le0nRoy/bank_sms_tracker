@@ -96,6 +96,27 @@ fun second() { }
 
 ## Operational Notes
 
-- Always run `./gradlew test` for unit coverage and `./gradlew connectedAndroidTest --tests com.example.banksmstracker.SmsReceiverE2ETest` after touching SMS flow.  
-- Config loading is idempotent; if a test needs a clean slate, call `ConfigRepository.reset()` (currently `internal`).  
+- Always run `./gradlew test` for unit coverage and `./gradlew connectedAndroidTest --tests com.example.banksmstracker.SmsReceiverE2ETest` after touching SMS flow.
+- Config loading is idempotent; if a test needs a clean slate, call `ConfigRepository.reset()` (currently `internal`).
 - Keep UI changes aligned with `BaseActivity` navigation/back behaviour to maintain consistent titles/back stack handling.
+
+## Task Tracking (CRITICAL)
+
+**After completing any feature or fixing any issue:**
+1. **Update TODO.md** - Mark completed tasks as `[x]` and add entry to Completed Items Log
+2. **Commit changes** - Do not batch TODO.md updates; update immediately after completing work
+3. **Keep TODO.md current** - This file is the source of truth for project progress
+
+**TODO.md format:**
+```markdown
+- [ ] Not started
+- [~] In progress
+- [x] Completed
+
+## Completed Items Log
+| Date | Task | Commit |
+|------|------|--------|
+| YYYY-MM-DD | Task description | commit_hash |
+```
+
+**NEVER skip this step** - The TODO.md must always reflect current project state.
