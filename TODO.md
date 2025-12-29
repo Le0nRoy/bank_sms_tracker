@@ -123,7 +123,7 @@
 ### 4.2 Integration Tests
 - [x] ConfigRepositoryRoomTest
 - [x] RoomPaymentRepositoryTest
-- [ ] Config import/export integration
+- [x] Config import/export integration (ConfigImportE2ETest)
 - [ ] Full SMS processing pipeline
 
 ### 4.3 E2E Tests
@@ -132,6 +132,8 @@
 - [x] ConfigPersistenceE2ETest
 - [x] ConfigExportE2ETest
 - [x] PaymentDeduplicationE2ETest
+- [x] ConfigImportE2ETest (JSON import + merge tests)
+- [x] EnabledDisabledE2ETest (enabled/disabled filtering)
 - [ ] Set up Appium for UI automation
 - [ ] E2E: Category management flow
 - [ ] E2E: Sender management flow
@@ -194,3 +196,5 @@
 | 2025-12-30 | AGENTS.md task tracking rule added | 67189bd |
 | 2025-12-30 | ImportResultTest added | 67189bd |
 | 2025-12-30 | DataClassesTest added | 67189bd |
+| 2025-12-30 | ConfigImportE2ETest + EnabledDisabledE2ETest added | 6f083cb |
+| 2025-12-30 | Fixed JUnit 5 Android test setup | 6f083cb |
