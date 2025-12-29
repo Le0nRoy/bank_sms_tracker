@@ -11,4 +11,15 @@
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
+    <string name="sender_name_hint">Sender name</string>
+    <string name="sender_addresses_title">Addresses</string>
+    <string name="add_address">Add Address</string>
+    <string name="sender_address_hint">Address %1$d</string>
+    <string name="sender_rules_title">Regex rules</string>
+    <string name="add_rule">Add Rule</string>
+    <string name="sender_rule_hint">Rule %1$d</string>
+    <string name="export_config">Export configuration</string>
+    <string name="share_config_title">Share configuration</string>
+    <string name="config_export_success">Configuration exported to %1$s</string>
+    <string name="config_export_failed">Failed to export configuration: %1$s</string>
 </resources>

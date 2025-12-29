@@ -8,7 +8,6 @@ import android.telephony.SmsMessage
 import android.util.Log
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.ConfigRepository
-import com.example.banksmstracker.serializer.ConfigLoader
 
 class SmsReceiver : BroadcastReceiver() {
 
@@ -30,7 +29,7 @@ class SmsReceiver : BroadcastReceiver() {
     private fun initializePaymentProcessor(context: Context) {
         if (!::paymentProcessor.isInitialized) {
             ConfigRepository.load(context.applicationContext as android.app.Application)
-            paymentProcessor = ConfigLoader.createPaymentProcessor(ConfigRepository.config)
+            paymentProcessor = ConfigRepository.getPaymentProcessor()
         }
     }
 

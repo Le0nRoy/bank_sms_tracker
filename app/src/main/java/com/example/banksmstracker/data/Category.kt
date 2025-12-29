@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class Category(
+    var id: Long? = null,
     var name: String,
     var merchants: MutableList<String>,
 )

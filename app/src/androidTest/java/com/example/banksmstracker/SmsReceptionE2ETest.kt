@@ -10,6 +10,7 @@ import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.parser.SmsReceiver
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.InMemoryPaymentRepository
+import com.example.banksmstracker.repository.ConfigRepository
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -32,7 +33,7 @@ class SmsReceiverE2ETest {
     @BeforeAll
     fun setup() {
         Log.i(TAG, "Setting up tests, loading config repository…")
-        com.example.banksmstracker.repository.ConfigRepository.load(
+        ConfigRepository.load(
             context.applicationContext as android.app.Application
         )
     }

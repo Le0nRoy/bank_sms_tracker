@@ -5,6 +5,7 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class Payment(
+    val id: Long? = null,
     val amount: Double,
     val currency: String,
     val card: String?,

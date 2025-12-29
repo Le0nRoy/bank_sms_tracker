@@ -5,7 +5,8 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class Sender(
-    val name: String,
-    val addresses: List<String>,
-    val rules: List<PaymentRegexRule>,
+    var id: Long? = null,
+    var name: String,
+    var addresses: MutableList<String>,
+    var rules: MutableList<PaymentRegexRule>,
 )

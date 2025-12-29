@@ -6,12 +6,10 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.banksmstracker.R
 import com.example.banksmstracker.repository.ConfigRepository
-import com.example.banksmstracker.serializer.ConfigLoader
 
 class ApplyRulesActivity : BaseActivity() {
 
@@ -64,8 +62,8 @@ class ApplyRulesActivity : BaseActivity() {
     private fun applyRules() {
         try {
             val config = ConfigRepository.config
-            val processor = ConfigLoader.createPaymentProcessor(config)
-            
+            val processor = ConfigRepository.getPaymentProcessor()
+
             val configuredSenders = config.senders.flatMap { it.addresses }.toSet()
             val smsMessages = getSmsMessages(configuredSenders)
             

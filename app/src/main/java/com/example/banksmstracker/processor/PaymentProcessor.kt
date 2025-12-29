@@ -1,5 +1,6 @@
 package com.example.banksmstracker.processor
 
+import android.util.Log
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Sender
@@ -50,7 +51,10 @@ class PaymentProcessor(
     fun processMessage(message: String, address: String): Payment {
         val payment = this.getPaymentFromMessage(message, address)
         val categorizedPayment = assignCategory(payment!!)
-        paymentRepository.savePayment(categorizedPayment)
+        val inserted = paymentRepository.savePayment(categorizedPayment, message, address)
+        if (!inserted) {
+            Log.d(TAG, "Duplicate payment skipped for sender $address")
+        }
         return categorizedPayment
     }
     
