@@ -10,7 +10,8 @@ fun List<CategoryWithMerchants>.toDomainCategories(): List<Category> = map { cat
         name = categoryWithMerchants.category.name,
         merchants = categoryWithMerchants.merchants
             .map { it.name }
-            .toMutableList()
+            .toMutableList(),
+        enabled = categoryWithMerchants.category.enabled
     )
 }
 
@@ -22,7 +23,14 @@ fun List<SenderWithDetails>.toDomainSenders(): List<Sender> = map { senderWithDe
             .map { it.address }
             .toMutableList(),
         rules = senderWithDetails.rules
-            .map { rule -> PaymentRegexRule(id = rule.id, regex = rule.regex) }
-            .toMutableList()
+            .map { rule ->
+                PaymentRegexRule(
+                    id = rule.id,
+                    regex = rule.regex,
+                    enabled = rule.enabled
+                )
+            }
+            .toMutableList(),
+        enabled = senderWithDetails.sender.enabled
     )
 }

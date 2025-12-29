@@ -64,7 +64,9 @@ object ConfigRepository {
         config.senders.map { sender ->
             sender.copy(
                 addresses = sender.addresses.toMutableList(),
-                rules = sender.rules.map { PaymentRegexRule(id = it.id, regex = it.regex) }.toMutableList()
+                rules = sender.rules.map {
+                    PaymentRegexRule(id = it.id, regex = it.regex, enabled = it.enabled)
+                }.toMutableList()
             )
         }
     }
@@ -78,7 +80,9 @@ object ConfigRepository {
     suspend fun updateCategory(category: Category) = withContext(Dispatchers.IO) {
         val categoryId = category.id ?: error("Category must have id")
         database.withTransaction {
-            configDao.updateCategory(CategoryEntity(categoryId, category.name))
+            configDao.updateCategory(
+                CategoryEntity(id = categoryId, name = category.name, enabled = category.enabled)
+            )
             configDao.deleteMerchantsForCategory(categoryId)
             category.merchants
                 .map { it.trim() }
@@ -101,7 +105,9 @@ object ConfigRepository {
     suspend fun updateSender(sender: Sender) = withContext(Dispatchers.IO) {
         val senderId = sender.id ?: error("Sender must have id")
         database.withTransaction {
-            configDao.updateSender(SenderEntity(senderId, sender.name))
+            configDao.updateSender(
+                SenderEntity(id = senderId, name = sender.name, enabled = sender.enabled)
+            )
             configDao.deleteAddressesForSender(senderId)
             sender.addresses
                 .map { it.trim() }
@@ -113,11 +119,14 @@ object ConfigRepository {
                 }
             configDao.deleteRulesForSender(senderId)
             sender.rules
-                .map { it.regex.trim() }
-                .filter { it.isNotEmpty() }
-                .forEach { regex ->
+                .filter { it.regex.trim().isNotEmpty() }
+                .forEach { rule ->
                     configDao.insertRule(
-                        SenderRuleEntity(senderId = senderId, regex = regex)
+                        SenderRuleEntity(
+                            senderId = senderId,
+                            regex = rule.regex.trim(),
+                            enabled = rule.enabled
+                        )
                     )
                 }
         }
@@ -151,6 +160,185 @@ object ConfigRepository {
             file
         )
         return file to uri
+    }
+
+    /**
+     * Import configuration from JSON string and merge with existing config.
+     * New senders/categories are added. Existing ones (matched by name) have their
+     * addresses/rules/merchants merged.
+     */
+    suspend fun importConfig(jsonString: String): ImportResult = withContext(Dispatchers.IO) {
+        try {
+            val importedConfig = ConfigLoader.load(jsonString)
+            mergeConfig(importedConfig)
+        } catch (e: SerializationException) {
+            ImportResult.Error("Failed to parse config: ${e.message}")
+        } catch (e: Exception) {
+            ImportResult.Error("Import failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Import configuration from a file URI.
+     */
+    suspend fun importConfigFromUri(context: Context, uri: Uri): ImportResult = withContext(Dispatchers.IO) {
+        try {
+            val jsonString = context.contentResolver.openInputStream(uri)?.use {
+                it.bufferedReader().readText()
+            } ?: return@withContext ImportResult.Error("Could not read file")
+            importConfig(jsonString)
+        } catch (e: Exception) {
+            ImportResult.Error("Failed to read file: ${e.message}")
+        }
+    }
+
+    private suspend fun mergeConfig(importedConfig: SmsConfig): ImportResult {
+        var sendersAdded = 0
+        var sendersMerged = 0
+        var categoriesAdded = 0
+        var categoriesMerged = 0
+
+        database.withTransaction {
+            // Merge senders
+            for (importedSender in importedConfig.senders) {
+                val existingSender = config.senders.find {
+                    it.name.equals(importedSender.name, ignoreCase = true)
+                }
+
+                if (existingSender != null) {
+                    // Merge with existing sender
+                    val mergedAddresses = (existingSender.addresses + importedSender.addresses)
+                        .map { it.trim().lowercase() }
+                        .distinct()
+                        .toMutableList()
+
+                    val existingRegexes = existingSender.rules.map { it.regex.trim() }.toSet()
+                    val newRules = importedSender.rules.filter {
+                        it.regex.trim() !in existingRegexes
+                    }
+                    val mergedRules = (existingSender.rules + newRules).toMutableList()
+
+                    val mergedSender = existingSender.copy(
+                        addresses = mergedAddresses,
+                        rules = mergedRules
+                    )
+                    updateSenderInternal(mergedSender)
+                    sendersMerged++
+                } else {
+                    // Add new sender
+                    val senderId = configDao.insertSender(
+                        SenderEntity(name = importedSender.name, enabled = importedSender.enabled)
+                    )
+                    importedSender.addresses
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                        .forEach { address ->
+                            configDao.insertAddress(
+                                SenderAddressEntity(senderId = senderId, address = address)
+                            )
+                        }
+                    importedSender.rules
+                        .filter { it.regex.trim().isNotEmpty() }
+                        .forEach { rule ->
+                            configDao.insertRule(
+                                SenderRuleEntity(
+                                    senderId = senderId,
+                                    regex = rule.regex.trim(),
+                                    enabled = rule.enabled
+                                )
+                            )
+                        }
+                    sendersAdded++
+                }
+            }
+
+            // Merge categories
+            for (importedCategory in importedConfig.categories) {
+                val existingCategory = config.categories.find {
+                    it.name.equals(importedCategory.name, ignoreCase = true)
+                }
+
+                if (existingCategory != null) {
+                    // Merge merchants
+                    val mergedMerchants = (existingCategory.merchants + importedCategory.merchants)
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                        .distinct()
+                        .toMutableList()
+
+                    val mergedCategory = existingCategory.copy(merchants = mergedMerchants)
+                    updateCategoryInternal(mergedCategory)
+                    categoriesMerged++
+                } else {
+                    // Add new category
+                    val categoryId = configDao.insertCategory(
+                        CategoryEntity(name = importedCategory.name, enabled = importedCategory.enabled)
+                    )
+                    importedCategory.merchants
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                        .forEach { merchant ->
+                            configDao.insertMerchant(
+                                CategoryMerchantEntity(categoryId = categoryId, name = merchant)
+                            )
+                        }
+                    categoriesAdded++
+                }
+            }
+        }
+
+        refreshConfigInternal()
+
+        return ImportResult.Success(
+            sendersAdded = sendersAdded,
+            sendersMerged = sendersMerged,
+            categoriesAdded = categoriesAdded,
+            categoriesMerged = categoriesMerged
+        )
+    }
+
+    private suspend fun updateSenderInternal(sender: Sender) {
+        val senderId = sender.id ?: return
+        configDao.updateSender(
+            SenderEntity(id = senderId, name = sender.name, enabled = sender.enabled)
+        )
+        configDao.deleteAddressesForSender(senderId)
+        sender.addresses
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .forEach { address ->
+                configDao.insertAddress(
+                    SenderAddressEntity(senderId = senderId, address = address)
+                )
+            }
+        configDao.deleteRulesForSender(senderId)
+        sender.rules
+            .filter { it.regex.trim().isNotEmpty() }
+            .forEach { rule ->
+                configDao.insertRule(
+                    SenderRuleEntity(
+                        senderId = senderId,
+                        regex = rule.regex.trim(),
+                        enabled = rule.enabled
+                    )
+                )
+            }
+    }
+
+    private suspend fun updateCategoryInternal(category: Category) {
+        val categoryId = category.id ?: return
+        configDao.updateCategory(
+            CategoryEntity(id = categoryId, name = category.name, enabled = category.enabled)
+        )
+        configDao.deleteMerchantsForCategory(categoryId)
+        category.merchants
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .forEach { merchant ->
+                configDao.insertMerchant(
+                    CategoryMerchantEntity(categoryId = categoryId, name = merchant)
+                )
+            }
     }
 
     private suspend fun refreshConfigInternal() = withContext(Dispatchers.IO) {
@@ -198,7 +386,9 @@ object ConfigRepository {
     private suspend fun persistConfig(config: SmsConfig) = withContext(Dispatchers.IO) {
         database.withTransaction {
             config.senders.forEach { sender ->
-                val senderId = configDao.insertSender(SenderEntity(name = sender.name))
+                val senderId = configDao.insertSender(
+                    SenderEntity(name = sender.name, enabled = sender.enabled)
+                )
                 sender.addresses
                     .map { it.trim() }
                     .filter { it.isNotEmpty() }
@@ -208,16 +398,21 @@ object ConfigRepository {
                         )
                     }
                 sender.rules
-                    .map { it.regex.trim() }
-                    .filter { it.isNotEmpty() }
-                    .forEach { regex ->
+                    .filter { it.regex.trim().isNotEmpty() }
+                    .forEach { rule ->
                         configDao.insertRule(
-                            SenderRuleEntity(senderId = senderId, regex = regex)
+                            SenderRuleEntity(
+                                senderId = senderId,
+                                regex = rule.regex.trim(),
+                                enabled = rule.enabled
+                            )
                         )
                     }
             }
             config.categories.forEach { category ->
-                val categoryId = configDao.insertCategory(CategoryEntity(name = category.name))
+                val categoryId = configDao.insertCategory(
+                    CategoryEntity(name = category.name, enabled = category.enabled)
+                )
                 category.merchants
                     .map { it.trim() }
                     .filter { it.isNotEmpty() }

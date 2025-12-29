@@ -7,5 +7,6 @@ data class Sender(
     var id: Long? = null,
     var name: String,
     var addresses: MutableList<String>,
-    var rules: MutableList<PaymentRegexRule>
+    var rules: MutableList<PaymentRegexRule>,
+    var enabled: Boolean = true
 )

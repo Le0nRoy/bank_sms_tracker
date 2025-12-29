@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.Switch
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -97,6 +98,7 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
     class CategoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val nameEditText: EditText = itemView.findViewById(R.id.nameEditText)
+        private val switchEnabled: Switch = itemView.findViewById(R.id.switchEnabled)
         private val merchantsContainer: LinearLayout = itemView.findViewById(R.id.merchantsContainer)
         private val btnAddMerchant: Button = itemView.findViewById(R.id.btnAddMerchant)
         private val bindingInProgress = AtomicBoolean(false)
@@ -106,11 +108,19 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
             if (nameEditText.text.toString() != category.name) {
                 nameEditText.setText(category.name)
             }
+            switchEnabled.isChecked = category.enabled
             bindingInProgress.set(false)
 
             nameEditText.setSimpleWatcher { newValue ->
                 if (!bindingInProgress.get() && category.name != newValue) {
                     category.name = newValue
+                    callbacks.onCategoryUpdated(category)
+                }
+            }
+
+            switchEnabled.setOnCheckedChangeListener { _, isChecked ->
+                if (!bindingInProgress.get() && category.enabled != isChecked) {
+                    category.enabled = isChecked
                     callbacks.onCategoryUpdated(category)
                 }
             }
@@ -146,5 +156,6 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
 private fun Category.clone(): Category = Category(
     id = id,
     name = name,
-    merchants = merchants.toMutableList()
+    merchants = merchants.toMutableList(),
+    enabled = enabled
 )

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.Switch
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -97,6 +98,7 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
     class SenderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         private val nameEditText: EditText = itemView.findViewById(R.id.senderNameEditText)
+        private val switchSenderEnabled: Switch = itemView.findViewById(R.id.switchSenderEnabled)
         private val addressesContainer: LinearLayout = itemView.findViewById(R.id.addressesContainer)
         private val btnAddAddress: Button = itemView.findViewById(R.id.btnAddAddress)
         private val rulesContainer: LinearLayout = itemView.findViewById(R.id.rulesContainer)
@@ -108,11 +110,19 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
             if (nameEditText.text.toString() != sender.name) {
                 nameEditText.setText(sender.name)
             }
+            switchSenderEnabled.isChecked = sender.enabled
             bindingInProgress.set(false)
 
             nameEditText.setSimpleWatcher { newValue ->
                 if (bindingInProgress.get().not() && sender.name != newValue) {
                     sender.name = newValue
+                    callbacks.onSenderUpdated(sender)
+                }
+            }
+
+            switchSenderEnabled.setOnCheckedChangeListener { _, isChecked ->
+                if (!bindingInProgress.get() && sender.enabled != isChecked) {
+                    sender.enabled = isChecked
                     callbacks.onSenderUpdated(sender)
                 }
             }
@@ -153,17 +163,30 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
         }
 
         private fun addRuleField(index: Int, rule: PaymentRegexRule, sender: Sender, callbacks: SenderCallbacks) {
-            val editText = LayoutInflater.from(itemView.context)
-                .inflate(R.layout.view_dynamic_edit_text, rulesContainer, false) as EditText
+            val ruleView = LayoutInflater.from(itemView.context)
+                .inflate(R.layout.view_rule_with_toggle, rulesContainer, false)
+            val editText: EditText = ruleView.findViewById(R.id.etRuleRegex)
+            val switchEnabled: Switch = ruleView.findViewById(R.id.switchRuleEnabled)
+
             editText.hint = itemView.context.getString(R.string.sender_rule_hint, index + 1)
             editText.setText(rule.regex)
+            switchEnabled.isChecked = rule.enabled
+
             editText.setSimpleWatcher { newValue ->
                 if (index in sender.rules.indices && sender.rules[index].regex != newValue) {
                     sender.rules[index].regex = newValue
                     callbacks.onSenderUpdated(sender)
                 }
             }
-            rulesContainer.addView(editText)
+
+            switchEnabled.setOnCheckedChangeListener { _, isChecked ->
+                if (index in sender.rules.indices && sender.rules[index].enabled != isChecked) {
+                    sender.rules[index].enabled = isChecked
+                    callbacks.onSenderUpdated(sender)
+                }
+            }
+
+            rulesContainer.addView(ruleView)
         }
     }
 }
@@ -172,5 +195,6 @@ private fun Sender.clone(): Sender = Sender(
     id = id,
     name = name,
     addresses = addresses.toMutableList(),
-    rules = rules.map { PaymentRegexRule(id = it.id, regex = it.regex) }.toMutableList()
+    rules = rules.map { PaymentRegexRule(id = it.id, regex = it.regex, enabled = it.enabled) }.toMutableList(),
+    enabled = enabled
 )

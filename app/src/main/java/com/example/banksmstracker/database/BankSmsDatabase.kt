@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
@@ -14,7 +16,7 @@ import androidx.room.RoomDatabase
         SenderRuleEntity::class,
         PaymentEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class BankSmsDatabase : RoomDatabase() {
@@ -26,12 +28,26 @@ abstract class BankSmsDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: BankSmsDatabase? = null
 
+        /**
+         * Migration from version 1 to 2: Add enabled columns to categories, senders, and sender_rules.
+         */
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE categories ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE senders ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE sender_rules ADD COLUMN enabled INTEGER NOT NULL DEFAULT 1")
+            }
+        }
+
         fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
                 BankSmsDatabase::class.java,
                 "bank_sms_tracker.db"
-            ).build().also { INSTANCE = it }
+            )
+                .addMigrations(MIGRATION_1_2)
+                .build()
+                .also { INSTANCE = it }
         }
     }
 }

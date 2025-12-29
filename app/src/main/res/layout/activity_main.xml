@@ -51,6 +51,38 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/export_config"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp" />
+
+    <Button
+        android:id="@+id/btnImportConfig"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/import_config"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp" />
+
+    <Button
+        android:id="@+id/btnPayments"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/payments"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp" />
+
+    <Button
+        android:id="@+id/btnRegexBuilder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/regex_builder"
+        android:layout_marginBottom="16dp"
+        android:padding="16dp" />
+
+    <Button
+        android:id="@+id/btnBugReport"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/bug_report"
         android:padding="16dp" />
 
 </LinearLayout>

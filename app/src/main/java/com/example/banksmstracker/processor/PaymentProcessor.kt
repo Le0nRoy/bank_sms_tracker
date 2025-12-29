@@ -17,11 +17,22 @@ class PaymentProcessor(
         private const val TAG = "PaymentProcessor"
     }
 
-    fun getPaymentFromMessage(message: String, address: String): Payment? {
-        val sender = senders.find { sender -> sender.addresses.any { it.equals(address, ignoreCase = true) } }
-            ?: throw UnparsedMessageException("No sender found for address: $address")
+    // Filter to only enabled senders and categories
+    private val enabledSenders: List<Sender>
+        get() = senders.filter { it.enabled }
 
-        for (rule in sender.rules) {
+    private val enabledCategories: List<Category>
+        get() = categories.filter { it.enabled }
+
+    fun getPaymentFromMessage(message: String, address: String): Payment? {
+        val sender = enabledSenders.find { sender ->
+            sender.addresses.any { it.equals(address, ignoreCase = true) }
+        } ?: throw UnparsedMessageException("No sender found for address: $address")
+
+        // Only use enabled rules
+        val enabledRules = sender.rules.filter { it.enabled }
+
+        for (rule in enabledRules) {
             val pattern = rule.regexPattern
             val match = pattern.find(message) ?: continue
 
@@ -61,7 +72,8 @@ class PaymentProcessor(
     private fun assignCategory(payment: Payment): Payment {
         val merchant = payment.merchant ?: return payment
 
-        val category = categories.find { category ->
+        // Only match against enabled categories
+        val category = enabledCategories.find { category ->
             category.merchants.any { it.equals(merchant, ignoreCase = true) }
         }
 
