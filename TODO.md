@@ -108,6 +108,8 @@
 - [x] PaymentProcessorTest
 - [x] ConfigLoaderTest
 - [x] PaymentProcessorEnabledTest (enabled/disabled functionality)
+- [x] ImportResultTest (import result sealed class)
+- [x] DataClassesTest (data class coverage)
 - [ ] Add missing edge case tests
 - [ ] Achieve 80%+ code coverage
 
@@ -187,6 +189,8 @@
 | 2025-12-30 | RegexBuilderActivity created | 94ab266 |
 | 2025-12-30 | BugReportActivity created | 94ab266 |
 | 2025-12-30 | PaymentProcessorEnabledTest added | 94ab266 |
-| 2025-12-30 | JaCoCo coverage configured | - |
-| 2025-12-30 | CI workflow updated with tests + coverage | - |
-| 2025-12-30 | AGENTS.md task tracking rule added | - |
+| 2025-12-30 | JaCoCo coverage configured | 67189bd |
+| 2025-12-30 | CI workflow updated with tests + coverage | 67189bd |
+| 2025-12-30 | AGENTS.md task tracking rule added | 67189bd |
+| 2025-12-30 | ImportResultTest added | 67189bd |
+| 2025-12-30 | DataClassesTest added | 67189bd |
