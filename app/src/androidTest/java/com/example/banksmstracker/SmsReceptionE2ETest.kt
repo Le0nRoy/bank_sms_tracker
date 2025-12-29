@@ -43,8 +43,8 @@ class SmsReceiverE2ETest {
 
         val sender = Sender(
             name = "MyBank",
-            addresses = listOf("BANK"),
-            rules = listOf(
+            addresses = mutableListOf("BANK"),
+            rules = mutableListOf(
                 PaymentRegexRule(
                     regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
@@ -111,8 +111,8 @@ class SmsReceiverE2ETest {
 
         val sender = Sender(
             name = "MyBank",
-            addresses = listOf("BANK"),
-            rules = listOf(
+            addresses = mutableListOf("BANK"),
+            rules = mutableListOf(
                 PaymentRegexRule(
                     regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )

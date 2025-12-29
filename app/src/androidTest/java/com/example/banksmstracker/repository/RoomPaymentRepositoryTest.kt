@@ -12,14 +12,13 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.junit5.android.core.J5SuiteExtension
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Instrumented tests for RoomPaymentRepository.
  * Tests payment persistence and deduplication using Room database.
  */
-@ExtendWith(J5SuiteExtension::class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RoomPaymentRepositoryTest {
 
     private lateinit var database: BankSmsDatabase

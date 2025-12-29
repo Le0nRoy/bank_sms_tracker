@@ -4,20 +4,19 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.example.banksmstracker.repository.ConfigRepository
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtendWith
-import org.junit5.android.core.J5SuiteExtension
 
 /**
  * E2E tests for configuration export functionality.
  * Verifies that configuration can be exported to JSON and shared.
  */
-@ExtendWith(J5SuiteExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConfigExportE2ETest {
 

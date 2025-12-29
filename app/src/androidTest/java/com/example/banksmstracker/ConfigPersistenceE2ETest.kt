@@ -9,14 +9,11 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtendWith
-import org.junit5.android.core.J5SuiteExtension
 
 /**
  * E2E tests for configuration persistence.
  * Verifies that configuration changes persist across repository operations.
  */
-@ExtendWith(J5SuiteExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConfigPersistenceE2ETest {
 

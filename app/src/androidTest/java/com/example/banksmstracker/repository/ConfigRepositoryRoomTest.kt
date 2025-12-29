@@ -10,14 +10,13 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.junit5.android.core.J5SuiteExtension
+import org.junit.jupiter.api.TestInstance
 
 /**
  * Instrumented tests for ConfigRepository database operations.
  * Tests adding, updating, and retrieving categories and senders from Room database.
  */
-@ExtendWith(J5SuiteExtension::class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ConfigRepositoryRoomTest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
