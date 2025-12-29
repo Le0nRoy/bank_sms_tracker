@@ -83,6 +83,7 @@ dependencies {
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.junit.jupiter)
     testImplementation(kotlin("test"))
+    testImplementation(libs.appium.java.client)
 
     // --- Android instrumented tests ---
     androidTestImplementation(libs.junit.jupiter.api)

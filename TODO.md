@@ -134,10 +134,10 @@
 - [x] PaymentDeduplicationE2ETest
 - [x] ConfigImportE2ETest (JSON import + merge tests)
 - [x] EnabledDisabledE2ETest (enabled/disabled filtering)
-- [ ] Set up Appium for UI automation
-- [ ] E2E: Category management flow
-- [ ] E2E: Sender management flow
-- [ ] E2E: Full SMS to payment flow
+- [x] Set up Appium for UI automation (dependencies + base test class)
+- [x] E2E: Category management flow (CategoryManagementAppiumTest)
+- [x] E2E: Sender management flow (SenderManagementAppiumTest)
+- [x] E2E: Full SMS to payment flow (SmsToPaymentFlowAppiumTest)
 
 ---
 
@@ -198,3 +198,4 @@
 | 2025-12-30 | DataClassesTest added | 67189bd |
 | 2025-12-30 | ConfigImportE2ETest + EnabledDisabledE2ETest added | 6f083cb |
 | 2025-12-30 | Fixed JUnit 5 Android test setup | 6f083cb |
+| 2025-12-30 | Appium UI E2E tests setup | - |
