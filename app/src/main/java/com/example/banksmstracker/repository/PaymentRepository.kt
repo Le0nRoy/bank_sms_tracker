@@ -23,17 +23,13 @@ class InMemoryPaymentRepository : PaymentRepository {
         return true
     }
 
-    override fun getAllPayments(): List<Payment> {
-        return payments.toList()
+    override fun getAllPayments(): List<Payment> = payments.toList()
+
+    override fun getPaymentsByCategory(categoryId: String): List<Payment> = payments.filter {
+        it.categoryId == categoryId
     }
-    
-    override fun getPaymentsByCategory(categoryId: String): List<Payment> {
-        return payments.filter { it.categoryId == categoryId }
-    }
-    
-    override fun getUncategorizedPayments(): List<Payment> {
-        return payments.filter { it.categoryId == null }
-    }
+
+    override fun getUncategorizedPayments(): List<Payment> = payments.filter { it.categoryId == null }
 
     private fun computeHash(message: String, sender: String): String {
         val digest = java.security.MessageDigest.getInstance("SHA-256")

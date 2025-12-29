@@ -16,6 +16,10 @@ trim_trailing_whitespace = true
 ktlint_code_style = android_studio
 ktlint_standard_no-wildcard-imports = disabled
 ktlint_standard_package-name = disabled
+# Disable filename rule (Android tests often have different naming conventions)
+ktlint_standard_filename = disabled
+# Disable property-naming for TAG constants (common Android pattern)
+ktlint_standard_property-naming = disabled
 
 [*.md]
 trim_trailing_whitespace = false

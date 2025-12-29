@@ -2,25 +2,24 @@ package com.example.banksmstracker.repository
 
 import android.app.Application
 import android.content.res.AssetManager
-import com.example.banksmstracker.serializer.ConfigLoader
-import kotlinx.serialization.SerializationException
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.junit.jupiter.MockitoExtension
 import java.io.ByteArrayInputStream
+import java.io.FileNotFoundException
 import java.io.IOException
+import kotlinx.serialization.SerializationException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.io.FileNotFoundException
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mock
+import org.mockito.Mockito.times
+import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
+import org.mockito.junit.jupiter.MockitoExtension
 
 @Disabled("Requires Android context; migrate to instrumentation test with Room backing store")
 @ExtendWith(MockitoExtension::class) // For Mockito integration with JUnit 5
@@ -111,7 +110,11 @@ class ConfigRepositoryTest {
             ConfigRepository.load(mockApplication)
             val secondConfigInstance = ConfigRepository.config
 
-            assertSame(firstConfigInstance, secondConfigInstance, "Config should be loaded only once and be the same instance")
+            assertSame(
+                firstConfigInstance,
+                secondConfigInstance,
+                "Config should be loaded only once and be the same instance"
+            )
             verify(mockAssetManager, times(1)).open("default_rules.json")
         }
 

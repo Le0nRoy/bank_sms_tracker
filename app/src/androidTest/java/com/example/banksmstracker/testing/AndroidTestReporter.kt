@@ -1,6 +1,5 @@
 package com.example.banksmstracker.testing
 
-import android.app.Activity
 import android.graphics.Bitmap
 import android.os.Environment
 import android.util.Log
@@ -149,17 +148,15 @@ object AndroidTestReporter {
     /**
      * Capture screenshot and return bytes.
      */
-    internal fun captureScreenshotBytes(): ByteArray? {
-        return try {
-            val capture = Screenshot.capture()
-            val bitmap = capture.bitmap
-            val stream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            stream.toByteArray()
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to capture screenshot: ${e.message}")
-            null
-        }
+    internal fun captureScreenshotBytes(): ByteArray? = try {
+        val capture = Screenshot.capture()
+        val bitmap = capture.bitmap
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        stream.toByteArray()
+    } catch (e: Exception) {
+        Log.w(TAG, "Failed to capture screenshot: ${e.message}")
+        null
     }
 
     /**
@@ -181,18 +178,14 @@ object AndroidTestReporter {
         }
     }
 
-    private fun captureDeviceInfo(): String {
-        return "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (API ${android.os.Build.VERSION.SDK_INT})"
-    }
+    private fun captureDeviceInfo(): String =
+        "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (API ${android.os.Build.VERSION.SDK_INT})"
 }
 
 /**
  * Context for building an Android test report.
  */
-class AndroidTestContext(
-    private val report: AndroidTestReport,
-    private val reporter: AndroidTestReporter
-) {
+class AndroidTestContext(private val report: AndroidTestReport, private val reporter: AndroidTestReporter) {
 
     fun description(text: String) {
         report.description = text
@@ -281,11 +274,7 @@ data class AndroidTestReport(
 /**
  * Screenshot information.
  */
-data class ScreenshotInfo(
-    val name: String,
-    val path: String,
-    val bytes: ByteArray
-) {
+data class ScreenshotInfo(val name: String, val path: String, val bytes: ByteArray) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

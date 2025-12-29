@@ -1,12 +1,11 @@
 package com.example.banksmstracker.repository
 
 import com.example.banksmstracker.data.Payment
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-// import java.util.Date // Not using Date directly anymore
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class PaymentRepositoryTest {
 
@@ -25,17 +24,15 @@ class PaymentRepositoryTest {
         timestamp: String? = "2023-01-01T12:00:00Z",
         balance: Double? = null,
         categoryId: String? = null
-    ): Payment {
-        return Payment(
-            amount = amount,
-            currency = currency,
-            card = card,
-            merchant = merchant,
-            timestamp = timestamp,
-            balance = balance,
-            categoryId = categoryId
-        )
-    }
+    ): Payment = Payment(
+        amount = amount,
+        currency = currency,
+        card = card,
+        merchant = merchant,
+        timestamp = timestamp,
+        balance = balance,
+        categoryId = categoryId
+    )
 
     @Test
     fun `savePayment_addsPaymentToRepository`() {

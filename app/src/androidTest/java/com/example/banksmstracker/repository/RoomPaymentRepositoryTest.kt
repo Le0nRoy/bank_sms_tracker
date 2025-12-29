@@ -3,7 +3,6 @@ package com.example.banksmstracker.repository
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.PaymentDao
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit5.android.core.J5SuiteExtension
-import java.io.File
 
 /**
  * Instrumented tests for RoomPaymentRepository.
@@ -52,23 +50,21 @@ class RoomPaymentRepositoryTest {
         timestamp: String? = "2023-01-01T12:00:00Z",
         balance: Double? = null,
         categoryId: String? = null
-    ): Payment {
-        return Payment(
-            amount = amount,
-            currency = currency,
-            card = card,
-            merchant = merchant,
-            timestamp = timestamp,
-            balance = balance,
-            categoryId = categoryId
-        )
-    }
+    ): Payment = Payment(
+        amount = amount,
+        currency = currency,
+        card = card,
+        merchant = merchant,
+        timestamp = timestamp,
+        balance = balance,
+        categoryId = categoryId
+    )
 
     @Test
     fun `savePayment_addsPaymentToRepository`() {
         val payment = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         val inserted = repository.savePayment(payment, "message-1", "sender-1")
-        
+
         assertTrue(inserted)
         val allPayments = repository.getAllPayments()
         assertEquals(1, allPayments.size)
@@ -83,7 +79,7 @@ class RoomPaymentRepositoryTest {
         val payment2 = createTestPayment(amount = 20.0, merchant = "Test 2", categoryId = "cat2")
         repository.savePayment(payment1, "message-1", "sender-1")
         repository.savePayment(payment2, "message-2", "sender-2")
-        
+
         val allPayments = repository.getAllPayments()
         assertEquals(2, allPayments.size)
     }
@@ -141,7 +137,7 @@ class RoomPaymentRepositoryTest {
         val payment = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         val inserted = repository.savePayment(payment, "duplicate-message", "sender-1")
         val duplicateInsert = repository.savePayment(payment, "duplicate-message", "sender-1")
-        
+
         assertTrue(inserted)
         assertTrue(repository.getAllPayments().size == 1)
         assertFalse(duplicateInsert)
@@ -151,10 +147,10 @@ class RoomPaymentRepositoryTest {
     fun `savePayment_allowsDifferentPaymentsWithSameContentButDifferentMessage`() {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         val payment2 = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
-        
+
         val inserted1 = repository.savePayment(payment1, "message-1", "sender-1")
         val inserted2 = repository.savePayment(payment2, "message-2", "sender-1")
-        
+
         assertTrue(inserted1)
         assertTrue(inserted2)
         assertEquals(2, repository.getAllPayments().size)
@@ -164,10 +160,10 @@ class RoomPaymentRepositoryTest {
     fun `savePayment_allowsSameMessageFromDifferentSenders`() {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Test Merchant 2", categoryId = "cat2")
-        
+
         val inserted1 = repository.savePayment(payment1, "same-message", "sender-1")
         val inserted2 = repository.savePayment(payment2, "same-message", "sender-2")
-        
+
         assertTrue(inserted1)
         assertTrue(inserted2)
         assertEquals(2, repository.getAllPayments().size)
@@ -178,11 +174,11 @@ class RoomPaymentRepositoryTest {
         val payment1 = createTestPayment(amount = 10.0, merchant = "First")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Second")
         val payment3 = createTestPayment(amount = 30.0, merchant = "Third")
-        
+
         repository.savePayment(payment1, "msg-1", "sender")
         repository.savePayment(payment2, "msg-2", "sender")
         repository.savePayment(payment3, "msg-3", "sender")
-        
+
         val allPayments = repository.getAllPayments()
         assertEquals(3, allPayments.size)
         // Payments should be in descending order by ID (most recent first)

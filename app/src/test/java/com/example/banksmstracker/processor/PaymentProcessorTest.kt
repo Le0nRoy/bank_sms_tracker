@@ -2,25 +2,20 @@ package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.serializer.ConfigLoader
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.builtins.ListSerializer
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 @Serializable
-data class SmsTestCase(
-    val id: String,
-    val rawMessage: String,
-    val address: String,
-    val expected: Payment
-)
+data class SmsTestCase(val id: String, val rawMessage: String, val address: String, val expected: Payment)
 
 object SmsTestLoader {
     private val json = Json { ignoreUnknownKeys = true }
@@ -34,7 +29,7 @@ class PaymentParserTest {
     private val configJson = loadAssetFile("default_rules.json")
     private val config = ConfigLoader.load(configJson)
     private val processor = ConfigLoader.createPaymentProcessor(config)
-    
+
     companion object {
         @JvmStatic
         fun smsTestCases(): List<SmsTestCase> {
@@ -42,17 +37,14 @@ class PaymentParserTest {
             return SmsTestLoader.loadTests(testDataJson)
         }
 
-        private fun loadTestResource(filename: String): String {
-            return javaClass.classLoader
-                ?.getResourceAsStream(filename)
-                ?.bufferedReader()
-                ?.readText()!!
-        }
+        private fun loadTestResource(filename: String): String = javaClass.classLoader
+            ?.getResourceAsStream(filename)
+            ?.bufferedReader()
+            ?.readText()!!
     }
-    
-    private fun loadAssetFile(filename: String): String {
-        return javaClass.classLoader?.getResourceAsStream(filename)?.bufferedReader()?.readText()!!
-    }
+
+    private fun loadAssetFile(filename: String): String =
+        javaClass.classLoader?.getResourceAsStream(filename)?.bufferedReader()?.readText()!!
 
     @ParameterizedTest(name = "Parsing SMS case {index}: {0}")
     @MethodSource("smsTestCases")
@@ -79,7 +71,7 @@ class PaymentParserTest {
             processor.getPaymentFromMessage(message, address)
         }
     }
-    
+
     @ParameterizedTest(name = "Categorizing payment case {index}: {0}")
     @MethodSource("smsTestCases")
     fun testCategoryAssignment(testCase: SmsTestCase) {
@@ -90,16 +82,26 @@ class PaymentParserTest {
         val allPayments = processor.paymentRepository.getAllPayments()
         assertFalse(allPayments.isEmpty())
         assertTrue(allPayments.any { it.merchant == testCase.expected.merchant })
-        
+
         // Check if category was assigned correctly
         val uncategorizedPayments = processor.paymentRepository.getUncategorizedPayments()
         if (testCase.expected.categoryId != null) {
-            assertEquals(testCase.expected.categoryId, processedPayment.categoryId, "Category mismatch in case ${testCase.id}")
-            assertTrue(uncategorizedPayments.isEmpty(), "Payment with category was returned by method, that returns uncategorized payments")
+            assertEquals(
+                testCase.expected.categoryId,
+                processedPayment.categoryId,
+                "Category mismatch in case ${testCase.id}"
+            )
+            assertTrue(
+                uncategorizedPayments.isEmpty(),
+                "Payment with category was returned by method, that returns uncategorized payments"
+            )
         } else {
             // If no category expected, it should be null
             assertEquals(null, processedPayment.categoryId, "Category should be null in case ${testCase.id}")
-            assertFalse(uncategorizedPayments.isEmpty(), "Payment without category was not returned by method, that returns uncategorized payments")
+            assertFalse(
+                uncategorizedPayments.isEmpty(),
+                "Payment without category was not returned by method, that returns uncategorized payments"
+            )
         }
     }
 }

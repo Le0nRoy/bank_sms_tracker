@@ -1,15 +1,13 @@
 package com.example.banksmstracker.repository
 
+import android.database.sqlite.SQLiteConstraintException
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.database.PaymentDao
 import com.example.banksmstracker.database.PaymentEntity
-import android.database.sqlite.SQLiteConstraintException
 import java.security.MessageDigest
 import kotlinx.coroutines.runBlocking
 
-class RoomPaymentRepository(
-    private val paymentDao: PaymentDao
-) : PaymentRepository {
+class RoomPaymentRepository(private val paymentDao: PaymentDao) : PaymentRepository {
 
     override fun savePayment(payment: Payment, rawMessage: String, senderAddress: String): Boolean {
         val hash = computeHash(rawMessage, senderAddress)

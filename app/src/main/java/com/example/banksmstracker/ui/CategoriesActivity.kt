@@ -17,7 +17,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.launch
 
-class CategoriesActivity : BaseActivity(), CategoriesAdapter.CategoryCallbacks {
+class CategoriesActivity :
+    BaseActivity(),
+    CategoriesAdapter.CategoryCallbacks {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: CategoriesAdapter
@@ -60,9 +62,8 @@ class CategoriesActivity : BaseActivity(), CategoriesAdapter.CategoryCallbacks {
     }
 }
 
-class CategoriesAdapter(
-    private val callbacks: CategoryCallbacks
-) : RecyclerView.Adapter<CategoriesAdapter.CategoryViewHolder>() {
+class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
+    RecyclerView.Adapter<CategoriesAdapter.CategoryViewHolder>() {
 
     interface CategoryCallbacks {
         fun onCategoryUpdated(category: Category)
@@ -126,12 +127,7 @@ class CategoriesAdapter(
             }
         }
 
-        private fun addMerchantField(
-            index: Int,
-            value: String,
-            category: Category,
-            callbacks: CategoryCallbacks
-        ) {
+        private fun addMerchantField(index: Int, value: String, category: Category, callbacks: CategoryCallbacks) {
             val editText = LayoutInflater.from(itemView.context)
                 .inflate(R.layout.view_dynamic_edit_text, merchantsContainer, false) as EditText
             editText.hint = itemView.context.getString(R.string.merchant_hint, index + 1)
@@ -147,9 +143,8 @@ class CategoriesAdapter(
     }
 }
 
-private fun Category.clone(): Category =
-    Category(
-        id = id,
-        name = name,
-        merchants = merchants.toMutableList()
-    )
+private fun Category.clone(): Category = Category(
+    id = id,
+    name = name,
+    merchants = merchants.toMutableList()
+)

@@ -78,9 +78,9 @@ object TestReporter {
      */
     fun generateTextReport(): String {
         val sb = StringBuilder()
-        sb.appendLine("=" .repeat(60))
+        sb.appendLine("=".repeat(60))
         sb.appendLine("TEST REPORT")
-        sb.appendLine("=" .repeat(60))
+        sb.appendLine("=".repeat(60))
         sb.appendLine()
 
         for (report in reports) {
@@ -245,12 +245,7 @@ data class TestStep(
 /**
  * Attachment data class.
  */
-data class Attachment(
-    val name: String,
-    val type: AttachmentType,
-    val content: ByteArray,
-    val path: String? = null
-) {
+data class Attachment(val name: String, val type: AttachmentType, val content: ByteArray, val path: String? = null) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -267,17 +262,30 @@ data class Attachment(
 }
 
 enum class TestStatus {
-    RUNNING, PASSED, FAILED, SKIPPED
+    RUNNING,
+    PASSED,
+    FAILED,
+    SKIPPED
 }
 
 enum class StepStatus {
-    PASSED, FAILED, SKIPPED
+    PASSED,
+    FAILED,
+    SKIPPED
 }
 
 enum class Severity {
-    BLOCKER, CRITICAL, NORMAL, MINOR, TRIVIAL
+    BLOCKER,
+    CRITICAL,
+    NORMAL,
+    MINOR,
+    TRIVIAL
 }
 
 enum class AttachmentType {
-    TEXT, FILE, SCREENSHOT, JSON, XML
+    TEXT,
+    FILE,
+    SCREENSHOT,
+    JSON,
+    XML
 }

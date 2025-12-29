@@ -8,10 +8,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 
 @Entity(tableName = "categories")
-data class CategoryEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val name: String
-)
+data class CategoryEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val name: String)
 
 @Entity(
     tableName = "category_merchants",
@@ -43,10 +40,7 @@ data class CategoryWithMerchants(
 )
 
 @Entity(tableName = "senders")
-data class SenderEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val name: String
-)
+data class SenderEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val name: String)
 
 @Entity(
     tableName = "sender_addresses",
@@ -80,11 +74,7 @@ data class SenderAddressEntity(
     ],
     indices = [Index(value = ["senderId"])]
 )
-data class SenderRuleEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val senderId: Long,
-    val regex: String
-)
+data class SenderRuleEntity(@PrimaryKey(autoGenerate = true) val id: Long = 0, val senderId: Long, val regex: String)
 
 data class SenderWithDetails(
     @Embedded val sender: SenderEntity,

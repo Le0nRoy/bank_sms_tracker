@@ -12,6 +12,25 @@ This document tracks known issues, design decisions requiring user input, and bl
 
 ## Active Issues
 
+### TODO-002: Pre-existing ktlint Violations
+**Status:** Documented
+**Created:** 2025-12-29
+
+**Description:**
+The ktlint integration revealed pre-existing code style violations in the codebase. These need to be fixed before CI can pass lint checks.
+
+**Violations (cannot be auto-corrected):**
+1. File naming: `SmsReceptionE2ETest.kt` should be `SmsReceiverE2ETest.kt`
+2. Property naming: `TAG` constants should use lowercase camelCase (`tag`)
+3. Various other violations fixed by `./gradlew ktlintFormat`
+
+**Resolution:**
+- Run `./gradlew ktlintFormat` to fix auto-correctable issues
+- Manually fix file naming and property naming violations
+- Or disable specific rules in `.editorconfig`
+
+---
+
 ### DESIGN-001: Category Cascade Implementation
 **Status:** Needs Decision
 **Created:** 2025-12-29

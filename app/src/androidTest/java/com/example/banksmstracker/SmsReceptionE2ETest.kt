@@ -9,13 +9,13 @@ import com.example.banksmstracker.data.PaymentRegexRule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.parser.SmsReceiver
 import com.example.banksmstracker.processor.PaymentProcessor
-import com.example.banksmstracker.repository.InMemoryPaymentRepository
 import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.repository.InMemoryPaymentRepository
+import kotlin.collections.listOf
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import kotlin.collections.listOf
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SmsReceiverE2ETest {
@@ -23,12 +23,11 @@ class SmsReceiverE2ETest {
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     private val TAG = "SmsReceiverE2ETest"
 
-    private fun buildSmsIntent(sender: String, body: String): Intent {
-        return Intent("android.provider.Telephony.SMS_RECEIVED").apply {
+    private fun buildSmsIntent(sender: String, body: String): Intent =
+        Intent("android.provider.Telephony.SMS_RECEIVED").apply {
             putExtra(SmsReceiver.EXTRA_TEST_SENDER, sender)
             putExtra(SmsReceiver.EXTRA_TEST_BODY, body)
         }
-    }
 
     @BeforeAll
     fun setup() {

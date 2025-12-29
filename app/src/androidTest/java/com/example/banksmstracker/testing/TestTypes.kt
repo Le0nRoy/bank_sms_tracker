@@ -8,19 +8,32 @@ import java.time.Instant
  */
 
 enum class TestStatus {
-    RUNNING, PASSED, FAILED, SKIPPED
+    RUNNING,
+    PASSED,
+    FAILED,
+    SKIPPED
 }
 
 enum class StepStatus {
-    PASSED, FAILED, SKIPPED
+    PASSED,
+    FAILED,
+    SKIPPED
 }
 
 enum class Severity {
-    BLOCKER, CRITICAL, NORMAL, MINOR, TRIVIAL
+    BLOCKER,
+    CRITICAL,
+    NORMAL,
+    MINOR,
+    TRIVIAL
 }
 
 enum class AttachmentType {
-    TEXT, FILE, SCREENSHOT, JSON, XML
+    TEXT,
+    FILE,
+    SCREENSHOT,
+    JSON,
+    XML
 }
 
 data class TestStep(
@@ -31,12 +44,7 @@ data class TestStep(
     var error: String? = null
 )
 
-data class Attachment(
-    val name: String,
-    val type: AttachmentType,
-    val content: ByteArray,
-    val path: String? = null
-) {
+data class Attachment(val name: String, val type: AttachmentType, val content: ByteArray, val path: String? = null) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

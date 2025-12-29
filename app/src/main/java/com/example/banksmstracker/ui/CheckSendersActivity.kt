@@ -6,12 +6,10 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.banksmstracker.R
 import com.example.banksmstracker.repository.ConfigRepository
-import com.example.banksmstracker.serializer.ConfigLoader
 
 class CheckSendersActivity : BaseActivity() {
 
@@ -23,7 +21,7 @@ class CheckSendersActivity : BaseActivity() {
         setContentView(R.layout.activity_check_senders)
 
         textView = findViewById(R.id.textViewCheckSenders)
-        
+
         if (checkSmsPermission()) {
             checkSenders()
         } else {
@@ -31,12 +29,10 @@ class CheckSendersActivity : BaseActivity() {
         }
     }
 
-    private fun checkSmsPermission(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.READ_SMS
-        ) == PackageManager.PERMISSION_GRANTED
-    }
+    private fun checkSmsPermission(): Boolean = ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.READ_SMS
+    ) == PackageManager.PERMISSION_GRANTED
 
     private fun requestSmsPermission() {
         ActivityCompat.requestPermissions(
@@ -46,11 +42,7 @@ class CheckSendersActivity : BaseActivity() {
         )
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == SMS_PERMISSION_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -65,13 +57,13 @@ class CheckSendersActivity : BaseActivity() {
         try {
             val configuredSenders = ConfigRepository.config.senders.flatMap { it.addresses }.toSet()
             val smsSenders = getSmsSenders()
-            
+
             val matchingSenders = smsSenders.intersect(configuredSenders)
             val nonMatchingSenders = smsSenders - configuredSenders
-            
+
             val result = StringBuilder()
             result.append("SMS Senders Check Results:\n\n")
-            
+
             if (matchingSenders.isNotEmpty()) {
                 result.append("✅ Senders with rules found:\n")
                 matchingSenders.forEach { sender ->
@@ -81,16 +73,15 @@ class CheckSendersActivity : BaseActivity() {
             } else {
                 result.append("❌ No senders with rules found in SMS storage.\n\n")
             }
-            
+
             if (nonMatchingSenders.isNotEmpty()) {
                 result.append("📋 All SMS senders (without rules):\n")
                 nonMatchingSenders.sorted().forEach { sender ->
                     result.append("• $sender\n")
                 }
             }
-            
+
             textView.text = result.toString()
-            
         } catch (e: Exception) {
             textView.text = "Error: ${e.message}"
             e.printStackTrace()
@@ -100,7 +91,7 @@ class CheckSendersActivity : BaseActivity() {
     private fun getSmsSenders(): Set<String> {
         val senders = mutableSetOf<String>()
         val uri = Uri.parse("content://sms")
-        
+
         val cursor: Cursor? = contentResolver.query(
             uri,
             arrayOf("DISTINCT address"),
@@ -108,7 +99,7 @@ class CheckSendersActivity : BaseActivity() {
             null,
             "address ASC"
         )
-        
+
         cursor?.use {
             val addressColumn = it.getColumnIndex("address")
             while (it.moveToNext()) {
@@ -118,7 +109,7 @@ class CheckSendersActivity : BaseActivity() {
                 }
             }
         }
-        
+
         return senders
     }
 }

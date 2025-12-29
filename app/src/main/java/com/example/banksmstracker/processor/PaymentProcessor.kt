@@ -25,12 +25,12 @@ class PaymentProcessor(
             val pattern = rule.regexPattern
             val match = pattern.find(message) ?: continue
 
-            val amount    = match.groupValues[1].toDoubleOrNull()
-            val currency  = match.groupValues[2]
-            val card      = match.groupValues[3]
-            val merchant  = match.groupValues[4]
+            val amount = match.groupValues[1].toDoubleOrNull()
+            val currency = match.groupValues[2]
+            val card = match.groupValues[3]
+            val merchant = match.groupValues[4]
             val timestamp = match.groupValues[5]
-            val balance   = match.groupValues[6].toDoubleOrNull()
+            val balance = match.groupValues[6].toDoubleOrNull()
 
             if (amount != null) {
                 return Payment(
@@ -57,14 +57,14 @@ class PaymentProcessor(
         }
         return categorizedPayment
     }
-    
+
     private fun assignCategory(payment: Payment): Payment {
         val merchant = payment.merchant ?: return payment
-        
+
         val category = categories.find { category ->
             category.merchants.any { it.equals(merchant, ignoreCase = true) }
         }
-        
+
         return if (category != null) {
             payment.copy(categoryId = category.name)
         } else {

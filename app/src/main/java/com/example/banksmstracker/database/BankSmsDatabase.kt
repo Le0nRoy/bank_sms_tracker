@@ -26,14 +26,12 @@ abstract class BankSmsDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: BankSmsDatabase? = null
 
-        fun getInstance(context: Context): BankSmsDatabase {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    BankSmsDatabase::class.java,
-                    "bank_sms_tracker.db"
-                ).build().also { INSTANCE = it }
-            }
+        fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
+            INSTANCE ?: Room.databaseBuilder(
+                context.applicationContext,
+                BankSmsDatabase::class.java,
+                "bank_sms_tracker.db"
+            ).build().also { INSTANCE = it }
         }
     }
 }

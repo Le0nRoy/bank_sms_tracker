@@ -124,13 +124,12 @@ object ConfigRepository {
         refreshConfigInternal()
     }
 
-    fun getPaymentProcessor(): com.example.banksmstracker.processor.PaymentProcessor {
-        return paymentProcessor ?: com.example.banksmstracker.processor.PaymentProcessor(
+    fun getPaymentProcessor(): com.example.banksmstracker.processor.PaymentProcessor =
+        paymentProcessor ?: com.example.banksmstracker.processor.PaymentProcessor(
             senders = config.senders,
             categories = config.categories,
             paymentRepository = paymentRepository
         ).also { paymentProcessor = it }
-    }
 
     suspend fun exportConfigJson(pretty: Boolean = true): String = withContext(Dispatchers.IO) {
         refreshConfigInternal()

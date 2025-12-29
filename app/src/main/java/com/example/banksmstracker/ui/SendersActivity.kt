@@ -18,7 +18,9 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.launch
 
-class SendersActivity : BaseActivity(), SendersAdapter.SenderCallbacks {
+class SendersActivity :
+    BaseActivity(),
+    SendersAdapter.SenderCallbacks {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: SendersAdapter
@@ -61,9 +63,7 @@ class SendersActivity : BaseActivity(), SendersAdapter.SenderCallbacks {
     }
 }
 
-class SendersAdapter(
-    private val callbacks: SenderCallbacks
-) : RecyclerView.Adapter<SendersAdapter.SenderViewHolder>() {
+class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adapter<SendersAdapter.SenderViewHolder>() {
 
     interface SenderCallbacks {
         fun onSenderUpdated(sender: Sender)
@@ -138,12 +138,7 @@ class SendersAdapter(
             }
         }
 
-        private fun addAddressField(
-            index: Int,
-            value: String,
-            sender: Sender,
-            callbacks: SenderCallbacks
-        ) {
+        private fun addAddressField(index: Int, value: String, sender: Sender, callbacks: SenderCallbacks) {
             val editText = LayoutInflater.from(itemView.context)
                 .inflate(R.layout.view_dynamic_edit_text, addressesContainer, false) as EditText
             editText.hint = itemView.context.getString(R.string.sender_address_hint, index + 1)
@@ -157,12 +152,7 @@ class SendersAdapter(
             addressesContainer.addView(editText)
         }
 
-        private fun addRuleField(
-            index: Int,
-            rule: PaymentRegexRule,
-            sender: Sender,
-            callbacks: SenderCallbacks
-        ) {
+        private fun addRuleField(index: Int, rule: PaymentRegexRule, sender: Sender, callbacks: SenderCallbacks) {
             val editText = LayoutInflater.from(itemView.context)
                 .inflate(R.layout.view_dynamic_edit_text, rulesContainer, false) as EditText
             editText.hint = itemView.context.getString(R.string.sender_rule_hint, index + 1)
@@ -178,10 +168,9 @@ class SendersAdapter(
     }
 }
 
-private fun Sender.clone(): Sender =
-    Sender(
-        id = id,
-        name = name,
-        addresses = addresses.toMutableList(),
-        rules = rules.map { PaymentRegexRule(id = it.id, regex = it.regex) }.toMutableList()
-    )
+private fun Sender.clone(): Sender = Sender(
+    id = id,
+    name = name,
+    addresses = addresses.toMutableList(),
+    rules = rules.map { PaymentRegexRule(id = it.id, regex = it.regex) }.toMutableList()
+)

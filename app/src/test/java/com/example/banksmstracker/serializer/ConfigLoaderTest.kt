@@ -1,7 +1,7 @@
 package com.example.banksmstracker.serializer
 
-import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
+import org.junit.jupiter.api.Test
 
 class ConfigLoaderTest {
 
@@ -32,12 +32,12 @@ class ConfigLoaderTest {
               ]
             }
         """.trimIndent()
-        
+
         assertFailsWith<IllegalArgumentException> {
             ConfigLoader.load(configJson)
         }
     }
-    
+
     @Test
     fun testMerchantInMultipleCategoriesValidation() {
         val configJson = """
@@ -65,7 +65,7 @@ class ConfigLoaderTest {
               ]
             }
         """.trimIndent()
-        
+
         assertFailsWith<IllegalArgumentException> {
             ConfigLoader.load(configJson)
         }

@@ -34,7 +34,7 @@ class ConfigPersistenceE2ETest {
         category.name = "Test Category"
         category.merchants = mutableListOf("Merchant1", "Merchant2")
         ConfigRepository.updateCategory(category)
-        
+
         // Get categories again (should read from database)
         val categories = ConfigRepository.getCategories()
         assertEquals(1, categories.size)
@@ -47,14 +47,14 @@ class ConfigPersistenceE2ETest {
         val category = ConfigRepository.addCategory()
         category.name = "Original Name"
         ConfigRepository.updateCategory(category)
-        
+
         category.name = "Updated Name"
         category.merchants = mutableListOf("Merchant1")
         ConfigRepository.updateCategory(category)
-        
+
         category.merchants = mutableListOf("Merchant1", "Merchant2", "Merchant3")
         ConfigRepository.updateCategory(category)
-        
+
         val categories = ConfigRepository.getCategories()
         assertEquals(1, categories.size)
         assertEquals("Updated Name", categories[0].name)
@@ -71,7 +71,7 @@ class ConfigPersistenceE2ETest {
             com.example.banksmstracker.data.PaymentRegexRule(regex = "Rule2")
         )
         ConfigRepository.updateSender(sender)
-        
+
         val senders = ConfigRepository.getSenders()
         assertEquals(1, senders.size)
         assertEquals("Test Bank", senders[0].name)
@@ -88,7 +88,7 @@ class ConfigPersistenceE2ETest {
             com.example.banksmstracker.data.PaymentRegexRule(regex = "Old Rule")
         )
         ConfigRepository.updateSender(sender)
-        
+
         sender.name = "Updated Bank"
         sender.addresses = mutableListOf("22222", "33333")
         sender.rules = mutableListOf(
@@ -96,7 +96,7 @@ class ConfigPersistenceE2ETest {
             com.example.banksmstracker.data.PaymentRegexRule(regex = "New Rule 2")
         )
         ConfigRepository.updateSender(sender)
-        
+
         val senders = ConfigRepository.getSenders()
         assertEquals(1, senders.size)
         assertEquals("Updated Bank", senders[0].name)
@@ -111,15 +111,15 @@ class ConfigPersistenceE2ETest {
         cat1.name = "Category 1"
         cat1.merchants = mutableListOf("Merchant1")
         ConfigRepository.updateCategory(cat1)
-        
+
         val cat2 = ConfigRepository.addCategory()
         cat2.name = "Category 2"
         cat2.merchants = mutableListOf("Merchant2", "Merchant3")
         ConfigRepository.updateCategory(cat2)
-        
+
         val categories = ConfigRepository.getCategories()
         assertEquals(2, categories.size)
-        
+
         val categoryMap = categories.associateBy { it.name }
         assertEquals("Category 1", categoryMap["Category 1"]?.name)
         assertEquals(1, categoryMap["Category 1"]?.merchants?.size)
@@ -133,15 +133,15 @@ class ConfigPersistenceE2ETest {
         sender1.name = "Bank 1"
         sender1.addresses = mutableListOf("11111")
         ConfigRepository.updateSender(sender1)
-        
+
         val sender2 = ConfigRepository.addSender()
         sender2.name = "Bank 2"
         sender2.addresses = mutableListOf("22222", "33333")
         ConfigRepository.updateSender(sender2)
-        
+
         val senders = ConfigRepository.getSenders()
         assertEquals(2, senders.size)
-        
+
         val senderMap = senders.associateBy { it.name }
         assertEquals("Bank 1", senderMap["Bank 1"]?.name)
         assertEquals(1, senderMap["Bank 1"]?.addresses?.size)
@@ -156,7 +156,7 @@ class ConfigPersistenceE2ETest {
         category.name = "Groceries"
         category.merchants = mutableListOf("Supermarket")
         ConfigRepository.updateCategory(category)
-        
+
         val sender = ConfigRepository.addSender()
         sender.name = "Bank"
         sender.addresses = mutableListOf("BANK123")
@@ -166,11 +166,11 @@ class ConfigPersistenceE2ETest {
             )
         )
         ConfigRepository.updateSender(sender)
-        
+
         // Get processor - should have updated config
         val processor = ConfigRepository.getPaymentProcessor()
         assertNotNull(processor)
-        
+
         // Verify config was updated
         val config = ConfigRepository.config
         assertEquals(1, config.categories.size)
@@ -186,20 +186,20 @@ class ConfigPersistenceE2ETest {
         category.name = "Persistence Test"
         category.merchants = mutableListOf("Test Merchant")
         ConfigRepository.updateCategory(category)
-        
+
         val sender = ConfigRepository.addSender()
         sender.name = "Persistence Bank"
         sender.addresses = mutableListOf("PERSIST")
         ConfigRepository.updateSender(sender)
-        
+
         // Simulate "restart" by resetting and reloading
         ConfigRepository.reset()
         ConfigRepository.load(context.applicationContext as android.app.Application)
-        
+
         // Data should still be there
         val categories = ConfigRepository.getCategories()
         val senders = ConfigRepository.getSenders()
-        
+
         // Note: This test assumes the database persists between resets
         // In a real scenario, you'd restart the app to test persistence
         // For now, we verify the repository loads existing data
