@@ -1,6 +1,7 @@
 package com.example.banksmstracker.repository
 
 import com.example.banksmstracker.data.Payment
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -35,7 +36,7 @@ class PaymentRepositoryTest {
     )
 
     @Test
-    fun `savePayment_addsPaymentToRepository`() {
+    fun `savePayment_addsPaymentToRepository`() = runBlocking {
         val payment = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         repository.savePayment(payment, "message-1", "sender-1")
         assertEquals(1, repository.getAllPayments().size)
@@ -43,7 +44,7 @@ class PaymentRepositoryTest {
     }
 
     @Test
-    fun `getAllPayments_returnsAllSavedPayments`() {
+    fun `getAllPayments_returnsAllSavedPayments`() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Test 1", categoryId = "cat1")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Test 2", categoryId = "cat2")
         repository.savePayment(payment1, "message-1", "sender-1")
@@ -55,12 +56,12 @@ class PaymentRepositoryTest {
     }
 
     @Test
-    fun `getAllPayments_returnsEmptyList_whenNoPaymentsSaved`() {
+    fun `getAllPayments_returnsEmptyList_whenNoPaymentsSaved`() = runBlocking {
         assertTrue(repository.getAllPayments().isEmpty())
     }
 
     @Test
-    fun `getPaymentsByCategory_returnsCorrectPayments`() {
+    fun `getPaymentsByCategory_returnsCorrectPayments`() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Groceries", categoryId = "cat_grocery")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Transport", categoryId = "cat_transport")
         val payment3 = createTestPayment(amount = 30.0, merchant = "More Groceries", categoryId = "cat_grocery")
@@ -75,7 +76,7 @@ class PaymentRepositoryTest {
     }
 
     @Test
-    fun `getPaymentsByCategory_returnsEmptyList_forUnknownCategory`() {
+    fun `getPaymentsByCategory_returnsEmptyList_forUnknownCategory`() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Groceries", categoryId = "cat_grocery")
         repository.savePayment(payment1, "message-1", "sender-1")
         val utilityPayments = repository.getPaymentsByCategory("cat_utility")
@@ -83,7 +84,7 @@ class PaymentRepositoryTest {
     }
 
     @Test
-    fun `getUncategorizedPayments_returnsOnlyPaymentsWithNullCategoryId`() {
+    fun `getUncategorizedPayments_returnsOnlyPaymentsWithNullCategoryId`() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Categorized", categoryId = "cat_misc")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Uncategorized 1", categoryId = null)
         val payment3 = createTestPayment(amount = 30.0, merchant = "Uncategorized 2", categoryId = null)
@@ -98,14 +99,14 @@ class PaymentRepositoryTest {
     }
 
     @Test
-    fun `getUncategorizedPayments_returnsEmptyList_whenAllAreCategorized`() {
+    fun `getUncategorizedPayments_returnsEmptyList_whenAllAreCategorized`() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Categorized", categoryId = "cat_misc")
         repository.savePayment(payment1, "message-1", "sender-1")
         assertTrue(repository.getUncategorizedPayments().isEmpty())
     }
 
     @Test
-    fun `savePayment_returnsFalseWhenDuplicate`() {
+    fun `savePayment_returnsFalseWhenDuplicate`() = runBlocking {
         val payment = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         val inserted = repository.savePayment(payment, "duplicate-message", "sender-1")
         val duplicateInsert = repository.savePayment(payment, "duplicate-message", "sender-1")

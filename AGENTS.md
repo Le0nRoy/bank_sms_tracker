@@ -140,3 +140,62 @@ When conversation context is summarized/compacted (agent tool, or ~2% context re
 3. Ensure `Completed Items Log` is current
 
 This ensures seamless continuation across context boundaries.
+
+## Bug Reporting (CRITICAL)
+
+When a bug is discovered during development or testing:
+
+### 1. Create Bug Report File
+Create a new file in `bugs/` directory with format `BUG-XXX-short-description.md`:
+
+```markdown
+# BUG-XXX: Short Title
+
+## Status
+- [ ] Reported
+- [ ] In Progress
+- [ ] Fixed
+- [ ] Verified
+
+## Description
+Clear description of the bug.
+
+## Steps to Reproduce
+1. Step one
+2. Step two
+3. ...
+
+## Expected Behavior
+What should happen.
+
+## Actual Behavior
+What actually happens.
+
+## Root Cause
+(Fill after investigation)
+
+## Fix
+(Fill after fixing)
+
+## Verification
+- [ ] Unit test added/updated
+- [ ] Integration test passes
+- [ ] Appium test passes (if UI-related)
+
+## Related Files
+- `path/to/file.kt`
+```
+
+### 2. Add Task to TODO.md
+Add entry under appropriate phase:
+```markdown
+- [ ] Fix BUG-XXX: Short description
+```
+
+### 3. Fix and Verify
+1. Implement fix
+2. Add/update tests to prevent regression
+3. Run all related tests
+4. Update bug report status to Fixed/Verified
+
+**NEVER return control to user with unfixed bugs** - All reported bugs must be resolved before completing a task.

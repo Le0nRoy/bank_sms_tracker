@@ -36,12 +36,18 @@ class PaymentProcessor(
             val pattern = rule.regexPattern
             val match = pattern.find(message) ?: continue
 
-            val amount = match.groupValues[1].toDoubleOrNull()
-            val currency = match.groupValues[2]
-            val card = match.groupValues[3]
-            val merchant = match.groupValues[4]
-            val timestamp = match.groupValues[5]
-            val balance = match.groupValues[6].toDoubleOrNull()
+            // Validate that regex has at least 6 capture groups
+            if (match.groupValues.size < 7) {
+                Log.w(TAG, "Regex rule has insufficient groups (${match.groupValues.size - 1}), need 6")
+                continue
+            }
+
+            val amount = match.groupValues.getOrNull(1)?.toDoubleOrNull()
+            val currency = match.groupValues.getOrNull(2) ?: ""
+            val card = match.groupValues.getOrNull(3)
+            val merchant = match.groupValues.getOrNull(4)
+            val timestamp = match.groupValues.getOrNull(5)
+            val balance = match.groupValues.getOrNull(6)?.toDoubleOrNull()
 
             if (amount != null) {
                 return Payment(
@@ -59,9 +65,10 @@ class PaymentProcessor(
         throw UnparsedMessageException(message)
     }
 
-    fun processMessage(message: String, address: String): Payment {
+    suspend fun processMessage(message: String, address: String): Payment {
         val payment = this.getPaymentFromMessage(message, address)
-        val categorizedPayment = assignCategory(payment!!)
+            ?: throw UnparsedMessageException("Failed to parse message")
+        val categorizedPayment = assignCategory(payment)
         val inserted = paymentRepository.savePayment(categorizedPayment, message, address)
         if (!inserted) {
             Log.d(TAG, "Duplicate payment skipped for sender $address")

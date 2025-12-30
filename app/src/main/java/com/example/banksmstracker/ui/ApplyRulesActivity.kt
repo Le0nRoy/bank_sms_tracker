@@ -8,8 +8,12 @@ import android.os.Bundle
 import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.example.banksmstracker.R
 import com.example.banksmstracker.repository.ConfigRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ApplyRulesActivity : BaseActivity() {
 
@@ -54,70 +58,86 @@ class ApplyRulesActivity : BaseActivity() {
     }
 
     private fun applyRules() {
-        try {
-            val config = ConfigRepository.config
-            val processor = ConfigRepository.getPaymentProcessor()
+        textView.text = "Loading..."
 
-            val configuredSenders = config.senders.flatMap { it.addresses }.toSet()
-            val smsMessages = getSmsMessages(configuredSenders)
+        lifecycleScope.launch {
+            try {
+                ConfigRepository.load(application)
+                val config = ConfigRepository.config
+                val processor = ConfigRepository.getPaymentProcessor()
 
-            val result = StringBuilder()
-            result.append("Payment Parsing Results:\n\n")
+                val configuredSenders = config.senders.flatMap { it.addresses }.toSet()
+                val smsMessages = getSmsMessages(configuredSenders)
 
-            if (smsMessages.isEmpty()) {
-                result.append("❌ No SMS messages found from configured senders.\n")
-            } else {
-                result.append("📱 Found ${smsMessages.size} SMS messages from configured senders.\n\n")
+                val result = StringBuilder()
+                result.append("Payment Parsing Results:\n\n")
 
-                var parsedCount = 0
-                var categorizedCount = 0
+                if (smsMessages.isEmpty()) {
+                    result.append("❌ No SMS messages found from configured senders.\n")
+                } else {
+                    result.append("📱 Found ${smsMessages.size} SMS messages from configured senders.\n\n")
 
-                smsMessages.forEach { (sender, messages) ->
-                    result.append("📧 $sender (${messages.size} messages):\n")
+                    var parsedCount = 0
+                    var categorizedCount = 0
 
-                    messages.forEach { message ->
-                        try {
-                            val payment = processor.processMessage(message, sender)
-                            parsedCount++
+                    for ((sender, messages) in smsMessages) {
+                        result.append("📧 $sender (${messages.size} messages):\n")
 
-                            result.append("  ✅ Parsed: ${payment.amount} ${payment.currency}\n")
-                            result.append("     Merchant: ${payment.merchant}\n")
-                            result.append("     Category: ${payment.categoryId ?: "Uncategorized"}\n")
-                            result.append("     Date: ${payment.timestamp}\n")
-                            result.append("     Balance: ${payment.balance} ${payment.currency}\n\n")
+                        for (message in messages) {
+                            try {
+                                val payment = withContext(Dispatchers.IO) {
+                                    processor.processMessage(message, sender)
+                                }
+                                parsedCount++
 
-                            if (payment.categoryId != null) {
-                                categorizedCount++
+                                result.append("  ✅ Parsed: ${payment.amount} ${payment.currency}\n")
+                                result.append("     Merchant: ${payment.merchant}\n")
+                                result.append("     Category: ${payment.categoryId ?: "Uncategorized"}\n")
+                                result.append("     Date: ${payment.timestamp}\n")
+                                result.append("     Balance: ${payment.balance} ${payment.currency}\n\n")
+
+                                if (payment.categoryId != null) {
+                                    categorizedCount++
+                                }
+                            } catch (e: Exception) {
+                                result.append("  ❌ Error parsing: ${e.message}\n\n")
                             }
-                        } catch (e: Exception) {
-                            result.append("  ❌ Error parsing: ${e.message}\n\n")
                         }
                     }
+
+                    result.append("\n📊 Summary:\n")
+                    result.append("• Total messages: ${smsMessages.values.sumOf { it.size }}\n")
+                    result.append("• Successfully parsed: $parsedCount\n")
+                    result.append("• Categorized: $categorizedCount\n")
+                    result.append("• Uncategorized: ${parsedCount - categorizedCount}\n")
                 }
 
-                result.append("\n📊 Summary:\n")
-                result.append("• Total messages: ${smsMessages.values.sumOf { it.size }}\n")
-                result.append("• Successfully parsed: $parsedCount\n")
-                result.append("• Categorized: $categorizedCount\n")
-                result.append("• Uncategorized: ${parsedCount - categorizedCount}\n")
+                textView.text = result.toString()
+            } catch (e: Exception) {
+                textView.text = "Error: ${e.message}"
+                e.printStackTrace()
             }
-
-            textView.text = result.toString()
-        } catch (e: Exception) {
-            textView.text = "Error: ${e.message}"
-            e.printStackTrace()
         }
     }
 
     private fun getSmsMessages(configuredSenders: Set<String>): Map<String, List<String>> {
         val messages = mutableMapOf<String, MutableList<String>>()
+
+        if (configuredSenders.isEmpty()) {
+            return messages
+        }
+
         val uri = Uri.parse("content://sms")
+
+        // Use parameterized query to prevent SQL injection
+        val placeholders = configuredSenders.joinToString(",") { "?" }
+        val selectionArgs = configuredSenders.toTypedArray()
 
         val cursor: Cursor? = contentResolver.query(
             uri,
             arrayOf("address", "body"),
-            "address IN (${configuredSenders.joinToString(",") { "'$it'" }})",
-            null,
+            "address IN ($placeholders)",
+            selectionArgs,
             "date DESC"
         )
 

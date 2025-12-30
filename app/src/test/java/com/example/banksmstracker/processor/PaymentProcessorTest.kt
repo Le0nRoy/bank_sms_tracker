@@ -7,6 +7,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -74,7 +75,7 @@ class PaymentParserTest {
 
     @ParameterizedTest(name = "Categorizing payment case {index}: {0}")
     @MethodSource("smsTestCases")
-    fun testCategoryAssignment(testCase: SmsTestCase) {
+    fun testCategoryAssignment(testCase: SmsTestCase) = runBlocking {
         val processedPayment = processor.processMessage(testCase.rawMessage, testCase.address)
         assertNotNull(processedPayment, "Parsing failed for case ${testCase.id}")
 

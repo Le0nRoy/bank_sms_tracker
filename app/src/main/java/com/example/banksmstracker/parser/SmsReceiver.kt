@@ -8,6 +8,9 @@ import android.telephony.SmsMessage
 import android.util.Log
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.ConfigRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class SmsReceiver : BroadcastReceiver() {
 
@@ -21,7 +24,7 @@ class SmsReceiver : BroadcastReceiver() {
 
     private lateinit var paymentProcessor: PaymentProcessor
 
-    // For testing only TODO remove it from the prod version
+    // For testing only
     fun setPaymentProcessorForTest(processor: PaymentProcessor) {
         this.paymentProcessor = processor
     }
@@ -42,7 +45,14 @@ class SmsReceiver : BroadcastReceiver() {
         val testBody = intent.getStringExtra(EXTRA_TEST_BODY)
 
         if (!testSender.isNullOrBlank() && !testBody.isNullOrBlank()) {
-            handleMessage(testSender, testBody)
+            val pendingResult = goAsync()
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    handleMessage(testSender, testBody)
+                } finally {
+                    pendingResult.finish()
+                }
+            }
             return
         }
 
@@ -61,15 +71,21 @@ class SmsReceiver : BroadcastReceiver() {
             SmsMessage.createFromPdu(it as? ByteArray, format)
         } ?: return
 
-        for (message in messages) {
-            val sender = message.originatingAddress ?: continue
-            val body = message.messageBody
-
-            handleMessage(sender, body)
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                for (message in messages) {
+                    val sender = message.originatingAddress ?: continue
+                    val body = message.messageBody
+                    handleMessage(sender, body)
+                }
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
-    private fun handleMessage(sender: String, body: String) {
+    private suspend fun handleMessage(sender: String, body: String) {
         try {
             val payment = paymentProcessor.processMessage(body, sender)
             Log.d(

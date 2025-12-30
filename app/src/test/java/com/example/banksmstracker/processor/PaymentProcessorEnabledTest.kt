@@ -8,6 +8,7 @@ import com.example.banksmstracker.repository.PaymentRepository
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -106,7 +107,7 @@ class PaymentProcessorEnabledTest {
     }
 
     @Test
-    fun `disabled category should not be assigned`() {
+    fun `disabled category should not be assigned`() = runBlocking {
         val senders = listOf(
             Sender(
                 id = 1,
@@ -132,7 +133,7 @@ class PaymentProcessorEnabledTest {
     }
 
     @Test
-    fun `enabled category should be assigned`() {
+    fun `enabled category should be assigned`() = runBlocking {
         val senders = listOf(
             Sender(
                 id = 1,
@@ -184,16 +185,16 @@ class PaymentProcessorEnabledTest {
     class TestPaymentRepository : PaymentRepository {
         private val payments = mutableListOf<Payment>()
 
-        override fun savePayment(payment: Payment, message: String, address: String): Boolean {
+        override suspend fun savePayment(payment: Payment, message: String, address: String): Boolean {
             payments.add(payment)
             return true
         }
 
-        override fun getAllPayments(): List<Payment> = payments.toList()
+        override suspend fun getAllPayments(): List<Payment> = payments.toList()
 
-        override fun getPaymentsByCategory(categoryId: String): List<Payment> =
+        override suspend fun getPaymentsByCategory(categoryId: String): List<Payment> =
             payments.filter { it.categoryId == categoryId }
 
-        override fun getUncategorizedPayments(): List<Payment> = payments.filter { it.categoryId == null }
+        override suspend fun getUncategorizedPayments(): List<Payment> = payments.filter { it.categoryId == null }
     }
 }
