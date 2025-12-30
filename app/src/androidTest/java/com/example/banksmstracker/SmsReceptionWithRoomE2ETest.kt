@@ -10,7 +10,7 @@ import com.example.banksmstracker.repository.RoomPaymentRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -29,10 +29,20 @@ class SmsReceptionWithRoomE2ETest {
             putExtra(SmsReceiver.EXTRA_TEST_BODY, body)
         }
 
-    @BeforeAll
+    @BeforeEach
     fun setup() {
-        // Load config repository
+        // Reset and reload config repository
+        ConfigRepository.reset()
         ConfigRepository.load(context.applicationContext as android.app.Application)
+
+        // Clear all data to ensure test isolation
+        runBlocking {
+            ConfigRepository.clearAllData()
+        }
+
+        // Reload after clearing (without seeding)
+        ConfigRepository.reset()
+        ConfigRepository.load(context.applicationContext as android.app.Application, seedIfEmpty = false)
 
         // Set up test sender and category in config
         runBlocking {
@@ -128,11 +138,7 @@ class SmsReceptionWithRoomE2ETest {
 
     @Test
     fun `paymentIsCategorizedCorrectly`() {
-        val smsReceiver = SmsReceiver()
-        val processor = ConfigRepository.getPaymentProcessor()
-        smsReceiver.setPaymentProcessorForTest(processor)
-
-        // Add more merchants to test categorization
+        // Add TestStore to Shops category
         runBlocking {
             val category = ConfigRepository.getCategories().firstOrNull { it.name == "Shops" }
             if (category != null) {
@@ -141,11 +147,9 @@ class SmsReceptionWithRoomE2ETest {
             }
         }
 
-        // Reload processor to get updated config
-        ConfigRepository.reset()
-        ConfigRepository.load(context.applicationContext as android.app.Application)
-        val updatedProcessor = ConfigRepository.getPaymentProcessor()
-        smsReceiver.setPaymentProcessorForTest(updatedProcessor)
+        val smsReceiver = SmsReceiver()
+        val processor = ConfigRepository.getPaymentProcessor()
+        smsReceiver.setPaymentProcessorForTest(processor)
 
         val body = "Payment 150.00 USD card 9999 TestStore at 20230909 bal 250.00"
         smsReceiver.onReceive(context, buildSmsIntent("BANK", body))

@@ -24,8 +24,17 @@ class ConfigExportE2ETest {
 
     @BeforeEach
     fun setUp() {
+        // First reset to close any existing database connection
         ConfigRepository.reset()
+        // Load fresh instance
         ConfigRepository.load(context.applicationContext as android.app.Application)
+        // Clear all data to ensure test isolation
+        runBlocking {
+            ConfigRepository.clearAllData()
+        }
+        // Reload after clearing to have a fresh empty config (without seeding)
+        ConfigRepository.reset()
+        ConfigRepository.load(context.applicationContext as android.app.Application, seedIfEmpty = false)
     }
 
     @Test

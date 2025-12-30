@@ -1,0 +1,48 @@
+# Appium Docker setup for CI/CD environments
+# Note: This requires an Android emulator running on the host or a separate container
+#
+# For local development, run Appium natively:
+#   npm install -g appium
+#   appium driver install uiautomator2
+#   appium
+
+services:
+  appium:
+    image: appium/appium:latest
+    container_name: appium-server
+    ports:
+      - "4723:4723"
+    environment:
+      - APPIUM_LOG_LEVEL=info
+    # For connecting to host emulator, use host network mode
+    network_mode: "host"
+    volumes:
+      # Mount APK files for installation
+      - ./app/build/outputs/apk:/apk:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4723/status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Optional: Android emulator container (requires KVM support)
+  # Uncomment if your CI/CD environment supports nested virtualization
+  # android-emulator:
+  #   image: budtmo/docker-android:emulator_14.0
+  #   container_name: android-emulator
+  #   privileged: true
+  #   ports:
+  #     - "5554:5554"
+  #     - "5555:5555"
+  #   environment:
+  #     - EMULATOR_DEVICE="Samsung Galaxy S10"
+  #     - WEB_VNC=true
+  #   devices:
+  #     - /dev/kvm
+
+# Usage:
+#   1. Start emulator on host: emulator -avd <avd_name>
+#   2. Start Appium: docker-compose -f docker-compose.appium.yml up -d
+#   3. Run tests: ./gradlew test --tests "*.appium.*"
+#   4. Stop: docker-compose -f docker-compose.appium.yml down

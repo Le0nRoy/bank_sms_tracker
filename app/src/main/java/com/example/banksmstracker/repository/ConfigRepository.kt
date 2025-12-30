@@ -40,14 +40,14 @@ object ConfigRepository {
     val config: SmsConfig
         get() = _config ?: throw IllegalStateException("Config not initialized")
 
-    fun load(application: Application) {
+    fun load(application: Application, seedIfEmpty: Boolean = true) {
         if (_config != null) return
         database = BankSmsDatabase.getInstance(application)
         configDao = database.configDao()
         paymentRepository = RoomPaymentRepository(database.paymentDao())
 
         runBlocking {
-            if (isConfigEmpty()) {
+            if (seedIfEmpty && isConfigEmpty()) {
                 seedFromAssets(application)
             }
             refreshConfigInternal()
@@ -428,5 +428,24 @@ object ConfigRepository {
     internal fun reset() {
         _config = null
         paymentProcessor = null
+        BankSmsDatabase.resetInstance()
     }
+
+    /**
+     * Clear all data from the database. Used for testing.
+     * After calling this, you must call load() again to reinitialize.
+     */
+    internal suspend fun clearAllData() = withContext(Dispatchers.IO) {
+        if (::database.isInitialized) {
+            database.clearAllTables()
+        }
+        // Reset in-memory state - caller must call load() again
+        _config = null
+        paymentProcessor = null
+    }
+
+    /**
+     * Check if config is loaded.
+     */
+    internal fun isLoaded(): Boolean = _config != null
 }

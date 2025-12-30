@@ -138,6 +138,10 @@
 - [x] E2E: Category management flow (CategoryManagementAppiumTest)
 - [x] E2E: Sender management flow (SenderManagementAppiumTest)
 - [x] E2E: Full SMS to payment flow (SmsToPaymentFlowAppiumTest)
+- [x] E2E: Main navigation flow (MainNavigationAppiumTest)
+- [x] E2E: Bug report feature (BugReportAppiumTest)
+- [x] E2E: Regex builder feature (RegexBuilderAppiumTest)
+- [x] Docker setup for Appium server (docker-compose.appium.yml)
 
 ---
 
@@ -199,3 +203,8 @@
 | 2025-12-30 | ConfigImportE2ETest + EnabledDisabledE2ETest added | 6f083cb |
 | 2025-12-30 | Fixed JUnit 5 Android test setup | 6f083cb |
 | 2025-12-30 | Appium UI E2E tests setup | - |
+| 2025-12-30 | Added MainNavigationAppiumTest (14 tests) | - |
+| 2025-12-30 | Added BugReportAppiumTest (12 tests) | - |
+| 2025-12-30 | Added RegexBuilderAppiumTest (10 tests) | - |
+| 2025-12-30 | Docker Appium setup (docker-compose.appium.yml) | - |
+| 2025-12-30 | Fixed Appium test isolation issues | - |

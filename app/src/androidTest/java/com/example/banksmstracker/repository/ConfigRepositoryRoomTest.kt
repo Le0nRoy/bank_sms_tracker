@@ -23,9 +23,17 @@ class ConfigRepositoryRoomTest {
 
     @BeforeEach
     fun setUp() {
+        // First reset to close any existing database connection
         ConfigRepository.reset()
-        // Note: For a production test, you might want to clear tables,
-        // but ConfigRepository handles initialization properly
+        // Load fresh instance
+        ConfigRepository.load(context.applicationContext as android.app.Application)
+        // Clear all data to ensure test isolation
+        runBlocking {
+            ConfigRepository.clearAllData()
+        }
+        // Reload after clearing to have a fresh empty config (without seeding)
+        ConfigRepository.reset()
+        ConfigRepository.load(context.applicationContext as android.app.Application, seedIfEmpty = false)
     }
 
     @AfterEach

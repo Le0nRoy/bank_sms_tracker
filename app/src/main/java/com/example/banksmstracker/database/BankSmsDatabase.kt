@@ -49,5 +49,15 @@ abstract class BankSmsDatabase : RoomDatabase() {
                 .build()
                 .also { INSTANCE = it }
         }
+
+        /**
+         * Close and clear the database instance. Used for testing.
+         */
+        internal fun resetInstance() {
+            synchronized(this) {
+                INSTANCE?.close()
+                INSTANCE = null
+            }
+        }
     }
 }

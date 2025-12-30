@@ -11,7 +11,6 @@ import com.example.banksmstracker.repository.RoomPaymentRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -24,7 +23,6 @@ import org.junit.jupiter.api.TestInstance
 class PaymentDeduplicationE2ETest {
 
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-    private lateinit var database: BankSmsDatabase
     private lateinit var paymentRepository: RoomPaymentRepository
     private lateinit var processor: PaymentProcessor
 
@@ -34,22 +32,34 @@ class PaymentDeduplicationE2ETest {
             putExtra(SmsReceiver.EXTRA_TEST_BODY, body)
         }
 
-    @BeforeAll
+    @BeforeEach
     fun setup() {
-        // Initialize database and repository
-        database = BankSmsDatabase.getInstance(context)
-        paymentRepository = RoomPaymentRepository(database.paymentDao())
-
-        // Load config
+        // Reset and reload config repository
+        ConfigRepository.reset()
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
-        // Create test sender and category
+        // Clear all data to ensure test isolation
+        runBlocking {
+            ConfigRepository.clearAllData()
+        }
+
+        // Reload after clearing (without seeding)
+        ConfigRepository.reset()
+        ConfigRepository.load(context.applicationContext as android.app.Application, seedIfEmpty = false)
+
+        // Initialize repository
+        val database = BankSmsDatabase.getInstance(context)
+        paymentRepository = RoomPaymentRepository(database.paymentDao())
+
+        // Create test sender
         runBlocking {
             val sender = ConfigRepository.addSender()
             sender.name = "Test Bank"
             sender.addresses = mutableListOf("BANK123")
             sender.rules = mutableListOf(
-                PaymentRegexRule(regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})")
+                PaymentRegexRule(
+                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                )
             )
             ConfigRepository.updateSender(sender)
 
@@ -59,17 +69,6 @@ class PaymentDeduplicationE2ETest {
             ConfigRepository.updateCategory(category)
 
             processor = ConfigRepository.getPaymentProcessor()
-        }
-    }
-
-    @BeforeEach
-    fun clearPayments() {
-        // Clear payments before each test
-        runBlocking {
-            val payments = paymentRepository.getAllPayments()
-            // Note: In a real scenario, you'd have a delete method, but for testing
-            // we'll use a fresh repository or clear manually
-            // For now, we'll rely on unique constraint for deduplication
         }
     }
 
@@ -131,7 +130,9 @@ class PaymentDeduplicationE2ETest {
             sender2.name = "Another Bank"
             sender2.addresses = mutableListOf("BANK456")
             sender2.rules = mutableListOf(
-                PaymentRegexRule(regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})")
+                PaymentRegexRule(
+                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                )
             )
             ConfigRepository.updateSender(sender2)
 
