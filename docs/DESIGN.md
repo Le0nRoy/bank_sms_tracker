@@ -189,49 +189,55 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | UI: Senders | ✅ | Add/edit senders, addresses, and rules |
 | Room Persistence | ✅ | SQLite database for all data |
 
-### 6.2 Planned Features (TODO)
+### 6.2 Extended Features (Implemented)
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Config Import | ✅ | Import and merge config from JSON file |
+| Enable/Disable Rules | ✅ | Toggle individual senders, rules, categories |
+| Regex Builder UI | ✅ | Visual tool to build and test regex patterns |
+| Payments List UI | ✅ | View payments with filter by category |
+| CSV Export | ✅ | Export payments to CSV file |
+| Bug Report | ✅ | Send bug reports via built-in email |
+
+### 6.3 Planned Features (TODO)
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Config Import | High | Import and merge config from JSON file |
-| Enable/Disable Rules | High | Toggle individual senders, rules, categories |
-| Regex Builder UI | High | Visual tool to build and test regex patterns |
-| Payments List UI | High | View payments with filter by sender/category |
-| CSV Export | Medium | Export payments to CSV file |
+| Filter by sender | Medium | Filter payments by sender |
+| Filter by date range | Medium | Filter payments by date |
 | Category Cascade | Medium | Update payment categories when rule changes |
-| Retrospective Parsing | Medium | Process historical SMS from specified date range |
-| Bug Report | Low | Send bug reports via built-in email |
 | Default Configs | Low | Build-time email config, runtime sender/category defaults |
 
-### 6.3 Feature Details
+### 6.4 Feature Details
 
-#### 6.3.1 Config Import (Merge Rules)
+#### 6.4.1 Config Import (Merge Rules)
 During import, rules should be **appended** to existing configuration:
 - New senders → Add to database
 - Existing sender (by name) → Merge addresses and rules
 - New categories → Add to database
 - Existing category (by name) → Merge merchants
 
-#### 6.3.2 Enable/Disable Rules
+#### 6.4.2 Enable/Disable Rules
 All configurable entities should have an `enabled` boolean field:
 - Disabled senders → Skip during SMS processing
 - Disabled rules → Skip during regex matching
 - Disabled categories → Exclude from category assignment
 
-#### 6.3.3 Regex Builder
+#### 6.4.3 Regex Builder
 Interactive UI component that:
 - Shows regex input field
 - Shows sample message input
 - Highlights matches in real-time
 - Displays captured groups with labels
 
-#### 6.3.4 Category Cascade
+#### 6.4.4 Category Cascade
 When a regex rule's category assignment changes:
 1. Find all payments processed by that rule
 2. Update their categoryId to the new category
 3. Requires tracking which rule parsed each payment
 
-#### 6.3.5 Retrospective Parsing
+#### 6.4.5 Retrospective Parsing
 Allow processing historical SMS:
 1. Request SMS read permission
 2. Query SMS inbox for date range
@@ -265,13 +271,13 @@ Build system should sync these files automatically via Gradle task.
 
 ```
         ┌─────────┐
-        │  E2E    │  ← Appium/UIAutomator
+        │  E2E    │  ← Appium (68 tests)
         │  Tests  │     Full user flows
        ─┼─────────┼─
-       │Integration│  ← AndroidJUnit
+       │Integration│  ← AndroidJUnit (66 tests)
        │   Tests   │     Room DB, Repositories
       ─┼───────────┼─
-      │   Unit     │  ← JUnit 5
+      │   Unit     │  ← JUnit 5 (30+ tests)
       │   Tests    │     Processors, Parsers, Logic
       ─┴───────────┴─
 ```
@@ -281,10 +287,26 @@ Build system should sync these files automatically via Gradle task.
 | Category | Framework | Location | Scope |
 |----------|-----------|----------|-------|
 | Unit | JUnit 5 | `src/test/` | Business logic, parsing, data classes |
-| Integration | AndroidJUnit | `src/androidTest/` | Room DB, Repositories, Config loading |
-| E2E | Appium (planned) | `src/androidTest/` | Full UI flows, SMS reception |
+| Integration | AndroidJUnit5 | `src/androidTest/` | Room DB, Repositories, Config loading |
+| E2E/Appium | Appium + JUnit 5 | `src/test/appium/` | Full UI flows, navigation |
 
-### 8.3 Test Data Management
+### 8.3 Appium UI Tests
+
+Docker-based Appium setup for UI automation:
+- **68 tests** across 6 test classes
+- **82% pass rate** (56/68 tests)
+- Run with: `make test-appium` or `./gradlew testDebugUnitTest --tests "*.appium.*"`
+
+| Test Class | Tests | Coverage |
+|------------|-------|----------|
+| MainNavigationAppiumTest | 14 | Main screen navigation |
+| CategoryManagementAppiumTest | 11 | Category CRUD operations |
+| SenderManagementAppiumTest | 11 | Sender CRUD operations |
+| SmsToPaymentFlowAppiumTest | 10 | End-to-end payment flow |
+| BugReportAppiumTest | 12 | Bug report feature |
+| RegexBuilderAppiumTest | 10 | Regex builder feature |
+
+### 8.4 Test Data Management
 - Shared test fixtures in `src/test/resources/`
 - Gradle task to copy to `src/androidTest/assets/` during build
 - SMS test cases in `sms_tests.json`
@@ -302,8 +324,10 @@ Build system should sync these files automatically via Gradle task.
 │ • Check Senders│──────▶ CheckSendersActivity
 │ • Apply Rules  │──────▶ ApplyRulesActivity
 │ • Export Config│──────▶ Share Intent
-│ • Payments (TODO)│────▶ PaymentsActivity
-│ • Bug Report(TODO)│───▶ Email Intent
+│ • Import Config│──────▶ File Picker
+│ • Payments     │──────▶ PaymentsActivity
+│ • Regex Builder│──────▶ RegexBuilderActivity
+│ • Bug Report   │──────▶ BugReportActivity
 └────────────────┘
 ```
 
@@ -315,8 +339,10 @@ Build system should sync these files automatically via Gradle task.
 | **CategoriesActivity** | List and edit spending categories with merchants |
 | **SendersActivity** | List and edit senders with addresses and rules |
 | **CheckSendersActivity** | Test regex patterns against sample messages |
-| **ApplyRulesActivity** | Manually trigger rule application on existing payments |
-| **PaymentsActivity** (TODO) | View parsed payments with filtering |
+| **ApplyRulesActivity** | Manually trigger rule application on SMS inbox |
+| **PaymentsActivity** | View parsed payments with category filtering |
+| **RegexBuilderActivity** | Visual regex testing tool |
+| **BugReportActivity** | Bug report form with device info collection |
 
 ## 10. Security Considerations
 
@@ -370,5 +396,27 @@ app/src/main/java/com/example/banksmstracker/
     ├── CategoriesActivity.kt
     ├── SendersActivity.kt
     ├── CheckSendersActivity.kt
-    └── ApplyRulesActivity.kt
+    ├── ApplyRulesActivity.kt
+    ├── PaymentsActivity.kt
+    ├── RegexBuilderActivity.kt
+    └── BugReportActivity.kt
+
+app/src/test/java/com/example/banksmstracker/
+├── appium/                        # Appium UI tests
+│   ├── AppiumBaseTest.kt
+│   ├── MainNavigationAppiumTest.kt
+│   ├── CategoryManagementAppiumTest.kt
+│   ├── SenderManagementAppiumTest.kt
+│   ├── SmsToPaymentFlowAppiumTest.kt
+│   ├── BugReportAppiumTest.kt
+│   └── RegexBuilderAppiumTest.kt
+└── repository/                    # Unit tests
+    ├── ConfigRepositoryTest.kt
+    └── PaymentRepositoryTest.kt
+
+# Project root
+├── docker-compose.appium.yml      # Appium Docker setup
+├── Makefile                       # Build automation
+├── AGENTS.md                      # AI agent guidelines
+└── TODO.md                        # Project progress tracking
 ```

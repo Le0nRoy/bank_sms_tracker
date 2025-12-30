@@ -7,16 +7,16 @@ This document describes the testing strategy, test structure, and usage guidelin
 ## Test Pyramid
 
 ```
-         ┌───────────┐
-         │   E2E     │  ← Full user flows, UI automation
-         │   Tests   │     ~5-10 tests
-        ─┼───────────┼─
-        │ Integration │  ← Room DB, Repositories, Context
-        │    Tests    │     ~15-20 tests
-       ─┼─────────────┼─
-       │    Unit      │  ← Business logic, Parsing, Data
-       │    Tests     │     ~30+ tests
-       ─┴─────────────┴─
+        ┌─────────┐
+        │  E2E    │  ← Appium (68 tests)
+        │  Tests  │     Full user flows
+       ─┼─────────┼─
+       │Integration│  ← AndroidJUnit (66 tests)
+       │   Tests   │     Room DB, Repositories
+      ─┼───────────┼─
+      │   Unit     │  ← JUnit 5 (30+ tests)
+      │   Tests    │     Processors, Parsers, Logic
+      ─┴───────────┴─
 ```
 
 ## Test Categories
@@ -70,11 +70,59 @@ This document describes the testing strategy, test structure, and usage guidelin
 | `SmsReceptionE2ETest` | Basic SMS processing flow | Active |
 | `SmsReceptionWithRoomE2ETest` | SMS processing with real DB | Active |
 | `PaymentDeduplicationE2ETest` | Duplicate payment handling | Active |
+| `ConfigPersistenceE2ETest` | Config load/save cycle | Active |
+| `ConfigExportE2ETest` | JSON export functionality | Active |
+| `ConfigImportE2ETest` | JSON import + merge tests | Active |
+| `EnabledDisabledE2ETest` | Enabled/disabled filtering | Active |
 
 **Running E2E Tests:**
 ```bash
 ./gradlew connectedAndroidTest --tests "*E2ETest"
 ```
+
+### 4. Appium UI Tests (`app/src/test/appium/`)
+
+**Purpose:** Full UI automation testing with real user interactions.
+
+**Framework:** Appium + UiAutomator2 + JUnit 5
+
+**Location:** `app/src/test/java/com/example/banksmstracker/appium/`
+
+| Test Class | Tests | Coverage |
+|------------|-------|----------|
+| `MainNavigationAppiumTest` | 14 | Main screen navigation |
+| `CategoryManagementAppiumTest` | 11 | Category CRUD operations |
+| `SenderManagementAppiumTest` | 11 | Sender CRUD operations |
+| `SmsToPaymentFlowAppiumTest` | 10 | End-to-end payment flow |
+| `BugReportAppiumTest` | 12 | Bug report feature |
+| `RegexBuilderAppiumTest` | 10 | Regex builder feature |
+
+**Prerequisites:**
+1. Appium server running: `make appium-start` or `make appium-docker-start`
+2. Android emulator with app installed: `make install`
+
+**Running Appium Tests:**
+```bash
+# Using Makefile (recommended)
+make test-appium
+
+# Using Gradle directly
+./gradlew testDebugUnitTest --tests "*.appium.*"
+```
+
+**Docker Setup:**
+```bash
+# Start Appium in Docker
+docker-compose -f docker-compose.appium.yml up -d
+
+# Stop Appium
+docker-compose -f docker-compose.appium.yml down
+```
+
+**Test Isolation:**
+- Each test class uses `@BeforeEach` to navigate to main screen
+- `navigateToMain()` helper with app restart fallback ensures clean state
+- Material buttons render text in ALL CAPS - tests handle both cases
 
 ## Test Reporter
 
@@ -292,7 +340,8 @@ Current CI pipeline:
 
 ## Future Improvements
 
-1. **Appium Integration** - Full UI automation for E2E tests
-2. **Code Coverage** - JaCoCo reports with minimum threshold
+1. ~~**Appium Integration**~~ - ✅ Implemented (68 tests, Docker support)
+2. ~~**Code Coverage**~~ - ✅ JaCoCo configured (`./gradlew jacocoTestReport`)
 3. **Mutation Testing** - Verify test effectiveness
 4. **Performance Tests** - Test SMS processing throughput
+5. **CI Emulator Tests** - Run Appium tests in GitHub Actions with emulator

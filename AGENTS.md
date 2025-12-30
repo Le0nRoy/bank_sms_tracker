@@ -120,3 +120,23 @@ fun second() { }
 ```
 
 **NEVER skip this step** - The TODO.md must always reflect current project state.
+
+## Session Continuity (Context Compacting)
+
+When conversation context is summarized/compacted (agent tool, or ~2% context remaining):
+
+### After Compacting
+**ALWAYS read these files first** to restore full project context:
+1. `docs/DESIGN.md` - Architecture, features, and current state
+2. `TODO.md` - Project progress and current session tasks
+3. `AGENTS.md` - This file, for coding rules and guidelines
+
+### Before Compacting (~2% context left)
+1. **Update TODO.md "Current Session" section** with:
+   - Task being actively worked on
+   - What was completed in this session
+   - Next steps to continue
+2. **Save any uncommitted changes** if possible
+3. Ensure `Completed Items Log` is current
+
+This ensures seamless continuation across context boundaries.
