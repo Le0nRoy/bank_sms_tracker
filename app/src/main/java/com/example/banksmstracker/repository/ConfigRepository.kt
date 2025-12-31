@@ -448,4 +448,29 @@ object ConfigRepository {
      * Check if config is loaded.
      */
     internal fun isLoaded(): Boolean = _config != null
+
+    /**
+     * Re-categorize all payments based on current category merchant mappings.
+     * Returns the number of payments that were re-categorized.
+     */
+    suspend fun recategorizeAllPayments(): Int = withContext(Dispatchers.IO) {
+        var count = 0
+        val allPayments = paymentRepository.getAllPayments()
+
+        for (payment in allPayments) {
+            val merchant = payment.merchant ?: continue
+            val newCategory = config.categories
+                .filter { it.enabled }
+                .firstOrNull { cat ->
+                    cat.merchants.any { it.equals(merchant, ignoreCase = true) }
+                }?.name
+
+            if (newCategory != payment.categoryId) {
+                val paymentId = payment.id ?: continue
+                paymentRepository.updatePaymentCategory(paymentId, newCategory)
+                count++
+            }
+        }
+        count
+    }
 }

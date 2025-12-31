@@ -20,7 +20,9 @@ class RoomPaymentRepository(private val paymentDao: PaymentDao) : PaymentReposit
                     timestamp = payment.timestamp,
                     balance = payment.balance,
                     categoryName = payment.categoryId,
-                    messageHash = hash
+                    messageHash = hash,
+                    senderAddress = senderAddress,
+                    receivedAt = System.currentTimeMillis()
                 )
             )
             true
@@ -41,6 +43,30 @@ class RoomPaymentRepository(private val paymentDao: PaymentDao) : PaymentReposit
         return paymentDao.getUncategorizedPayments().map { it.toDomain() }
     }
 
+    override suspend fun getPaymentsBySender(senderAddress: String): List<Payment> {
+        return paymentDao.getPaymentsBySender(senderAddress).map { it.toDomain() }
+    }
+
+    override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> {
+        return paymentDao.getPaymentsByDateRange(startTime, endTime).map { it.toDomain() }
+    }
+
+    override suspend fun getDistinctSenderAddresses(): List<String> {
+        return paymentDao.getDistinctSenderAddresses()
+    }
+
+    override suspend fun updatePaymentCategory(paymentId: Long, categoryName: String?) {
+        paymentDao.updatePaymentCategory(paymentId, categoryName)
+    }
+
+    override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> {
+        return paymentDao.getPaymentsByRule(ruleId).map { it.toDomain() }
+    }
+
+    override suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?) {
+        paymentDao.updateCategoryForRule(ruleId, categoryName)
+    }
+
     private fun computeHash(message: String, sender: String): String {
         val digest = MessageDigest.getInstance("SHA-256")
         val combined = "$sender::$message"
@@ -57,5 +83,8 @@ private fun PaymentEntity.toDomain(): Payment = Payment(
     merchant = merchant,
     timestamp = timestamp,
     balance = balance,
-    categoryId = categoryName
+    categoryId = categoryName,
+    senderAddress = senderAddress,
+    receivedAt = receivedAt,
+    ruleId = ruleId
 )

@@ -10,10 +10,18 @@
         android:orientation="vertical"
         android:padding="8dp">
 
+        <Button
+            android:id="@+id/btnRecategorize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/recategorize_payments"
+            android:layout_marginBottom="8dp" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewCategories"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
     </LinearLayout>
 

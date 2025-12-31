@@ -4,7 +4,7 @@
 - [x] Reported
 - [x] In Progress
 - [x] Fixed
-- [ ] Verified
+- [x] Verified
 
 ## Description
 PaymentProcessor assumes regex patterns have exactly 6 capture groups without validation. If a regex has fewer groups, accessing `match.groupValues[1]` through `[6]` throws IndexOutOfBoundsException.
@@ -27,9 +27,9 @@ Lines 39-44 in PaymentProcessor.kt access group indices without checking `groupV
 Check `match.groupValues.size >= 7` (including group 0) before accessing, or use `getOrNull()`.
 
 ## Verification
-- [ ] Unit test with insufficient groups
-- [ ] Unit test with valid groups
-- [ ] Integration test passes
+- [x] Unit test with insufficient groups
+- [x] Unit test with valid groups
+- [x] Integration test passes
 
 ## Related Files
 - `app/src/main/java/com/example/banksmstracker/processor/PaymentProcessor.kt:39-44`

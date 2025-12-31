@@ -160,6 +160,9 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 │ balance                               │
 │ categoryName                          │
 │ messageHash (UNIQUE)                  │
+│ senderAddress                         │
+│ receivedAt                            │
+│ ruleId (for cascade)                  │
 └───────────────────────────────────────┘
 ```
 
@@ -196,7 +199,11 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | Config Import | ✅ | Import and merge config from JSON file |
 | Enable/Disable Rules | ✅ | Toggle individual senders, rules, categories |
 | Regex Builder UI | ✅ | Visual tool to build and test regex patterns |
+| Save Regex to Sender | ✅ | Save tested regex patterns directly to sender |
 | Payments List UI | ✅ | View payments with filter by category |
+| Filter by Sender | ✅ | Filter payments by sender address |
+| Filter by Date Range | ✅ | Filter payments by date range with date picker UI |
+| Category Cascade | ✅ | Re-categorize all payments based on current merchant mappings |
 | CSV Export | ✅ | Export payments to CSV file |
 | Bug Report | ✅ | Send bug reports via built-in email |
 
@@ -204,9 +211,6 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Filter by sender | Medium | Filter payments by sender |
-| Filter by date range | Medium | Filter payments by date |
-| Category Cascade | Medium | Update payment categories when rule changes |
 | Default Configs | Low | Build-time email config, runtime sender/category defaults |
 
 ### 6.4 Feature Details
@@ -224,18 +228,20 @@ All configurable entities should have an `enabled` boolean field:
 - Disabled rules → Skip during regex matching
 - Disabled categories → Exclude from category assignment
 
-#### 6.4.3 Regex Builder
+#### 6.4.3 Regex Builder (Implemented)
 Interactive UI component that:
 - Shows regex input field
 - Shows sample message input
 - Highlights matches in real-time
 - Displays captured groups with labels
+- **Save to Sender**: Select a sender and save the tested regex directly to its rules
 
-#### 6.4.4 Category Cascade
-When a regex rule's category assignment changes:
-1. Find all payments processed by that rule
-2. Update their categoryId to the new category
-3. Requires tracking which rule parsed each payment
+#### 6.4.4 Category Cascade (Implemented)
+Re-categorize all payments based on current category merchant mappings:
+1. Payments track which rule parsed them via `ruleId` field
+2. "Re-categorize All Payments" button in CategoriesActivity
+3. When triggered, iterates all payments and re-assigns categories based on merchant name matching
+4. Database schema v4 adds `ruleId` column to payments table
 
 #### 6.4.5 Retrospective Parsing
 Allow processing historical SMS:
@@ -340,8 +346,8 @@ Docker-based Appium setup for UI automation:
 | **SendersActivity** | List and edit senders with addresses and rules |
 | **CheckSendersActivity** | Test regex patterns against sample messages |
 | **ApplyRulesActivity** | Manually trigger rule application on SMS inbox |
-| **PaymentsActivity** | View parsed payments with category filtering |
-| **RegexBuilderActivity** | Visual regex testing tool |
+| **PaymentsActivity** | View parsed payments with filters (category, sender, date range) |
+| **RegexBuilderActivity** | Visual regex testing tool with save-to-sender feature |
 | **BugReportActivity** | Bug report form with device info collection |
 
 ## 10. Security Considerations

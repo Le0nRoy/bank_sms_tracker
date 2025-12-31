@@ -1,5 +1,6 @@
 package com.example.banksmstracker.ui
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -21,6 +22,7 @@ import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
 import java.io.File
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
@@ -33,14 +35,23 @@ class PaymentsActivity : BaseActivity() {
     private lateinit var tvEmptyState: TextView
     private lateinit var tvPaymentCount: TextView
     private lateinit var spinnerCategory: Spinner
+    private lateinit var spinnerSender: Spinner
     private lateinit var btnExportCsv: Button
+    private lateinit var btnStartDate: Button
+    private lateinit var btnEndDate: Button
+    private lateinit var btnClearDates: Button
 
     private lateinit var paymentRepository: RoomPaymentRepository
     private var allPayments: List<Payment> = emptyList()
     private var filteredPayments: List<Payment> = emptyList()
     private var categories: List<String> = emptyList()
+    private var senderAddresses: List<String> = emptyList()
     private var selectedCategory: String? = null
+    private var selectedSender: String? = null
+    private var startDate: Long? = null
+    private var endDate: Long? = null
 
+    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val adapter = PaymentAdapter()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,11 +68,75 @@ class PaymentsActivity : BaseActivity() {
         tvEmptyState = findViewById(R.id.tvEmptyState)
         tvPaymentCount = findViewById(R.id.tvPaymentCount)
         spinnerCategory = findViewById(R.id.spinnerCategory)
+        spinnerSender = findViewById(R.id.spinnerSender)
         btnExportCsv = findViewById(R.id.btnExportCsv)
+        btnStartDate = findViewById(R.id.btnStartDate)
+        btnEndDate = findViewById(R.id.btnEndDate)
+        btnClearDates = findViewById(R.id.btnClearDates)
 
         btnExportCsv.setOnClickListener {
             exportToCsv()
         }
+
+        btnStartDate.setOnClickListener {
+            showDatePicker(isStartDate = true)
+        }
+
+        btnEndDate.setOnClickListener {
+            showDatePicker(isStartDate = false)
+        }
+
+        btnClearDates.setOnClickListener {
+            startDate = null
+            endDate = null
+            btnStartDate.text = getString(R.string.start_date)
+            btnEndDate.text = getString(R.string.end_date)
+            applyFilter()
+        }
+    }
+
+    private fun showDatePicker(isStartDate: Boolean) {
+        val calendar = Calendar.getInstance()
+
+        // Use current date or the existing selection
+        val existingDate = if (isStartDate) startDate else endDate
+        if (existingDate != null) {
+            calendar.timeInMillis = existingDate
+        }
+
+        DatePickerDialog(
+            this,
+            { _, year, month, dayOfMonth ->
+                val selectedCalendar = Calendar.getInstance().apply {
+                    set(year, month, dayOfMonth)
+                    if (isStartDate) {
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    } else {
+                        set(Calendar.HOUR_OF_DAY, 23)
+                        set(Calendar.MINUTE, 59)
+                        set(Calendar.SECOND, 59)
+                        set(Calendar.MILLISECOND, 999)
+                    }
+                }
+                val timestamp = selectedCalendar.timeInMillis
+                val dateText = dateFormat.format(Date(timestamp))
+
+                if (isStartDate) {
+                    startDate = timestamp
+                    btnStartDate.text = dateText
+                } else {
+                    endDate = timestamp
+                    btnEndDate.text = dateText
+                }
+                applyFilter()
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
     }
 
     private fun setupRecyclerView() {
@@ -86,7 +161,14 @@ class PaymentsActivity : BaseActivity() {
             categories = listOf(getString(R.string.all_categories)) +
                 configCategories.map { it.name }
 
+            // Load sender addresses for filter
+            senderAddresses = withContext(Dispatchers.IO) {
+                listOf(getString(R.string.all_senders)) +
+                    paymentRepository.getDistinctSenderAddresses()
+            }
+
             setupCategorySpinner()
+            setupSenderSpinner()
             applyFilter()
         }
     }
@@ -113,11 +195,48 @@ class PaymentsActivity : BaseActivity() {
         }
     }
 
+    private fun setupSenderSpinner() {
+        val spinnerAdapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            senderAddresses
+        )
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerSender.adapter = spinnerAdapter
+
+        spinnerSender.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedSender = if (position == 0) null else senderAddresses[position]
+                applyFilter()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                selectedSender = null
+                applyFilter()
+            }
+        }
+    }
+
     private fun applyFilter() {
-        filteredPayments = if (selectedCategory == null) {
-            allPayments
-        } else {
-            allPayments.filter { it.categoryId == selectedCategory }
+        filteredPayments = allPayments.filter { payment ->
+            val matchesCategory = selectedCategory == null || payment.categoryId == selectedCategory
+            val matchesSender = selectedSender == null || payment.senderAddress == selectedSender
+            val matchesDateRange = when {
+                startDate != null && endDate != null -> {
+                    val receivedAt = payment.receivedAt ?: return@filter false
+                    receivedAt in startDate!!..endDate!!
+                }
+                startDate != null -> {
+                    val receivedAt = payment.receivedAt ?: return@filter false
+                    receivedAt >= startDate!!
+                }
+                endDate != null -> {
+                    val receivedAt = payment.receivedAt ?: return@filter false
+                    receivedAt <= endDate!!
+                }
+                else -> true
+            }
+            matchesCategory && matchesSender && matchesDateRange
         }
 
         adapter.submitList(filteredPayments)
@@ -181,9 +300,12 @@ class PaymentsActivity : BaseActivity() {
     private fun buildCsvContent(payments: List<Payment>): String {
         val sb = StringBuilder()
         // Header
-        sb.appendLine("Amount,Currency,Card,Merchant,Timestamp,Balance,Category")
+        sb.appendLine("Amount,Currency,Card,Merchant,Timestamp,Balance,Category,Sender,ReceivedAt")
         // Data
         for (payment in payments) {
+            val receivedAtStr = payment.receivedAt?.let {
+                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(it))
+            } ?: ""
             sb.appendLine(
                 listOf(
                     payment.amount.toString(),
@@ -192,7 +314,9 @@ class PaymentsActivity : BaseActivity() {
                     escapeCsv(payment.merchant ?: ""),
                     escapeCsv(payment.timestamp ?: ""),
                     payment.balance?.toString() ?: "",
-                    escapeCsv(payment.categoryId ?: "")
+                    escapeCsv(payment.categoryId ?: ""),
+                    escapeCsv(payment.senderAddress ?: ""),
+                    escapeCsv(receivedAtStr)
                 ).joinToString(",")
             )
         }

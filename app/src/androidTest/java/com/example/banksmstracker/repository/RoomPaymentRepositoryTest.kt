@@ -184,4 +184,121 @@ class RoomPaymentRepositoryTest {
         assertTrue(allPayments[0].id!! >= allPayments[1].id!!)
         assertTrue(allPayments[1].id!! >= allPayments[2].id!!)
     }
+
+    // ==================== Sender Filtering Tests ====================
+
+    @Test
+    fun `getPaymentsBySender_returnsCorrectPayments`() {
+        val payment1 = createTestPayment(amount = 10.0, merchant = "Store 1")
+        val payment2 = createTestPayment(amount = 20.0, merchant = "Store 2")
+        val payment3 = createTestPayment(amount = 30.0, merchant = "Store 3")
+        repository.savePayment(payment1, "msg-1", "BANK-A")
+        repository.savePayment(payment2, "msg-2", "BANK-B")
+        repository.savePayment(payment3, "msg-3", "BANK-A")
+
+        val bankAPayments = repository.getPaymentsBySender("BANK-A")
+        assertEquals(2, bankAPayments.size)
+        assertTrue(bankAPayments.all { it.senderAddress == "BANK-A" })
+    }
+
+    @Test
+    fun `getPaymentsBySender_returnsEmptyListForUnknownSender`() {
+        val payment = createTestPayment(amount = 10.0, merchant = "Store")
+        repository.savePayment(payment, "msg-1", "BANK-A")
+
+        val unknownPayments = repository.getPaymentsBySender("UNKNOWN")
+        assertTrue(unknownPayments.isEmpty())
+    }
+
+    @Test
+    fun `getDistinctSenderAddresses_returnsUniqueSortedList`() {
+        val payment1 = createTestPayment(amount = 10.0, merchant = "Store 1")
+        val payment2 = createTestPayment(amount = 20.0, merchant = "Store 2")
+        val payment3 = createTestPayment(amount = 30.0, merchant = "Store 3")
+        val payment4 = createTestPayment(amount = 40.0, merchant = "Store 4")
+        repository.savePayment(payment1, "msg-1", "BANK-B")
+        repository.savePayment(payment2, "msg-2", "BANK-A")
+        repository.savePayment(payment3, "msg-3", "BANK-B")
+        repository.savePayment(payment4, "msg-4", "BANK-C")
+
+        val senders = repository.getDistinctSenderAddresses()
+        assertEquals(listOf("BANK-A", "BANK-B", "BANK-C"), senders)
+    }
+
+    @Test
+    fun `getDistinctSenderAddresses_returnsEmptyListWhenNoPayments`() {
+        val senders = repository.getDistinctSenderAddresses()
+        assertTrue(senders.isEmpty())
+    }
+
+    // ==================== Date Range Filtering Tests ====================
+
+    @Test
+    fun `getPaymentsByDateRange_returnsPaymentsInRange`() {
+        val payment1 = createTestPayment(amount = 10.0, merchant = "Store 1")
+        val payment2 = createTestPayment(amount = 20.0, merchant = "Store 2")
+        repository.savePayment(payment1, "msg-1", "BANK")
+        Thread.sleep(50)
+        repository.savePayment(payment2, "msg-2", "BANK")
+
+        val allPayments = repository.getAllPayments()
+        assertEquals(2, allPayments.size)
+
+        val startTime = allPayments.minOf { it.receivedAt ?: 0 } - 1000
+        val endTime = allPayments.maxOf { it.receivedAt ?: 0 } + 1000
+        val rangePayments = repository.getPaymentsByDateRange(startTime, endTime)
+        assertEquals(2, rangePayments.size)
+    }
+
+    @Test
+    fun `getPaymentsByDateRange_excludesPaymentsOutsideRange`() {
+        val payment = createTestPayment(amount = 10.0, merchant = "Store")
+        repository.savePayment(payment, "msg-1", "BANK")
+
+        val futureStart = System.currentTimeMillis() + 100000
+        val futureEnd = futureStart + 100000
+        val rangePayments = repository.getPaymentsByDateRange(futureStart, futureEnd)
+        assertTrue(rangePayments.isEmpty())
+    }
+
+    // ==================== Category Update Tests ====================
+
+    @Test
+    fun `updatePaymentCategory_updatesExistingPayment`() {
+        val payment = createTestPayment(amount = 10.0, merchant = "Store", categoryId = "old-cat")
+        repository.savePayment(payment, "msg-1", "BANK")
+
+        val saved = repository.getAllPayments().first()
+        val paymentId = saved.id!!
+
+        repository.updatePaymentCategory(paymentId, "new-cat")
+
+        val updated = repository.getAllPayments().first()
+        assertEquals("new-cat", updated.categoryId)
+    }
+
+    @Test
+    fun `updatePaymentCategory_canSetCategoryToNull`() {
+        val payment = createTestPayment(amount = 10.0, merchant = "Store", categoryId = "cat")
+        repository.savePayment(payment, "msg-1", "BANK")
+
+        val saved = repository.getAllPayments().first()
+        val paymentId = saved.id!!
+
+        repository.updatePaymentCategory(paymentId, null)
+
+        val updated = repository.getAllPayments().first()
+        assertEquals(null, updated.categoryId)
+    }
+
+    @Test
+    fun `updatePaymentCategory_doesNothingForUnknownId`() {
+        val payment = createTestPayment(amount = 10.0, merchant = "Store", categoryId = "cat")
+        repository.savePayment(payment, "msg-1", "BANK")
+
+        repository.updatePaymentCategory(999999L, "new-cat")
+
+        val unchanged = repository.getAllPayments().first()
+        assertEquals("cat", unchanged.categoryId)
+    }
 }

@@ -1,10 +1,20 @@
 package com.example.banksmstracker.ui
 
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Spinner
 import android.widget.TextView
+import android.widget.Toast
 import com.example.banksmstracker.R
+import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Sender
+import com.example.banksmstracker.repository.ConfigRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class RegexBuilderActivity : BaseActivity() {
 
@@ -12,6 +22,10 @@ class RegexBuilderActivity : BaseActivity() {
     private lateinit var etRegexPattern: EditText
     private lateinit var btnTestRegex: Button
     private lateinit var tvResults: TextView
+    private lateinit var spinnerSenders: Spinner
+    private lateinit var btnSaveRegex: Button
+
+    private var senders: List<Sender> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,6 +33,7 @@ class RegexBuilderActivity : BaseActivity() {
 
         initViews()
         setupListeners()
+        loadSenders()
     }
 
     private fun initViews() {
@@ -26,11 +41,117 @@ class RegexBuilderActivity : BaseActivity() {
         etRegexPattern = findViewById(R.id.etRegexPattern)
         btnTestRegex = findViewById(R.id.btnTestRegex)
         tvResults = findViewById(R.id.tvResults)
+        spinnerSenders = findViewById(R.id.spinnerSenders)
+        btnSaveRegex = findViewById(R.id.btnSaveRegex)
     }
 
     private fun setupListeners() {
         btnTestRegex.setOnClickListener {
             testRegex()
+        }
+
+        btnSaveRegex.setOnClickListener {
+            saveRegexToSender()
+        }
+    }
+
+    private fun loadSenders() {
+        CoroutineScope(Dispatchers.Main).launch {
+            senders = withContext(Dispatchers.IO) {
+                ConfigRepository.getSenders()
+            }
+
+            if (senders.isEmpty()) {
+                spinnerSenders.isEnabled = false
+                btnSaveRegex.isEnabled = false
+                val adapter = ArrayAdapter(
+                    this@RegexBuilderActivity,
+                    android.R.layout.simple_spinner_item,
+                    listOf(getString(R.string.no_senders_available))
+                )
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spinnerSenders.adapter = adapter
+            } else {
+                val senderNames = listOf(getString(R.string.select_sender_hint)) +
+                    senders.map { it.name }
+                val adapter = ArrayAdapter(
+                    this@RegexBuilderActivity,
+                    android.R.layout.simple_spinner_item,
+                    senderNames
+                )
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spinnerSenders.adapter = adapter
+            }
+        }
+    }
+
+    private fun saveRegexToSender() {
+        val regexPattern = etRegexPattern.text.toString().trim()
+
+        if (regexPattern.isBlank()) {
+            Toast.makeText(this, R.string.error_empty_pattern, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Validate regex
+        try {
+            Regex(regexPattern)
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                getString(R.string.regex_save_failed, e.message),
+                Toast.LENGTH_LONG
+            ).show()
+            return
+        }
+
+        val selectedPosition = spinnerSenders.selectedItemPosition
+        if (selectedPosition <= 0 || senders.isEmpty()) {
+            Toast.makeText(this, R.string.no_sender_selected, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Adjust index because first item is the hint
+        val sender = senders[selectedPosition - 1]
+
+        // Check if this regex already exists for the sender
+        val existingRegexes = sender.rules.map { it.regex.trim() }.toSet()
+        if (regexPattern in existingRegexes) {
+            Toast.makeText(
+                this,
+                getString(R.string.regex_save_failed, "Pattern already exists"),
+                Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
+
+        // Add new rule and save
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val updatedRules = sender.rules.toMutableList()
+                updatedRules.add(PaymentRegexRule(regex = regexPattern))
+
+                val updatedSender = sender.copy(rules = updatedRules)
+
+                withContext(Dispatchers.IO) {
+                    ConfigRepository.updateSender(updatedSender)
+                }
+
+                Toast.makeText(
+                    this@RegexBuilderActivity,
+                    getString(R.string.regex_saved, sender.name),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                // Refresh senders list
+                loadSenders()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@RegexBuilderActivity,
+                    getString(R.string.regex_save_failed, e.message),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 

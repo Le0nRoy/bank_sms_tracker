@@ -32,9 +32,12 @@ This document describes the testing strategy, test structure, and usage guidelin
 | Test Class | Coverage | Status |
 |------------|----------|--------|
 | `ConfigRepositoryTest` | Config loading, error handling | Disabled (needs Room migration) |
-| `PaymentRepositoryTest` | Payment CRUD operations | Active |
+| `PaymentRepositoryTest` | Payment CRUD, sender/date filtering, category cascade | Active |
 | `PaymentProcessorTest` | SMS parsing, categorization | Active |
 | `ConfigLoaderTest` | JSON deserialization | Active |
+| `PaymentProcessorEnabledTest` | Enabled/disabled rule filtering | Active |
+| `DataClassesTest` | Data class coverage | Active |
+| `ImportResultTest` | Import result sealed class | Active |
 
 **Running Unit Tests:**
 ```bash
@@ -52,9 +55,11 @@ This document describes the testing strategy, test structure, and usage guidelin
 | Test Class | Coverage | Status |
 |------------|----------|--------|
 | `ConfigRepositoryRoomTest` | Config persistence with Room | Active |
-| `RoomPaymentRepositoryTest` | Payment persistence with Room | Active |
+| `RoomPaymentRepositoryTest` | Payment persistence, filtering, category cascade | Active |
 | `ConfigPersistenceE2ETest` | Config load/save cycle | Active |
 | `ConfigExportE2ETest` | JSON export functionality | Active |
+| `PaymentFilterE2ETest` | Payment filtering by sender/date range | Active |
+| `CategoryCascadeE2ETest` | Category cascade and re-categorization | Active |
 
 **Running Integration Tests:**
 ```bash
@@ -95,7 +100,9 @@ This document describes the testing strategy, test structure, and usage guidelin
 | `SenderManagementAppiumTest` | 11 | Sender CRUD operations |
 | `SmsToPaymentFlowAppiumTest` | 10 | End-to-end payment flow |
 | `BugReportAppiumTest` | 12 | Bug report feature |
-| `RegexBuilderAppiumTest` | 10 | Regex builder feature |
+| `RegexBuilderAppiumTest` | 13 | Regex builder feature + save-to-sender |
+| `PaymentsFilterAppiumTest` | 8 | Payment filtering by sender/date range |
+| `CategoryCascadeAppiumTest` | 5 | Re-categorize all payments feature |
 
 **Prerequisites:**
 1. Appium server running: `make appium-start` or `make appium-docker-start`

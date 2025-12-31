@@ -16,7 +16,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         SenderRuleEntity::class,
         PaymentEntity::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class BankSmsDatabase : RoomDatabase() {
@@ -39,13 +39,32 @@ abstract class BankSmsDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 2 to 3: Add senderAddress and receivedAt columns to payments.
+         */
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE payments ADD COLUMN senderAddress TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE payments ADD COLUMN receivedAt INTEGER DEFAULT NULL")
+            }
+        }
+
+        /**
+         * Migration from version 3 to 4: Add ruleId column to payments for cascade tracking.
+         */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE payments ADD COLUMN ruleId INTEGER DEFAULT NULL")
+            }
+        }
+
         fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
                 BankSmsDatabase::class.java,
                 "bank_sms_tracker.db"
             )
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build()
                 .also { INSTANCE = it }
         }

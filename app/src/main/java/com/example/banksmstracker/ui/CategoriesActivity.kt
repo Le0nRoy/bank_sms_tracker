@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Switch
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -16,7 +17,9 @@ import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.repository.ConfigRepository
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class CategoriesActivity :
     BaseActivity(),
@@ -24,18 +27,47 @@ class CategoriesActivity :
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: CategoriesAdapter
+    private lateinit var btnRecategorize: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_categories)
 
         setupRecyclerView()
+        setupRecategorizeButton()
         loadCategories()
 
         findViewById<FloatingActionButton>(R.id.fabAddCategory).setOnClickListener {
             lifecycleScope.launch {
                 val newCategory = ConfigRepository.addCategory()
                 adapter.addCategory(newCategory.clone())
+            }
+        }
+    }
+
+    private fun setupRecategorizeButton() {
+        btnRecategorize = findViewById(R.id.btnRecategorize)
+        btnRecategorize.setOnClickListener {
+            lifecycleScope.launch {
+                btnRecategorize.isEnabled = false
+                try {
+                    val count = withContext(Dispatchers.IO) {
+                        ConfigRepository.recategorizeAllPayments()
+                    }
+                    Toast.makeText(
+                        this@CategoriesActivity,
+                        getString(R.string.recategorize_success, count),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@CategoriesActivity,
+                        getString(R.string.recategorize_failed, e.message ?: "Unknown error"),
+                        Toast.LENGTH_LONG
+                    ).show()
+                } finally {
+                    btnRecategorize.isEnabled = true
+                }
             }
         }
     }

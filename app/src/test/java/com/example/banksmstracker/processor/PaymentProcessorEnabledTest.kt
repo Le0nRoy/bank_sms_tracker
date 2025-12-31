@@ -196,5 +196,37 @@ class PaymentProcessorEnabledTest {
             payments.filter { it.categoryId == categoryId }
 
         override suspend fun getUncategorizedPayments(): List<Payment> = payments.filter { it.categoryId == null }
+
+        override suspend fun getPaymentsBySender(senderAddress: String): List<Payment> =
+            payments.filter { it.senderAddress == senderAddress }
+
+        override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> =
+            payments.filter {
+                val receivedAt = it.receivedAt ?: return@filter false
+                receivedAt in startTime..endTime
+            }
+
+        override suspend fun getDistinctSenderAddresses(): List<String> =
+            payments.mapNotNull { it.senderAddress }.distinct().sorted()
+
+        override suspend fun updatePaymentCategory(paymentId: Long, categoryName: String?) {
+            val index = payments.indexOfFirst { it.id == paymentId }
+            if (index >= 0) {
+                payments[index] = payments[index].copy(categoryId = categoryName)
+            }
+        }
+
+        override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> =
+            payments.filter { it.ruleId == ruleId }
+
+        override suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?) {
+            payments.replaceAll { payment ->
+                if (payment.ruleId == ruleId) {
+                    payment.copy(categoryId = categoryName)
+                } else {
+                    payment
+                }
+            }
+        }
     }
 }

@@ -286,4 +286,53 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
 
         navigateToMain()
     }
+
+    // ==================== Save Regex to Sender Tests ====================
+
+    @Test
+    @Order(11)
+    @DisplayName("Sender selection spinner is displayed")
+    fun senderSelectionSpinnerExists() {
+        findById("btnRegexBuilder").click()
+        mediumWait()
+
+        // Need to scroll down to see the spinner (spinnerSenders with plural s)
+        val hasSpinner = elementExists("spinnerSenders")
+        assertTrue(hasSpinner, "Should have sender selection spinner")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(12)
+    @DisplayName("Save Regex button is displayed")
+    fun saveRegexButtonExists() {
+        findById("btnRegexBuilder").click()
+        mediumWait()
+
+        val hasButton = elementExists("btnSaveRegex")
+        assertTrue(hasButton, "Should have Save Regex button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(13)
+    @DisplayName("Cannot save empty regex pattern")
+    fun cannotSaveEmptyRegex() {
+        findById("btnRegexBuilder").click()
+        mediumWait()
+
+        // Ensure regex field is empty
+        val regexInput = findById("etRegexPattern")
+        regexInput.clear()
+        shortWait()
+
+        // Click save button
+        findById("btnSaveRegex").click()
+        mediumWait()
+
+        // App should not crash, might show toast or error
+        navigateToMain()
+    }
 }

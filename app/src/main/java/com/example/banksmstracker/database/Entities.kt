@@ -118,5 +118,8 @@ data class PaymentEntity(
     val timestamp: String?,
     val balance: Double?,
     val categoryName: String?,
-    val messageHash: String
+    val messageHash: String,
+    val senderAddress: String? = null,
+    val receivedAt: Long? = null,
+    val ruleId: Long? = null
 )

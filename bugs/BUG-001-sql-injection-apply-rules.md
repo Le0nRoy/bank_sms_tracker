@@ -4,7 +4,7 @@
 - [x] Reported
 - [x] In Progress
 - [x] Fixed
-- [ ] Verified
+- [x] Verified
 
 ## Description
 The ApplyRulesActivity constructs SQL queries using string interpolation with user-controlled data (sender addresses), creating a SQL injection vulnerability.
@@ -29,9 +29,9 @@ Line 119 in ApplyRulesActivity.kt uses string interpolation instead of parameter
 Use `selectionArgs` parameter in `contentResolver.query()` with placeholders.
 
 ## Verification
-- [ ] Unit test added/updated
-- [ ] Integration test passes
-- [ ] Manual test with special characters in sender
+- [x] Unit test added/updated
+- [x] Integration test passes
+- [x] Manual test with special characters in sender
 
 ## Related Files
 - `app/src/main/java/com/example/banksmstracker/ui/ApplyRulesActivity.kt:119`

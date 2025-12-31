@@ -34,6 +34,12 @@
     <string name="export_csv">Export CSV</string>
     <string name="csv_export_success">Payments exported to %1$s</string>
     <string name="csv_export_failed">Failed to export payments: %1$s</string>
+    <string name="start_date">Start Date</string>
+    <string name="end_date">End Date</string>
+    <string name="clear">Clear</string>
+    <string name="recategorize_payments">Re-categorize All Payments</string>
+    <string name="recategorize_success">Re-categorized %1$d payments</string>
+    <string name="recategorize_failed">Failed to re-categorize: %1$s</string>
     <string name="regex_builder">Regex Builder</string>
     <string name="regex_builder_title">Regex Builder</string>
     <string name="sample_sms_label">Sample SMS Message</string>
@@ -45,6 +51,13 @@
     <string name="results_label">Results</string>
     <string name="error_empty_sms">Please enter a sample SMS message</string>
     <string name="error_empty_pattern">Please enter a regex pattern</string>
+    <string name="save_to_sender_label">Save to Sender</string>
+    <string name="select_sender_hint">Select a sender…</string>
+    <string name="save_regex">Save Regex</string>
+    <string name="regex_saved">Regex saved to %1$s</string>
+    <string name="regex_save_failed">Failed to save regex: %1$s</string>
+    <string name="no_sender_selected">Please select a sender first</string>
+    <string name="no_senders_available">No senders configured. Add a sender first.</string>
     <string name="bug_report">Bug Report</string>
     <string name="bug_report_title">Bug Report</string>
     <string name="bug_description_label">Describe the issue</string>
