@@ -7,6 +7,7 @@ import java.net.URI
 import java.time.Duration
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.support.ui.ExpectedConditions
@@ -61,6 +62,63 @@ abstract class AppiumBaseTest {
     open fun tearDown() {
         if (::driver.isInitialized) {
             driver.quit()
+        }
+    }
+
+    /**
+     * Ensure we start each test from main screen.
+     */
+    @BeforeEach
+    open fun ensureMainScreen() {
+        if (::driver.isInitialized) {
+            navigateToMainRobust()
+        }
+    }
+
+    /**
+     * Robust navigation to main screen with app restart fallback.
+     */
+    protected fun navigateToMainRobust() {
+        // First try simple back navigation
+        repeat(3) {
+            if (isOnMainScreen()) return
+            try {
+                driver.navigate().back()
+                Thread.sleep(1000)
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+
+        // If still not on main, restart app
+        if (!isOnMainScreen()) {
+            try {
+                driver.terminateApp(APP_PACKAGE)
+                Thread.sleep(1000)
+                driver.activateApp(APP_PACKAGE)
+                Thread.sleep(2000)
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+
+        // Final wait for main screen
+        Thread.sleep(1000)
+    }
+
+    /**
+     * Check if we're on the main screen.
+     */
+    protected fun isOnMainScreen(): Boolean {
+        return try {
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(2))
+            val hasCategoriesBtn = driver.findElements(AppiumBy.id("$APP_PACKAGE:id/btnCategories")).isNotEmpty()
+            val hasSendersBtn = driver.findElements(AppiumBy.id("$APP_PACKAGE:id/btnSenders")).isNotEmpty()
+            driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+            hasCategoriesBtn && hasSendersBtn
+        } catch (e: Exception) {
+            driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+            false
         }
     }
 
@@ -209,33 +267,19 @@ abstract class AppiumBaseTest {
      * Uses multiple strategies to ensure we get back to main.
      */
     protected fun navigateToMain() {
-        var attempts = 0
-        val maxAttempts = 5
+        navigateToMainRobust()
+    }
 
-        while (attempts < maxAttempts) {
-            // Check if we're already on main screen
-            if (textExists("Bank SMS Tracker") && elementExists("btnCategories")) {
-                return
-            }
-
-            // Try pressing back
-            try {
-                driver.navigate().back()
-                Thread.sleep(500)
-            } catch (e: Exception) {
-                // Ignore navigation errors
-            }
-            attempts++
-        }
-
-        // Last resort: restart the app activity
+    /**
+     * Click a button by ID with wait for clickable.
+     */
+    protected fun clickButton(buttonId: String) {
         try {
-            driver.terminateApp(APP_PACKAGE)
-            Thread.sleep(500)
-            driver.activateApp(APP_PACKAGE)
-            Thread.sleep(1000)
+            val button = waitForClickable(buttonId, Duration.ofSeconds(10))
+            button.click()
         } catch (e: Exception) {
-            // Ignore if this fails
+            // Fallback to direct click
+            findById(buttonId).click()
         }
     }
 
@@ -243,14 +287,102 @@ abstract class AppiumBaseTest {
      * Short sleep for UI transitions.
      */
     protected fun shortWait() {
-        Thread.sleep(300)
+        Thread.sleep(500)
     }
 
     /**
      * Medium sleep for screen transitions.
      */
     protected fun mediumWait() {
-        Thread.sleep(500)
+        Thread.sleep(1000)
+    }
+
+    /**
+     * Long wait for complex operations.
+     */
+    protected fun longWait() {
+        Thread.sleep(2000)
+    }
+
+    /**
+     * Extra long wait for very slow operations.
+     */
+    protected fun extraLongWait() {
+        Thread.sleep(3000)
+    }
+
+    /**
+     * Click FAB button with retry mechanism using multiple strategies.
+     */
+    protected fun clickFab(fabId: String) {
+        // First, try to hide keyboard if it's visible (might be blocking FAB)
+        try {
+            driver.hideKeyboard()
+        } catch (e: Exception) {
+            // Keyboard wasn't visible
+        }
+
+        Thread.sleep(1500) // Wait for UI to settle
+
+        // Strategy 0: Try scrolling to make FAB visible first
+        try {
+            driver.findElement(
+                AppiumBy.androidUIAutomator(
+                    "new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(new UiSelector().resourceId(\"$APP_PACKAGE:id/$fabId\"))"
+                )
+            )
+            Thread.sleep(500)
+        } catch (e: Exception) {
+            // FAB might already be visible or no scrollable container
+        }
+
+        // Strategy 1: Try direct WebElement click
+        var attempts = 0
+        while (attempts < 3) {
+            try {
+                val fab = waitForClickable(fabId, Duration.ofSeconds(5))
+                fab.click()
+                Thread.sleep(1500)
+                return
+            } catch (e: Exception) {
+                attempts++
+                Thread.sleep(500)
+            }
+        }
+
+        // Strategy 2: Try W3C Actions tap with fresh element location
+        try {
+            val fab = findById(fabId)
+            val location = fab.location
+            val size = fab.size
+            val centerX = location.x + size.width / 2
+            val centerY = location.y + size.height / 2
+
+            val finger = org.openqa.selenium.interactions.PointerInput(
+                org.openqa.selenium.interactions.PointerInput.Kind.TOUCH, "finger"
+            )
+            val tap = org.openqa.selenium.interactions.Sequence(finger, 1)
+            tap.addAction(finger.createPointerMove(Duration.ZERO, org.openqa.selenium.interactions.PointerInput.Origin.viewport(), centerX, centerY))
+            tap.addAction(finger.createPointerDown(org.openqa.selenium.interactions.PointerInput.MouseButton.LEFT.asArg()))
+            tap.addAction(finger.createPointerUp(org.openqa.selenium.interactions.PointerInput.MouseButton.LEFT.asArg()))
+            driver.perform(listOf(tap))
+            Thread.sleep(1500)
+            return
+        } catch (e: Exception) {
+            // Continue to next strategy
+        }
+
+        // Strategy 3: Use UiAutomator to click directly
+        try {
+            driver.findElement(
+                AppiumBy.androidUIAutomator(
+                    "new UiSelector().resourceId(\"$APP_PACKAGE:id/$fabId\").clickable(true)"
+                )
+            ).click()
+            Thread.sleep(1500)
+        } catch (e: Exception) {
+            // All strategies failed
+        }
     }
 
     /**
@@ -270,6 +402,32 @@ abstract class AppiumBaseTest {
                     "new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(new UiSelector().text(\"${text.uppercase()}\"))"
                 )
             )
+        }
+    }
+
+    /**
+     * Scroll down to find element by resource ID.
+     */
+    protected fun scrollToElementById(resourceId: String): WebElement {
+        return driver.findElement(
+            AppiumBy.androidUIAutomator(
+                "new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(new UiSelector().resourceId(\"$APP_PACKAGE:id/$resourceId\"))"
+            )
+        )
+    }
+
+    /**
+     * Check if element exists, scrolling if needed.
+     */
+    protected fun elementExistsWithScroll(resourceId: String): Boolean {
+        return try {
+            driver.manage().timeouts().implicitlyWait(SHORT_TIMEOUT)
+            scrollToElementById(resourceId)
+            driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+            true
+        } catch (e: Exception) {
+            driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+            false
         }
     }
 

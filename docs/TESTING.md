@@ -8,7 +8,7 @@ This document describes the testing strategy, test structure, and usage guidelin
 
 ```
         ┌─────────┐
-        │  E2E    │  ← Appium (68 tests)
+        │  E2E    │  ← Appium (84 tests)
         │  Tests  │     Full user flows
        ─┼─────────┼─
        │Integration│  ← AndroidJUnit (66 tests)

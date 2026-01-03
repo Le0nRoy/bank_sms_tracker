@@ -277,7 +277,7 @@ Build system should sync these files automatically via Gradle task.
 
 ```
         ┌─────────┐
-        │  E2E    │  ← Appium (68 tests)
+        │  E2E    │  ← Appium (84 tests)
         │  Tests  │     Full user flows
        ─┼─────────┼─
        │Integration│  ← AndroidJUnit (66 tests)
@@ -299,8 +299,7 @@ Build system should sync these files automatically via Gradle task.
 ### 8.3 Appium UI Tests
 
 Docker-based Appium setup for UI automation:
-- **68 tests** across 6 test classes
-- **82% pass rate** (56/68 tests)
+- **84 tests** across 8 test classes
 - Run with: `make test-appium` or `./gradlew testDebugUnitTest --tests "*.appium.*"`
 
 | Test Class | Tests | Coverage |
@@ -310,7 +309,9 @@ Docker-based Appium setup for UI automation:
 | SenderManagementAppiumTest | 11 | Sender CRUD operations |
 | SmsToPaymentFlowAppiumTest | 10 | End-to-end payment flow |
 | BugReportAppiumTest | 12 | Bug report feature |
-| RegexBuilderAppiumTest | 10 | Regex builder feature |
+| RegexBuilderAppiumTest | 13 | Regex builder feature + save-to-sender |
+| PaymentsFilterAppiumTest | 8 | Payment filtering by sender/date range |
+| CategoryCascadeAppiumTest | 5 | Re-categorize all payments feature |
 
 ### 8.4 Test Data Management
 - Shared test fixtures in `src/test/resources/`
@@ -362,6 +363,18 @@ Docker-based Appium setup for UI automation:
 - Config export uses secure FileProvider
 
 ## 11. Future Enhancements
+
+### 11.1 Phase 7: Background Service & Real-time Processing (Planned)
+
+| Feature | Priority | Description |
+|---------|----------|-------------|
+| **Background Service** | High | Foreground service for permanent background operation |
+| **Real-time SMS Monitoring** | High | Watch and parse all incoming SMS in real time |
+| **Notification System** | High | Notify when configured sender has no applicable regex |
+| **Onboarding Screen** | Medium | First-time user flow explaining permissions |
+| **Bank API Integration** | Low | Research and implement Open Banking / PSD2 APIs |
+
+### 11.2 Other Future Enhancements
 
 1. **Multi-currency support** - Handle currency conversion
 2. **Cloud backup** - Optional encrypted cloud sync

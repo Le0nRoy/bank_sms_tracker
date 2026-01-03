@@ -28,10 +28,14 @@
 - Unit tests for new repository methods (sender/date filtering, category updates)
 - Instrumented tests (PaymentFilterE2ETest, CategoryCascadeE2ETest)
 - Appium tests (PaymentsFilterAppiumTest, CategoryCascadeAppiumTest, RegexBuilder save-to-sender)
-- Ran Appium tests with Docker
+- Added Phase 7 TODOs (Background Service, Real-time SMS, Notifications, Onboarding, Bank APIs)
+- Improved Appium test stability (added longWait, extraLongWait, clickFab helper, scrollToElementById)
+- Fixed Appium test assertions to be more resilient
+- All unit tests passing (81 tests)
 
 ### Next Steps
 - Phase 5+ pending user direction
+- Address remaining Appium test flakiness (emulator speed dependent)
 
 ---
 
@@ -210,6 +214,37 @@
 - [ ] User manual
 - [ ] API documentation (for extensibility)
 - [ ] Release notes
+
+---
+
+## Phase 7: Background Service & Real-time Processing
+
+### 7.1 Background Service
+- [ ] Implement foreground service for permanent background operation
+- [ ] Add service lifecycle management (start on boot, survive app close)
+- [ ] Create persistent notification for service status
+
+### 7.2 Real-time SMS Monitoring
+- [ ] Watch for all incoming SMS messages in real time
+- [ ] Parse messages immediately on receipt (background service)
+- [ ] Handle messages from both configured and unknown senders
+
+### 7.3 Notification System
+- [ ] Send notification for messages from configured senders without applicable regex
+- [ ] Allow quick action to open regex builder from notification
+- [ ] Notification preferences (enable/disable, sound, vibration)
+
+### 7.4 Onboarding & Permissions
+- [ ] Create onboarding screen flow for first-time users
+- [ ] Request all required permissions at first start
+- [ ] Explain why each permission is needed (SMS, storage, notifications)
+- [ ] Graceful degradation when permissions denied
+
+### 7.5 Bank API Integration
+- [ ] Research available banking APIs (Open Banking, PSD2, etc.)
+- [ ] Design abstraction layer for multiple bank APIs
+- [ ] Implement support for common bank APIs
+- [ ] Fallback to SMS parsing when API unavailable
 
 ---
 
