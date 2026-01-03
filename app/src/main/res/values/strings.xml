@@ -70,4 +70,12 @@
     <string name="send_report">Send Report</string>
     <string name="generate_preview_first">Please generate preview first</string>
     <string name="share_report_title">Share Bug Report</string>
+    <string name="select_from_inbox">Select from SMS Inbox</string>
+    <string name="select_sms_message">Select SMS Message</string>
+    <string name="no_sms_found">No SMS messages found</string>
+    <string name="sms_permission_denied">SMS permission is required to select messages</string>
+    <string name="cancel">Cancel</string>
+    <string name="duplicate_sender_name">A sender with this name already exists</string>
+    <string name="duplicate_category_name">A category with this name already exists</string>
+    <string name="duplicate_sender_address">This address already exists in another sender</string>
 </resources>

@@ -24,6 +24,8 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
@@ -31,10 +33,15 @@ import kotlinx.serialization.json.Json
 
 object ConfigRepository {
 
+    private val configMutex = Mutex()
+
+    @Volatile
     private var _config: SmsConfig? = null
     private lateinit var database: BankSmsDatabase
     private lateinit var configDao: ConfigDao
     private lateinit var paymentRepository: PaymentRepository
+
+    @Volatile
     private var paymentProcessor: com.example.banksmstracker.processor.PaymentProcessor? = null
 
     val config: SmsConfig
@@ -139,6 +146,66 @@ object ConfigRepository {
             categories = config.categories,
             paymentRepository = paymentRepository
         ).also { paymentProcessor = it }
+
+    /**
+     * Validation result for duplicate checks.
+     */
+    sealed class ValidationResult {
+        object Valid : ValidationResult()
+        data class DuplicateName(val existingName: String) : ValidationResult()
+        data class DuplicateAddress(val address: String, val existingSenderName: String) : ValidationResult()
+    }
+
+    /**
+     * Validate sender before update - check for duplicate names and addresses.
+     */
+    suspend fun validateSender(sender: Sender): ValidationResult = withContext(Dispatchers.IO) {
+        val senderId = sender.id
+        val senderName = sender.name.trim()
+
+        // Check for duplicate name (case-insensitive)
+        if (senderName.isNotEmpty()) {
+            val duplicateName = config.senders.find { s ->
+                s.id != senderId && s.name.equals(senderName, ignoreCase = true)
+            }
+            if (duplicateName != null) {
+                return@withContext ValidationResult.DuplicateName(duplicateName.name)
+            }
+        }
+
+        // Check for duplicate addresses across senders
+        val trimmedAddresses = sender.addresses.map { it.trim().lowercase() }.filter { it.isNotEmpty() }
+        for (address in trimmedAddresses) {
+            val otherSender = config.senders.find { s ->
+                s.id != senderId && s.addresses.any { it.trim().lowercase() == address }
+            }
+            if (otherSender != null) {
+                return@withContext ValidationResult.DuplicateAddress(address, otherSender.name)
+            }
+        }
+
+        ValidationResult.Valid
+    }
+
+    /**
+     * Validate category before update - check for duplicate names.
+     */
+    suspend fun validateCategory(category: Category): ValidationResult = withContext(Dispatchers.IO) {
+        val categoryId = category.id
+        val categoryName = category.name.trim()
+
+        // Check for duplicate name (case-insensitive)
+        if (categoryName.isNotEmpty()) {
+            val duplicateName = config.categories.find { c ->
+                c.id != categoryId && c.name.equals(categoryName, ignoreCase = true)
+            }
+            if (duplicateName != null) {
+                return@withContext ValidationResult.DuplicateName(duplicateName.name)
+            }
+        }
+
+        ValidationResult.Valid
+    }
 
     suspend fun exportConfigJson(pretty: Boolean = true): String = withContext(Dispatchers.IO) {
         refreshConfigInternal()
@@ -342,17 +409,19 @@ object ConfigRepository {
     }
 
     private suspend fun refreshConfigInternal() = withContext(Dispatchers.IO) {
-        val categories = configDao.getCategories().toDomainCategories()
-        val senders = configDao.getSenders().toDomainSenders()
-        _config = SmsConfig(
-            senders = senders.toMutableList(),
-            categories = categories.toMutableList()
-        )
-        paymentProcessor = com.example.banksmstracker.processor.PaymentProcessor(
-            senders = config.senders,
-            categories = config.categories,
-            paymentRepository = paymentRepository
-        )
+        configMutex.withLock {
+            val categories = configDao.getCategories().toDomainCategories()
+            val senders = configDao.getSenders().toDomainSenders()
+            _config = SmsConfig(
+                senders = senders.toMutableList(),
+                categories = categories.toMutableList()
+            )
+            paymentProcessor = com.example.banksmstracker.processor.PaymentProcessor(
+                senders = config.senders,
+                categories = config.categories,
+                paymentRepository = paymentRepository
+            )
+        }
     }
 
     private suspend fun isConfigEmpty(): Boolean = withContext(Dispatchers.IO) {

@@ -2,9 +2,9 @@
 
 ## Status
 - [x] Reported
-- [ ] In Progress
-- [ ] Fixed
-- [ ] Verified
+- [x] In Progress
+- [x] Fixed
+- [x] Verified
 
 ## Description
 PaymentsActivity calls `ConfigRepository.load()` asynchronously but immediately accesses `getCategories()` before load completes, causing a race condition.

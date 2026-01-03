@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.banksmstracker.R
 import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.util.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -18,7 +19,6 @@ import kotlinx.coroutines.withContext
 class ApplyRulesActivity : BaseActivity() {
 
     private lateinit var textView: TextView
-    private val SMS_PERMISSION_REQUEST = 124
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,13 +42,13 @@ class ApplyRulesActivity : BaseActivity() {
         ActivityCompat.requestPermissions(
             this,
             arrayOf(Manifest.permission.READ_SMS),
-            SMS_PERMISSION_REQUEST
+            Constants.RequestCodes.SMS_PERMISSION
         )
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == SMS_PERMISSION_REQUEST) {
+        if (requestCode == Constants.RequestCodes.SMS_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 applyRules()
             } else {

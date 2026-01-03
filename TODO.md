@@ -177,10 +177,10 @@
 
 ### 4.4 Bug Fixes
 - [x] Fix BUG-001: SQL injection in ApplyRulesActivity
-- [~] Fix BUG-002: Race condition in ConfigRepository (deferred - low priority)
+- [x] Fix BUG-002: Race condition in ConfigRepository (added Mutex synchronization)
 - [x] Fix BUG-003: Missing regex group validation
 - [x] Fix BUG-004: Blocking coroutines in RoomPaymentRepository
-- [~] Fix BUG-005: Race condition in PaymentsActivity (deferred - low priority)
+- [x] Fix BUG-005: Race condition in PaymentsActivity (fixed by proper coroutine sequencing)
 - [x] Fix BUG-006: Regex pattern not cached
 
 ---
@@ -189,16 +189,19 @@
 
 ### 5.1 Visual Improvements
 - [ ] Material Design 3 components
-- [ ] Consistent color scheme
+- [x] Consistent color scheme (Darcula-inspired dark theme)
 - [ ] Loading indicators
 - [ ] Empty state views
 - [ ] Error state views
 
 ### 5.2 UX Improvements
-- [ ] Input validation feedback
+- [x] Input validation feedback (duplicate validation for senders/categories)
 - [ ] Confirmation dialogs for destructive actions
 - [ ] Undo functionality for deletions
 - [ ] Keyboard navigation
+
+### 5.3 Regex Builder Enhancements
+- [x] Select SMS message from inbox (instead of just pasting)
 
 ---
 

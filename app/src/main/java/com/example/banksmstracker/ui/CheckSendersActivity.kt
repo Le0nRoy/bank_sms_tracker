@@ -10,11 +10,11 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.banksmstracker.R
 import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.util.Constants
 
 class CheckSendersActivity : BaseActivity() {
 
     private lateinit var textView: TextView
-    private val SMS_PERMISSION_REQUEST = 123
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,13 +38,13 @@ class CheckSendersActivity : BaseActivity() {
         ActivityCompat.requestPermissions(
             this,
             arrayOf(Manifest.permission.READ_SMS),
-            SMS_PERMISSION_REQUEST
+            Constants.RequestCodes.SMS_PERMISSION
         )
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == SMS_PERMISSION_REQUEST) {
+        if (requestCode == Constants.RequestCodes.SMS_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 checkSenders()
             } else {

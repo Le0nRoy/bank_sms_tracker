@@ -12,8 +12,8 @@
         android:textStyle="bold"
         android:gravity="center"
         android:padding="16dp"
-        android:background="@android:color/holo_purple"
-        android:textColor="@android:color/white" />
+        android:background="?attr/colorPrimary"
+        android:textColor="?attr/colorOnPrimary" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -44,6 +44,14 @@
                 android:inputType="textMultiLine"
                 android:background="@android:drawable/edit_text"
                 android:padding="8dp" />
+
+            <Button
+                android:id="@+id/btnSelectSms"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/select_from_inbox"
+                android:layout_marginTop="8dp"
+                style="?android:attr/buttonBarButtonStyle" />
 
             <TextView
                 android:layout_width="match_parent"

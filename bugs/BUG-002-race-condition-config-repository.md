@@ -2,8 +2,8 @@
 
 ## Status
 - [x] Reported
-- [ ] In Progress
-- [ ] Fixed
+- [x] In Progress
+- [x] Fixed
 - [ ] Verified
 
 ## Description
