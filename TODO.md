@@ -195,17 +195,23 @@
 - [ ] Consistent color scheme
 - [x] Loading indicators (CategoriesActivity, SendersActivity)
 - [x] Empty state views (CategoriesActivity, SendersActivity)
-- [ ] Error state views
+- [x] Error state views with retry functionality
 
 ### 5.2 UX Improvements
 - [x] Input validation feedback (duplicate validation for senders/categories)
 - [x] Confirmation dialogs for destructive actions (recategorize, save regex)
 - [ ] Undo functionality for deletions
 - [ ] Keyboard navigation
+- [x] Grouped main menu layout
 
 ### 5.3 Regex Builder Enhancements
 - [x] Select SMS message from inbox (instead of just pasting)
 - [x] SMS message separator in selection dialog
+
+### 5.4 Spending Reports
+- [x] Spending report dialog with category breakdown
+- [x] Date range filtering for reports
+- [x] Percentage breakdown by category
 
 ---
 
@@ -218,36 +224,51 @@
 - [ ] Build-time configuration (email, etc.)
 
 ### 6.2 Documentation
-- [ ] User manual
+- [x] User manual (docs/USER_MANUAL.md)
 - [ ] API documentation (for extensibility)
-- [ ] Release notes
+- [x] Release notes (CHANGELOG.md)
+- [x] README with build instructions
+- [x] AI reviewer prompt (AI_REVIEWER_PROMPT.md)
 
 ---
 
-## Phase 7: Background Service & Real-time Processing
+## Phase 7: Analytics & Reporting
 
-### 7.1 Background Service
+### 7.0 Anonymous Usage Statistics (Future)
+- [ ] Track most common categories used
+- [ ] Track number of configured senders per user
+- [ ] Track regex patterns usage frequency
+- [ ] Track app usage patterns (screens visited, features used)
+- [ ] Implement opt-in analytics collection
+- [ ] Privacy-first design (no PII collection)
+- [ ] Analytics dashboard for aggregate insights
+
+---
+
+## Phase 8: Background Service & Real-time Processing
+
+### 8.1 Background Service
 - [ ] Implement foreground service for permanent background operation
 - [ ] Add service lifecycle management (start on boot, survive app close)
 - [ ] Create persistent notification for service status
 
-### 7.2 Real-time SMS Monitoring
+### 8.2 Real-time SMS Monitoring
 - [ ] Watch for all incoming SMS messages in real time
 - [ ] Parse messages immediately on receipt (background service)
 - [ ] Handle messages from both configured and unknown senders
 
-### 7.3 Notification System
+### 8.3 Notification System
 - [ ] Send notification for messages from configured senders without applicable regex
 - [ ] Allow quick action to open regex builder from notification
 - [ ] Notification preferences (enable/disable, sound, vibration)
 
-### 7.4 Onboarding & Permissions
+### 8.4 Onboarding & Permissions
 - [ ] Create onboarding screen flow for first-time users
 - [ ] Request all required permissions at first start
 - [ ] Explain why each permission is needed (SMS, storage, notifications)
 - [ ] Graceful degradation when permissions denied
 
-### 7.5 Bank API Integration
+### 8.5 Bank API Integration
 - [ ] Research available banking APIs (Open Banking, PSD2, etc.)
 - [ ] Design abstraction layer for multiple bank APIs
 - [ ] Implement support for common bank APIs

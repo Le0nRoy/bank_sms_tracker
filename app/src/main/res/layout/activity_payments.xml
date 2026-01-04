@@ -74,6 +74,14 @@
             android:textStyle="bold" />
 
         <Button
+            android:id="@+id/btnSpendingReport"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/spending_report"
+            android:textSize="12sp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
             android:id="@+id/btnExportCsv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

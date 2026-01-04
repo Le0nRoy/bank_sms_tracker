@@ -36,3 +36,4 @@ outputs/
 # Misc
 .DS_Store
 Thumbs.db
+.kotlin/

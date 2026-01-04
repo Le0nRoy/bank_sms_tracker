@@ -1,5 +1,6 @@
 package com.example.banksmstracker.ui
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
@@ -40,6 +41,7 @@ class PaymentsActivity : BaseActivity() {
     private lateinit var btnStartDate: Button
     private lateinit var btnEndDate: Button
     private lateinit var btnClearDates: Button
+    private lateinit var btnSpendingReport: Button
 
     private lateinit var paymentRepository: RoomPaymentRepository
     private var allPayments: List<Payment> = emptyList()
@@ -76,6 +78,11 @@ class PaymentsActivity : BaseActivity() {
 
         btnExportCsv.setOnClickListener {
             exportToCsv()
+        }
+
+        btnSpendingReport = findViewById(R.id.btnSpendingReport)
+        btnSpendingReport.setOnClickListener {
+            showSpendingReport()
         }
 
         btnStartDate.setOnClickListener {
@@ -329,6 +336,60 @@ class PaymentsActivity : BaseActivity() {
         } else {
             value
         }
+
+    private fun showSpendingReport() {
+        if (filteredPayments.isEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.spending_report)
+                .setMessage(R.string.no_spending_data)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+            return
+        }
+
+        // Group payments by category and calculate totals
+        val categoryTotals = filteredPayments
+            .groupBy { it.categoryId ?: getString(R.string.all_categories).replace("All categories", "Uncategorized") }
+            .mapValues { (_, payments) ->
+                payments.sumOf { it.amount }
+            }
+            .toList()
+            .sortedByDescending { it.second }
+
+        val totalAmount = filteredPayments.sumOf { it.amount }
+        val currency = filteredPayments.firstOrNull()?.currency ?: ""
+
+        // Build report message
+        val reportBuilder = StringBuilder()
+
+        // Date range info
+        val dateRangeText = when {
+            startDate != null && endDate != null ->
+                "${dateFormat.format(Date(startDate!!))} - ${dateFormat.format(Date(endDate!!))}"
+            startDate != null -> "From ${dateFormat.format(Date(startDate!!))}"
+            endDate != null -> "Until ${dateFormat.format(Date(endDate!!))}"
+            else -> getString(R.string.all_time)
+        }
+        reportBuilder.appendLine("Period: $dateRangeText")
+        reportBuilder.appendLine()
+
+        // Total
+        reportBuilder.appendLine(getString(R.string.total_spending, "%.2f".format(totalAmount), currency))
+        reportBuilder.appendLine()
+
+        // Category breakdown
+        reportBuilder.appendLine("By Category:")
+        categoryTotals.forEach { (category, amount) ->
+            val percentage = (amount / totalAmount * 100).toInt()
+            reportBuilder.appendLine("  $category: ${"%.2f".format(amount)} $currency ($percentage%)")
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.spending_report)
+            .setMessage(reportBuilder.toString())
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+    }
 
     // RecyclerView Adapter
     inner class PaymentAdapter : RecyclerView.Adapter<PaymentAdapter.PaymentViewHolder>() {

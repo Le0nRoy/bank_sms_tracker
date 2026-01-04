@@ -29,6 +29,8 @@ class SendersActivity :
     private lateinit var adapter: SendersAdapter
     private lateinit var progressBar: ProgressBar
     private lateinit var tvEmptyState: TextView
+    private lateinit var errorStateView: LinearLayout
+    private lateinit var btnRetry: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +52,9 @@ class SendersActivity :
     private fun setupViews() {
         progressBar = findViewById(R.id.progressBar)
         tvEmptyState = findViewById(R.id.tvEmptyState)
+        errorStateView = findViewById(R.id.errorStateView)
+        btnRetry = findViewById(R.id.btnRetry)
+        btnRetry.setOnClickListener { loadSenders() }
     }
 
     private fun setupRecyclerView() {
@@ -61,18 +66,38 @@ class SendersActivity :
 
     private fun loadSenders() {
         lifecycleScope.launch {
-            progressBar.visibility = View.VISIBLE
-            recyclerView.visibility = View.GONE
-            tvEmptyState.visibility = View.GONE
-
-            val senders = ConfigRepository.getSenders()
-                .map { it.clone() }
-                .toMutableList()
-            adapter.submitList(senders)
-
-            progressBar.visibility = View.GONE
-            updateEmptyState()
+            showLoadingState()
+            try {
+                val senders = ConfigRepository.getSenders()
+                    .map { it.clone() }
+                    .toMutableList()
+                adapter.submitList(senders)
+                showContentState()
+            } catch (e: Exception) {
+                showErrorState(getString(R.string.error_loading_senders))
+            }
         }
+    }
+
+    private fun showLoadingState() {
+        progressBar.visibility = View.VISIBLE
+        recyclerView.visibility = View.GONE
+        tvEmptyState.visibility = View.GONE
+        errorStateView.visibility = View.GONE
+    }
+
+    private fun showContentState() {
+        progressBar.visibility = View.GONE
+        errorStateView.visibility = View.GONE
+        updateEmptyState()
+    }
+
+    private fun showErrorState(message: String) {
+        progressBar.visibility = View.GONE
+        recyclerView.visibility = View.GONE
+        tvEmptyState.visibility = View.GONE
+        errorStateView.visibility = View.VISIBLE
+        findViewById<TextView>(R.id.tvErrorMessage).text = message
     }
 
     private fun updateEmptyState() {

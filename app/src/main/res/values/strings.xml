@@ -89,4 +89,34 @@
     <string name="save_regex_confirm_title">Save Regex Rule</string>
     <string name="save_regex_confirm_message">Add this regex pattern to %1$s?\n\nPattern: %2$s</string>
     <string name="processing">Processing…</string>
+
+    <!-- Error states -->
+    <string name="error_loading_categories">Failed to load categories</string>
+    <string name="error_loading_senders">Failed to load senders</string>
+    <string name="error_loading_payments">Failed to load payments</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="retry">Retry</string>
+
+    <!-- Undo functionality -->
+    <string name="undo">Undo</string>
+    <string name="category_deleted">Category deleted</string>
+    <string name="sender_deleted">Sender deleted</string>
+    <string name="payment_deleted">Payment deleted</string>
+
+    <!-- Main menu groups -->
+    <string name="menu_group_data">Data Management</string>
+    <string name="menu_group_tools">Tools</string>
+    <string name="menu_group_settings">Settings &amp; Help</string>
+
+    <!-- Spending report -->
+    <string name="spending_report">Spending Report</string>
+    <string name="total_spending">Total: %1$s %2$s</string>
+    <string name="category_spending">%1$s: %2$s %3$s</string>
+    <string name="no_spending_data">No spending data for selected period</string>
+    <string name="date_range_format">%1$s - %2$s</string>
+    <string name="select_date_range">Select Date Range</string>
+    <string name="all_time">All Time</string>
+    <string name="this_month">This Month</string>
+    <string name="last_month">Last Month</string>
+    <string name="custom_range">Custom Range</string>
 </resources>
