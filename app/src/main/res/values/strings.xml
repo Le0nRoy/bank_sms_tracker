@@ -78,4 +78,15 @@
     <string name="duplicate_sender_name">A sender with this name already exists</string>
     <string name="duplicate_category_name">A category with this name already exists</string>
     <string name="duplicate_sender_address">This address already exists in another sender</string>
+
+    <!-- Phase 5: UI improvements -->
+    <string name="loading">Loading…</string>
+    <string name="no_categories">No categories yet. Tap + to add one.</string>
+    <string name="no_senders">No senders yet. Tap + to add one.</string>
+    <string name="confirm">Confirm</string>
+    <string name="recategorize_confirm_title">Re-categorize Payments</string>
+    <string name="recategorize_confirm_message">This will re-categorize all payments based on current merchant rules. This action cannot be undone.\n\nContinue?</string>
+    <string name="save_regex_confirm_title">Save Regex Rule</string>
+    <string name="save_regex_confirm_message">Add this regex pattern to %1$s?\n\nPattern: %2$s</string>
+    <string name="processing">Processing…</string>
 </resources>

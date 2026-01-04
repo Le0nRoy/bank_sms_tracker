@@ -22,13 +22,12 @@ fun SmsConfig.validate(): List<String> {
         }
     }
 
-    // merchant in multiple categories
-    // FIXME need better explanation of what happens here
+    // merchant in multiple different categories (duplicates within same category are allowed)
     val merchantMap = categories.flatMap { c ->
         c.merchants.map { it to c.name }
     }.groupBy({ it.first }, { it.second })
-    merchantMap.filter { it.value.size > 1 }.forEach {
-        errors.add("Merchant ${it.key} in multiple categories: ${it.value}")
+    merchantMap.filter { it.value.distinct().size > 1 }.forEach {
+        errors.add("Merchant ${it.key} in multiple categories: ${it.value.distinct()}")
     }
 
     return errors

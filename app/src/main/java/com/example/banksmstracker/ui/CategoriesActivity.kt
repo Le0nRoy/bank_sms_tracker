@@ -1,5 +1,6 @@
 package com.example.banksmstracker.ui
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,7 +8,9 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Switch
+import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,11 +31,14 @@ class CategoriesActivity :
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: CategoriesAdapter
     private lateinit var btnRecategorize: Button
+    private lateinit var progressBar: ProgressBar
+    private lateinit var tvEmptyState: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_categories)
 
+        setupViews()
         setupRecyclerView()
         setupRecategorizeButton()
         loadCategories()
@@ -41,33 +47,56 @@ class CategoriesActivity :
             lifecycleScope.launch {
                 val newCategory = ConfigRepository.addCategory()
                 adapter.addCategory(newCategory.clone())
+                updateEmptyState()
             }
         }
+    }
+
+    private fun setupViews() {
+        progressBar = findViewById(R.id.progressBar)
+        tvEmptyState = findViewById(R.id.tvEmptyState)
     }
 
     private fun setupRecategorizeButton() {
         btnRecategorize = findViewById(R.id.btnRecategorize)
         btnRecategorize.setOnClickListener {
-            lifecycleScope.launch {
-                btnRecategorize.isEnabled = false
-                try {
-                    val count = withContext(Dispatchers.IO) {
-                        ConfigRepository.recategorizeAllPayments()
-                    }
-                    Toast.makeText(
-                        this@CategoriesActivity,
-                        getString(R.string.recategorize_success, count),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } catch (e: Exception) {
-                    Toast.makeText(
-                        this@CategoriesActivity,
-                        getString(R.string.recategorize_failed, e.message ?: "Unknown error"),
-                        Toast.LENGTH_LONG
-                    ).show()
-                } finally {
-                    btnRecategorize.isEnabled = true
+            showRecategorizeConfirmation()
+        }
+    }
+
+    private fun showRecategorizeConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.recategorize_confirm_title)
+            .setMessage(R.string.recategorize_confirm_message)
+            .setPositiveButton(R.string.confirm) { _, _ ->
+                performRecategorize()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun performRecategorize() {
+        lifecycleScope.launch {
+            btnRecategorize.isEnabled = false
+            progressBar.visibility = View.VISIBLE
+            try {
+                val count = withContext(Dispatchers.IO) {
+                    ConfigRepository.recategorizeAllPayments()
                 }
+                Toast.makeText(
+                    this@CategoriesActivity,
+                    getString(R.string.recategorize_success, count),
+                    Toast.LENGTH_SHORT
+                ).show()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@CategoriesActivity,
+                    getString(R.string.recategorize_failed, e.message ?: "Unknown error"),
+                    Toast.LENGTH_LONG
+                ).show()
+            } finally {
+                btnRecategorize.isEnabled = true
+                progressBar.visibility = View.GONE
             }
         }
     }
@@ -81,10 +110,27 @@ class CategoriesActivity :
 
     private fun loadCategories() {
         lifecycleScope.launch {
+            progressBar.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+            tvEmptyState.visibility = View.GONE
+
             val categories = ConfigRepository.getCategories()
                 .map { it.clone() }
                 .toMutableList()
             adapter.submitList(categories)
+
+            progressBar.visibility = View.GONE
+            updateEmptyState()
+        }
+    }
+
+    private fun updateEmptyState() {
+        if (adapter.itemCount == 0) {
+            recyclerView.visibility = View.GONE
+            tvEmptyState.visibility = View.VISIBLE
+        } else {
+            recyclerView.visibility = View.VISIBLE
+            tvEmptyState.visibility = View.GONE
         }
     }
 

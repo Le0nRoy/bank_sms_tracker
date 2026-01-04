@@ -7,7 +7,9 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ProgressBar
 import android.widget.Switch
+import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -25,11 +27,14 @@ class SendersActivity :
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: SendersAdapter
+    private lateinit var progressBar: ProgressBar
+    private lateinit var tvEmptyState: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_senders)
 
+        setupViews()
         setupRecyclerView()
         loadSenders()
 
@@ -37,8 +42,14 @@ class SendersActivity :
             lifecycleScope.launch {
                 val sender = ConfigRepository.addSender()
                 adapter.addSender(sender.clone())
+                updateEmptyState()
             }
         }
+    }
+
+    private fun setupViews() {
+        progressBar = findViewById(R.id.progressBar)
+        tvEmptyState = findViewById(R.id.tvEmptyState)
     }
 
     private fun setupRecyclerView() {
@@ -50,10 +61,27 @@ class SendersActivity :
 
     private fun loadSenders() {
         lifecycleScope.launch {
+            progressBar.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+            tvEmptyState.visibility = View.GONE
+
             val senders = ConfigRepository.getSenders()
                 .map { it.clone() }
                 .toMutableList()
             adapter.submitList(senders)
+
+            progressBar.visibility = View.GONE
+            updateEmptyState()
+        }
+    }
+
+    private fun updateEmptyState() {
+        if (adapter.itemCount == 0) {
+            recyclerView.visibility = View.GONE
+            tvEmptyState.visibility = View.VISIBLE
+        } else {
+            recyclerView.visibility = View.VISIBLE
+            tvEmptyState.visibility = View.GONE
         }
     }
 

@@ -142,7 +142,10 @@
 - [x] PaymentProcessorEnabledTest (enabled/disabled functionality)
 - [x] ImportResultTest (import result sealed class)
 - [x] DataClassesTest (data class coverage)
-- [ ] Add missing edge case tests
+- [x] PaymentProcessorEdgeCaseTest (edge cases: empty inputs, boundaries, regex patterns)
+- [x] ConfigLoaderEdgeCaseTest (edge cases: invalid JSON, empty configs, special chars)
+- [x] PaymentRepositoryEdgeCaseTest (edge cases: null values, boundaries, ordering)
+- [x] ConstantsTest (Constants utility class)
 - [ ] Achieve 80%+ code coverage
 
 ### 4.1.1 Code Coverage
@@ -156,7 +159,7 @@
 - [x] ConfigRepositoryRoomTest
 - [x] RoomPaymentRepositoryTest
 - [x] Config import/export integration (ConfigImportE2ETest)
-- [ ] Full SMS processing pipeline
+- [x] Full SMS processing pipeline (SmsProcessingPipelineE2ETest)
 
 ### 4.3 E2E Tests
 - [x] SmsReceptionE2ETest
@@ -189,19 +192,20 @@
 
 ### 5.1 Visual Improvements
 - [ ] Material Design 3 components
-- [x] Consistent color scheme (Darcula-inspired dark theme)
-- [ ] Loading indicators
-- [ ] Empty state views
+- [ ] Consistent color scheme
+- [x] Loading indicators (CategoriesActivity, SendersActivity)
+- [x] Empty state views (CategoriesActivity, SendersActivity)
 - [ ] Error state views
 
 ### 5.2 UX Improvements
 - [x] Input validation feedback (duplicate validation for senders/categories)
-- [ ] Confirmation dialogs for destructive actions
+- [x] Confirmation dialogs for destructive actions (recategorize, save regex)
 - [ ] Undo functionality for deletions
 - [ ] Keyboard navigation
 
 ### 5.3 Regex Builder Enhancements
 - [x] Select SMS message from inbox (instead of just pasting)
+- [x] SMS message separator in selection dialog
 
 ---
 

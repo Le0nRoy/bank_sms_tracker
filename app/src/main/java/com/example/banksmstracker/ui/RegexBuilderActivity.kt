@@ -112,8 +112,8 @@ class RegexBuilderActivity : BaseActivity() {
             }
 
             val displayItems = smsMessages.map { sms ->
-                val preview = if (sms.body.length > 50) sms.body.take(50) + "..." else sms.body
-                "${sms.address}: $preview"
+                val preview = if (sms.body.length > 80) sms.body.take(80) + "..." else sms.body
+                "━━━ ${sms.address} ━━━\n$preview"
             }.toTypedArray()
 
             AlertDialog.Builder(this@RegexBuilderActivity)
@@ -222,7 +222,22 @@ class RegexBuilderActivity : BaseActivity() {
             return
         }
 
-        // Add new rule and save
+        // Show confirmation dialog
+        showSaveConfirmation(sender, regexPattern)
+    }
+
+    private fun showSaveConfirmation(sender: Sender, regexPattern: String) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.save_regex_confirm_title)
+            .setMessage(getString(R.string.save_regex_confirm_message, sender.name, regexPattern))
+            .setPositiveButton(R.string.confirm) { _, _ ->
+                performSaveRegex(sender, regexPattern)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun performSaveRegex(sender: Sender, regexPattern: String) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
                 val updatedRules = sender.rules.toMutableList()

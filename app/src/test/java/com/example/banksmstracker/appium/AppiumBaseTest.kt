@@ -3,9 +3,12 @@ package com.example.banksmstracker.appium
 import io.appium.java_client.AppiumBy
 import io.appium.java_client.android.AndroidDriver
 import io.appium.java_client.android.options.UiAutomator2Options
+import java.net.HttpURLConnection
 import java.net.URI
+import java.net.URL
 import java.time.Duration
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -26,6 +29,8 @@ import org.openqa.selenium.support.ui.WebDriverWait
  * ```
  * make appium-install
  * ```
+ *
+ * NOTE: Tests are automatically skipped if Appium server is not running.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AppiumBaseTest {
@@ -43,6 +48,12 @@ abstract class AppiumBaseTest {
 
     @BeforeAll
     open fun setUp() {
+        // Skip tests if Appium server is not available
+        Assumptions.assumeTrue(
+            isAppiumAvailable(),
+            "Appium server not available at $APPIUM_SERVER_URL - skipping Appium tests"
+        )
+
         val options = UiAutomator2Options().apply {
             setPlatformName("Android")
             setAutomationName("UiAutomator2")
@@ -56,6 +67,24 @@ abstract class AppiumBaseTest {
         driver = AndroidDriver(URI.create(APPIUM_SERVER_URL).toURL(), options)
         driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
         wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+    }
+
+    /**
+     * Check if Appium server is available.
+     */
+    private fun isAppiumAvailable(): Boolean {
+        return try {
+            val url = URL("$APPIUM_SERVER_URL/status")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.requestMethod = "GET"
+            conn.connectTimeout = 3000
+            conn.readTimeout = 3000
+            val response = conn.responseCode
+            conn.disconnect()
+            response == 200
+        } catch (e: Exception) {
+            false
+        }
     }
 
     @AfterAll
