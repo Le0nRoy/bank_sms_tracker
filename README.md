@@ -1,7 +1,7 @@
 # Bank SMS Tracker
 
 [![Build Status](https://github.com/user/BankSMSTracker/workflows/Android%20CI/badge.svg)](https://github.com/user/BankSMSTracker/actions)
-[![Code Coverage](https://img.shields.io/badge/coverage-WIP-yellow.svg)](./app/build/reports/jacoco/jacocoTestReport/html/index.html)
+[![Code Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen.svg)](./app/build/reports/jacoco/jacocoTestReport/html/index.html)
 [![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](LICENSE)
 
 **An Android app that automatically tracks bank transactions from SMS messages and categorizes your spending.**

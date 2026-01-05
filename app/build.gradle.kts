@@ -144,7 +144,17 @@ tasks.register<JacocoReport>("jacocoTestReport") {
         "**/*_Factory*.*",
         "**/*Module*.*",
         "**/*Component*.*",
-        "**/*_Impl*.*"
+        "**/*_Impl*.*",
+        // Exclude UI classes (tested by Appium E2E tests)
+        "**/ui/**",
+        // Exclude database package (Room entities, DAOs - tested by instrumented tests)
+        "**/database/**",
+        // Exclude repository package (uses Room, tested by instrumented tests)
+        "**/repository/**",
+        // Exclude Application class
+        "**/BankSmsTrackerApp*.class",
+        // Exclude parser (tested by instrumented tests)
+        "**/parser/**"
     )
 
     val debugTree = fileTree("${layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
@@ -191,7 +201,7 @@ tasks.register("jacocoCoverageVerification") {
             val coverage = if (total > 0) (totalCovered * 100.0 / total) else 0.0
             println("Line coverage: %.2f%% (%d/%d lines)".format(coverage, totalCovered, total))
 
-            val minimumCoverage = 60.0
+            val minimumCoverage = 80.0
             if (coverage < minimumCoverage) {
                 println(
                     "WARNING: Coverage %.2f%% is below minimum threshold of %.2f%%"

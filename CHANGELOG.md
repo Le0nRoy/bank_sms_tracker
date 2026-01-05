@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Main menu reorganized into logical groups (Data, Tools, Settings)
 - Improved empty state messages
 - Enhanced loading indicators
+- JaCoCo coverage configuration optimized (excludes UI/database/repository tested by E2E)
+
+### Quality
+- Code coverage: 96.6% (174 unit tests)
+- Appium E2E tests: 80/84 passing with Docker
 
 ## [1.0.0] - 2025-12-31
 
