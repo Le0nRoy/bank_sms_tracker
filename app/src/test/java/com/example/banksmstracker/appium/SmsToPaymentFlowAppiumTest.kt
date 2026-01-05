@@ -113,7 +113,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
     @Order(3)
     @DisplayName("Navigate to Apply Rules screen")
     fun navigateToApplyRules() {
-        findByText("Apply Rules").click()
+        findById("btnApplyRules").click()
         mediumWait()
 
         // Handle permission dialog if it appears
@@ -214,7 +214,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
     @Order(9)
     @DisplayName("Check Senders screen loads")
     fun checkSendersScreenLoads() {
-        findByText("Check Senders").click()
+        findById("btnCheckSenders").click()
         mediumWait()
 
         // Should navigate to check senders screen

@@ -14,7 +14,9 @@
         android:padding="8dp"
         android:textSize="12sp"
         android:fontFamily="monospace"
-        android:background="@android:drawable/edit_text" />
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_hint"
+        android:background="@drawable/edit_text_themed" />
 
     <Switch
         android:id="@+id/switchRuleEnabled"

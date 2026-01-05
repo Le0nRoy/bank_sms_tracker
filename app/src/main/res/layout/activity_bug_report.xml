@@ -42,8 +42,9 @@
                 android:gravity="top|start"
                 android:hint="@string/bug_description_hint"
                 android:inputType="textMultiLine"
-                android:background="@android:drawable/edit_text"
-                android:padding="8dp" />
+                android:background="@drawable/edit_text_themed"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
 
             <CheckBox
                 android:id="@+id/cbIncludeConfig"
@@ -88,7 +89,8 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="11sp"
-                android:background="@android:drawable/editbox_background"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/edit_text_themed"
                 android:padding="12dp"
                 android:minHeight="150dp"
                 android:gravity="top|start" />

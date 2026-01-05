@@ -42,8 +42,9 @@
                 android:gravity="top|start"
                 android:hint="@string/sample_sms_hint"
                 android:inputType="textMultiLine"
-                android:background="@android:drawable/edit_text"
-                android:padding="8dp" />
+                android:background="@drawable/edit_text_themed"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
 
             <Button
                 android:id="@+id/btnSelectSms"
@@ -71,15 +72,16 @@
                 android:hint="@string/regex_pattern_hint"
                 android:inputType="textMultiLine"
                 android:fontFamily="monospace"
-                android:background="@android:drawable/edit_text"
-                android:padding="8dp" />
+                android:background="@drawable/edit_text_themed"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/regex_groups_help"
                 android:textSize="11sp"
-                android:textColor="@android:color/darker_gray"
+                android:textColor="@color/text_hint"
                 android:layout_marginTop="4dp" />
 
             <Button
@@ -101,7 +103,7 @@
                 android:id="@+id/spinnerSenders"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@android:drawable/btn_dropdown"
+                android:background="@drawable/edit_text_themed"
                 android:padding="8dp" />
 
             <Button
@@ -125,7 +127,8 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
                 android:textSize="12sp"
-                android:background="@android:drawable/editbox_background"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/edit_text_themed"
                 android:padding="12dp"
                 android:minHeight="200dp"
                 android:gravity="top|start" />

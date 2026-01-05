@@ -14,9 +14,31 @@ This document describes the testing strategy, test structure, and usage guidelin
        │Integration│  ← AndroidJUnit (66 tests)
        │   Tests   │     Room DB, Repositories
       ─┼───────────┼─
-      │   Unit     │  ← JUnit 5 (30+ tests)
+      │   Unit     │  ← JUnit 5 (174 tests)
       │   Tests    │     Processors, Parsers, Logic
       ─┴───────────┴─
+```
+
+## Code Coverage
+
+**Current Coverage: 96.6%** (on business logic classes)
+
+Coverage is measured on:
+- `data/` - Data models
+- `processor/` - Payment parsing logic
+- `serializer/` - Config loading/validation
+- `util/` - Utility classes
+
+Excluded from coverage (tested by E2E/instrumented tests):
+- `ui/` - Activities, Adapters (tested by Appium)
+- `database/` - Room entities, DAOs (tested by instrumented tests)
+- `repository/` - Repository implementations (tested by instrumented tests)
+- `parser/` - SMS receiver (tested by instrumented tests)
+
+Generate coverage report:
+```bash
+./gradlew jacocoTestReport
+# Report: app/build/reports/jacoco/jacocoTestReport/html/index.html
 ```
 
 ## Test Categories
@@ -322,8 +344,8 @@ Tests are run automatically via GitHub Actions on:
 
 Current CI pipeline:
 1. **Lint** - ktlint code style check
-2. **Unit Tests** - (to be added)
-3. **Integration Tests** - (to be added, requires emulator)
+2. **Unit Tests** - JUnit 5 tests with coverage
+3. **Coverage Report** - JaCoCo HTML/XML reports
 
 ## Troubleshooting
 
