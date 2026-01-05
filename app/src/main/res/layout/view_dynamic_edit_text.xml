@@ -5,4 +5,6 @@
     android:layout_marginTop="4dp"
     android:layout_marginBottom="4dp"
     android:padding="8dp"
-    android:background="@drawable/edit_text_background" />
+    android:background="@drawable/edit_text_themed"
+    android:textColor="@color/text_primary"
+    android:textColorHint="@color/text_hint" />

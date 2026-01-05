@@ -4,17 +4,6 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Apply Rules"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:padding="16dp"
-        android:background="@android:color/holo_blue_dark"
-        android:textColor="@android:color/white" />
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -26,7 +15,8 @@
             android:layout_height="wrap_content"
             android:text="Loading..."
             android:textSize="12sp"
-            android:fontFamily="monospace" />
+            android:fontFamily="monospace"
+            android:textColor="@color/text_primary" />
 
     </ScrollView>
 

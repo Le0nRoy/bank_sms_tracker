@@ -28,22 +28,27 @@
 
         <activity
             android:name=".ui.CategoriesActivity"
+            android:label="@string/categories"
             android:exported="false" />
 
         <activity
             android:name=".ui.SendersActivity"
+            android:label="@string/senders"
             android:exported="false" />
 
         <activity
             android:name=".ui.CheckSendersActivity"
+            android:label="@string/test_rules"
             android:exported="false" />
 
         <activity
             android:name=".ui.ApplyRulesActivity"
+            android:label="@string/process_sms_history"
             android:exported="false" />
 
         <activity
             android:name=".ui.PaymentsActivity"
+            android:label="@string/payments"
             android:exported="false" />
 
         <activity

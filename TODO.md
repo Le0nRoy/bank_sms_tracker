@@ -13,21 +13,26 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- All tasks complete, ready for commit
+- Ready for commit
 
 ### Completed This Session
+- Fixed text box styling consistency across all screens (themed colors)
+- Removed duplicate "Bank SMS Tracker" text from main menu body
+- Updated activity headers to show meaningful action names
+- Removed duplicate banners from Tools activities (header is now sufficient)
+- Fixed $ sign in default regex rule that broke parsing
+- Added TODO items for Regex Builder improvements (5.3)
+- Added TODO items for Spending Reports improvements (5.4)
+- Added TODO items for Apply Rules improvements (5.5)
+- Added TODO items for Payment Details & Categorization (5.6)
+- Added TODO items for Ignore Rules for spam (5.7)
+- Added TODO item for Simplified Rules Creation (5.8)
+
+### Previous Sessions
 - Achieved 96.6% code coverage (target was 80%)
-- Updated JaCoCo configuration with proper exclusions for UI/database/repository packages
-- Updated README with coverage badge (96%)
 - Fixed UI text color consistency (dark mode support)
-- Added theme-aware colors for light/dark modes (colors.xml, values-night/colors.xml)
-- Fixed Appium tests to use button IDs instead of text matching
-- Improved Appium test resilience with better waiting and assertions
 - All 84 Appium tests passing with Docker
 - All 174 unit tests passing
-- Updated TESTING.md documentation
-
-### Previous Session
 - Fixed bugs: BUG-001 (SQL injection), BUG-003 (regex group validation), BUG-004 (blocking coroutines), BUG-006 (regex caching)
 - Phase 3.3: Save regex to sender rules (RegexBuilderActivity)
 - Phase 3.4: Filter payments by sender
@@ -210,11 +215,48 @@
 ### 5.3 Regex Builder Enhancements
 - [x] Select SMS message from inbox (instead of just pasting)
 - [x] SMS message separator in selection dialog
+- [ ] Filter SMS selection by configured senders only
+- [ ] Show sender selection dialog before showing messages
+- [ ] Display full message content in selection dialog
+- [ ] Better visual separation of messages (highlight each in a box)
+- [ ] Allow choosing existing regex pattern to modify it
 
 ### 5.4 Spending Reports
 - [x] Spending report dialog with category breakdown
 - [x] Date range filtering for reports
 - [x] Percentage breakdown by category
+- [ ] Default date range: first to last day of current month
+- [ ] Show actual dates in report even for empty range (first/last payment dates)
+- [ ] Apply date filter to both payment list and spending report
+
+### 5.5 Apply Rules Improvements
+- [ ] Choose time range for which to apply rules
+- [ ] Default time range: since last processed payment until now
+- [ ] Failed messages have button to redirect to regex builder with message pre-filled
+- [ ] Better error formatting: multiline with "Error parsing:\nMessage content"
+
+### 5.6 Payment Details & Categorization
+- [ ] Click on payment opens detail window
+- [ ] Add seller from payment to existing category
+- [ ] Create new category and add seller from payment
+
+### 5.7 Ignore Rules for Spam
+- [ ] Add ignore rules configuration (separate from payment rules)
+- [ ] Priority: payment rules → ignore rules → show error
+- [ ] Ignored messages not shown in processed messages log
+- [ ] UI for managing ignore rules
+
+### 5.8 Simplified Rules Creation
+**Goal: More user-friendly regex creation**
+
+Proposed solutions to investigate:
+1. **Line-based regex builder** - Write one pattern per line, auto-combine into full regex
+2. **Template-based patterns** - Pre-built templates for common bank formats with placeholders
+3. **Visual regex builder** - Click on message parts to generate regex automatically
+   - User highlights "amount", "merchant", etc. in sample message
+   - System generates regex from highlighted portions
+
+Implementation decision pending user feedback.
 
 ---
 
