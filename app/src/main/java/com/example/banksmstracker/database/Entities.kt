@@ -123,3 +123,11 @@ data class PaymentEntity(
     val receivedAt: Long? = null,
     val ruleId: Long? = null
 )
+
+@Entity(tableName = "ignore_rules")
+data class IgnoreRuleEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val pattern: String,
+    val description: String? = null,
+    val enabled: Boolean = true
+)

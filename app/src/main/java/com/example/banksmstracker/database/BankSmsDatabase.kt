@@ -14,15 +14,17 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         SenderEntity::class,
         SenderAddressEntity::class,
         SenderRuleEntity::class,
-        PaymentEntity::class
+        PaymentEntity::class,
+        IgnoreRuleEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class BankSmsDatabase : RoomDatabase() {
 
     abstract fun configDao(): ConfigDao
     abstract fun paymentDao(): PaymentDao
+    abstract fun ignoreRuleDao(): IgnoreRuleDao
 
     companion object {
         @Volatile
@@ -58,13 +60,31 @@ abstract class BankSmsDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 4 to 5: Add ignore_rules table for spam filtering.
+         */
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS ignore_rules (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        pattern TEXT NOT NULL,
+                        description TEXT,
+                        enabled INTEGER NOT NULL DEFAULT 1
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
                 BankSmsDatabase::class.java,
                 "bank_sms_tracker.db"
             )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
                 .also { INSTANCE = it }
         }

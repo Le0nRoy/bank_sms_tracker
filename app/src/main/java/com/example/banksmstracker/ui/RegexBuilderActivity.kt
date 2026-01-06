@@ -6,6 +6,10 @@ import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -14,6 +18,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.R
 import com.example.banksmstracker.data.PaymentRegexRule
 import com.example.banksmstracker.data.Sender
@@ -33,11 +39,13 @@ class RegexBuilderActivity : BaseActivity() {
     private lateinit var tvResults: TextView
     private lateinit var spinnerSenders: Spinner
     private lateinit var btnSaveRegex: Button
+    private lateinit var spinnerExistingPatterns: Spinner
 
     private var senders: List<Sender> = emptyList()
     private var smsMessages: List<SmsMessage> = emptyList()
+    private var selectedSenderForFilter: Sender? = null
 
-    data class SmsMessage(val address: String, val body: String)
+    data class SmsMessage(val address: String, val body: String, val date: Long = 0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +54,11 @@ class RegexBuilderActivity : BaseActivity() {
         initViews()
         setupListeners()
         loadSenders()
+
+        // Handle incoming sample SMS from ApplyRulesActivity
+        intent.getStringExtra(ApplyRulesActivity.EXTRA_SAMPLE_SMS)?.let { sampleSms ->
+            etSampleSms.setText(sampleSms)
+        }
     }
 
     private fun initViews() {
@@ -56,6 +69,7 @@ class RegexBuilderActivity : BaseActivity() {
         tvResults = findViewById(R.id.tvResults)
         spinnerSenders = findViewById(R.id.spinnerSenders)
         btnSaveRegex = findViewById(R.id.btnSaveRegex)
+        spinnerExistingPatterns = findViewById(R.id.spinnerExistingPatterns)
     }
 
     private fun setupListeners() {
@@ -101,51 +115,128 @@ class RegexBuilderActivity : BaseActivity() {
     }
 
     private fun showSmsSelectionDialog() {
+        // First, show sender filter dialog
+        showSenderFilterDialog()
+    }
+
+    private fun showSenderFilterDialog() {
+        val senderOptions = mutableListOf(getString(R.string.all_senders))
+        senderOptions.addAll(senders.map { it.name })
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.filter_by_sender)
+            .setItems(senderOptions.toTypedArray()) { _, which ->
+                selectedSenderForFilter = if (which == 0) null else senders[which - 1]
+                loadAndShowSmsMessages()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun loadAndShowSmsMessages() {
         CoroutineScope(Dispatchers.Main).launch {
+            val configuredAddresses = if (selectedSenderForFilter != null) {
+                selectedSenderForFilter!!.addresses.map { it.lowercase() }.toSet()
+            } else {
+                senders.flatMap { it.addresses }.map { it.lowercase() }.toSet()
+            }
+
             smsMessages = withContext(Dispatchers.IO) {
-                loadSmsMessages()
+                loadSmsMessages(configuredAddresses)
             }
 
             if (smsMessages.isEmpty()) {
-                Toast.makeText(this@RegexBuilderActivity, R.string.no_sms_found, Toast.LENGTH_SHORT).show()
+                val message = if (selectedSenderForFilter != null) {
+                    getString(R.string.no_sms_from_sender, selectedSenderForFilter!!.name)
+                } else {
+                    getString(R.string.no_sms_found)
+                }
+                Toast.makeText(this@RegexBuilderActivity, message, Toast.LENGTH_SHORT).show()
                 return@launch
             }
 
-            val displayItems = smsMessages.map { sms ->
-                val preview = if (sms.body.length > 80) sms.body.take(80) + "..." else sms.body
-                "━━━ ${sms.address} ━━━\n$preview"
-            }.toTypedArray()
-
-            AlertDialog.Builder(this@RegexBuilderActivity)
-                .setTitle(R.string.select_sms_message)
-                .setItems(displayItems) { _, which ->
-                    val selectedSms = smsMessages[which]
-                    etSampleSms.setText(selectedSms.body)
-                }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
+            showSmsListDialog()
         }
     }
 
-    private fun loadSmsMessages(): List<SmsMessage> {
+    private fun showSmsListDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_sms_selection, null)
+        val recyclerView = dialogView.findViewById<RecyclerView>(R.id.recyclerSmsMessages)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(R.string.select_sms_message)
+            .setView(dialogView)
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+
+        val adapter = SmsMessageAdapter(smsMessages) { selectedSms ->
+            etSampleSms.setText(selectedSms.body)
+            dialog.dismiss()
+        }
+        recyclerView.adapter = adapter
+
+        dialog.show()
+    }
+
+    inner class SmsMessageAdapter(
+        private val messages: List<SmsMessage>,
+        private val onItemClick: (SmsMessage) -> Unit
+    ) : RecyclerView.Adapter<SmsMessageAdapter.ViewHolder>() {
+
+        inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+            val tvSender: TextView = itemView.findViewById(R.id.tvSmsSender)
+            val tvBody: TextView = itemView.findViewById(R.id.tvSmsBody)
+            val tvDate: TextView = itemView.findViewById(R.id.tvSmsDate)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_sms_message, parent, false)
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            val sms = messages[position]
+            holder.tvSender.text = sms.address
+            holder.tvBody.text = sms.body
+            holder.tvDate.text = if (sms.date > 0) {
+                java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault())
+                    .format(java.util.Date(sms.date))
+            } else ""
+            holder.itemView.setOnClickListener { onItemClick(sms) }
+        }
+
+        override fun getItemCount(): Int = messages.size
+    }
+
+    private fun loadSmsMessages(filterAddresses: Set<String>? = null): List<SmsMessage> {
         val messages = mutableListOf<SmsMessage>()
         val uri = Uri.parse("content://sms/inbox")
 
         val cursor: Cursor? = contentResolver.query(
             uri,
-            arrayOf("address", "body"),
+            arrayOf("address", "body", "date"),
             null,
             null,
-            "date DESC LIMIT 100"
+            "date DESC LIMIT 200"
         )
 
         cursor?.use {
             val addressColumn = it.getColumnIndex("address")
             val bodyColumn = it.getColumnIndex("body")
+            val dateColumn = it.getColumnIndex("date")
             while (it.moveToNext()) {
                 val address = it.getString(addressColumn) ?: continue
                 val body = it.getString(bodyColumn) ?: continue
-                messages.add(SmsMessage(address, body))
+                val date = if (dateColumn >= 0) it.getLong(dateColumn) else 0L
+
+                // Filter by configured addresses if specified
+                if (filterAddresses != null && address.lowercase() !in filterAddresses) {
+                    continue
+                }
+
+                messages.add(SmsMessage(address, body, date))
             }
         }
 
@@ -168,6 +259,7 @@ class RegexBuilderActivity : BaseActivity() {
                 )
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spinnerSenders.adapter = adapter
+                setupExistingPatternsSpinner(emptyList())
             } else {
                 val senderNames = listOf(getString(R.string.select_sender_hint)) +
                     senders.map { it.name }
@@ -178,7 +270,54 @@ class RegexBuilderActivity : BaseActivity() {
                 )
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spinnerSenders.adapter = adapter
+
+                // Setup existing patterns spinner
+                spinnerSenders.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                        if (position > 0) {
+                            val selectedSender = senders[position - 1]
+                            setupExistingPatternsSpinner(selectedSender.rules)
+                        } else {
+                            setupExistingPatternsSpinner(emptyList())
+                        }
+                    }
+                    override fun onNothingSelected(parent: AdapterView<*>?) {
+                        setupExistingPatternsSpinner(emptyList())
+                    }
+                }
+                setupExistingPatternsSpinner(emptyList())
             }
+        }
+    }
+
+    private fun setupExistingPatternsSpinner(rules: List<PaymentRegexRule>) {
+        val patternOptions = mutableListOf(getString(R.string.new_pattern_hint))
+        patternOptions.addAll(rules.map { truncatePattern(it.regex) })
+
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            patternOptions
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerExistingPatterns.adapter = adapter
+
+        spinnerExistingPatterns.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position > 0 && position <= rules.size) {
+                    val selectedRule = rules[position - 1]
+                    etRegexPattern.setText(selectedRule.regex)
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
+
+    private fun truncatePattern(pattern: String): String {
+        return if (pattern.length > 40) {
+            pattern.take(37) + "..."
+        } else {
+            pattern
         }
     }
 

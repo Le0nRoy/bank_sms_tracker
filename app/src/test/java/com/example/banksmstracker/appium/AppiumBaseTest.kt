@@ -90,7 +90,54 @@ abstract class AppiumBaseTest {
     @AfterAll
     open fun tearDown() {
         if (::driver.isInitialized) {
-            driver.quit()
+            try {
+                driver.quit()
+            } catch (e: Exception) {
+                // Driver may have already died - ignore
+            }
+        }
+    }
+
+    /**
+     * Check if driver session is still alive.
+     */
+    protected fun isDriverAlive(): Boolean {
+        return try {
+            // Access currentPackage property to verify connection
+            val pkg = driver.currentPackage
+            pkg != null
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Reconnect driver if session died.
+     */
+    protected fun ensureDriverConnected() {
+        if (!::driver.isInitialized || !isDriverAlive()) {
+            try {
+                if (::driver.isInitialized) {
+                    try { driver.quit() } catch (e: Exception) { }
+                }
+
+                val options = UiAutomator2Options().apply {
+                    setPlatformName("Android")
+                    setAutomationName("UiAutomator2")
+                    setAppPackage(APP_PACKAGE)
+                    setAppActivity(APP_ACTIVITY)
+                    setNoReset(false)
+                    setFullReset(false)
+                    setNewCommandTimeout(Duration.ofSeconds(300))
+                }
+
+                driver = AndroidDriver(URI.create(APPIUM_SERVER_URL).toURL(), options)
+                driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+                wait = WebDriverWait(driver, DEFAULT_TIMEOUT)
+                Thread.sleep(2000) // Wait for app to start
+            } catch (e: Exception) {
+                throw RuntimeException("Failed to reconnect Appium driver: ${e.message}", e)
+            }
         }
     }
 
@@ -99,6 +146,8 @@ abstract class AppiumBaseTest {
      */
     @BeforeEach
     open fun ensureMainScreen() {
+        // First ensure driver is connected
+        ensureDriverConnected()
         if (::driver.isInitialized) {
             navigateToMainRobust()
         }
@@ -108,14 +157,31 @@ abstract class AppiumBaseTest {
      * Robust navigation to main screen with app restart fallback.
      */
     protected fun navigateToMainRobust() {
+        // Check driver connection first
+        if (!isDriverAlive()) {
+            try {
+                ensureDriverConnected()
+            } catch (e: Exception) {
+                return // Can't do anything without a driver
+            }
+        }
+
         // First try simple back navigation
         repeat(3) {
             if (isOnMainScreen()) return
             try {
                 driver.navigate().back()
                 Thread.sleep(1000)
+            } catch (e: org.openqa.selenium.remote.UnreachableBrowserException) {
+                // Driver died, try to reconnect
+                try {
+                    ensureDriverConnected()
+                    return // Fresh driver starts at main screen
+                } catch (reconnectException: Exception) {
+                    return
+                }
             } catch (e: Exception) {
-                // Ignore
+                // Ignore other errors
             }
         }
 
@@ -153,9 +219,43 @@ abstract class AppiumBaseTest {
 
     /**
      * Helper to find element by Android resource ID.
+     * Includes retry logic with driver reconnection if connection was lost.
      */
-    protected fun findById(resourceId: String): WebElement =
-        driver.findElement(AppiumBy.id("$APP_PACKAGE:id/$resourceId"))
+    protected fun findById(resourceId: String): WebElement {
+        var lastException: Exception? = null
+        repeat(2) { attempt ->
+            try {
+                return driver.findElement(AppiumBy.id("$APP_PACKAGE:id/$resourceId"))
+            } catch (e: org.openqa.selenium.remote.UnreachableBrowserException) {
+                lastException = e
+                if (attempt == 0) {
+                    // Try to reconnect on first failure
+                    try {
+                        ensureDriverConnected()
+                    } catch (reconnectException: Exception) {
+                        throw e
+                    }
+                }
+            } catch (e: org.openqa.selenium.WebDriverException) {
+                // Handle "instrumentation process not running" errors
+                if (e.message?.contains("instrumentation process is not running") == true) {
+                    lastException = e
+                    if (attempt == 0) {
+                        try {
+                            ensureDriverConnected()
+                        } catch (reconnectException: Exception) {
+                            throw e
+                        }
+                    }
+                } else {
+                    throw e
+                }
+            } catch (e: Exception) {
+                throw e
+            }
+        }
+        throw lastException ?: RuntimeException("Failed to find element: $resourceId")
+    }
 
     /**
      * Helper to find element by text content (case-insensitive).

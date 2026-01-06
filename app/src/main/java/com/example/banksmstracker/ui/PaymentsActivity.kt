@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -18,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.R
+import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
@@ -174,10 +176,35 @@ class PaymentsActivity : BaseActivity() {
                     paymentRepository.getDistinctSenderAddresses()
             }
 
+            // Set default date range to current month
+            setDefaultDateRange()
+
             setupCategorySpinner()
             setupSenderSpinner()
             applyFilter()
         }
+    }
+
+    private fun setDefaultDateRange() {
+        val calendar = Calendar.getInstance()
+
+        // First day of current month
+        calendar.set(Calendar.DAY_OF_MONTH, 1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        startDate = calendar.timeInMillis
+        btnStartDate.text = dateFormat.format(Date(startDate!!))
+
+        // Last day of current month
+        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        endDate = calendar.timeInMillis
+        btnEndDate.text = dateFormat.format(Date(endDate!!))
     }
 
     private fun setupCategorySpinner() {
@@ -338,10 +365,28 @@ class PaymentsActivity : BaseActivity() {
         }
 
     private fun showSpendingReport() {
+        val reportBuilder = StringBuilder()
+
+        // Determine date range to show
+        val actualStartDate = startDate ?: allPayments.mapNotNull { it.receivedAt }.minOrNull()
+        val actualEndDate = endDate ?: allPayments.mapNotNull { it.receivedAt }.maxOrNull()
+
+        // Date range info
+        val dateRangeText = when {
+            actualStartDate != null && actualEndDate != null ->
+                "${dateFormat.format(Date(actualStartDate))} - ${dateFormat.format(Date(actualEndDate))}"
+            actualStartDate != null -> "From ${dateFormat.format(Date(actualStartDate))}"
+            actualEndDate != null -> "Until ${dateFormat.format(Date(actualEndDate))}"
+            else -> getString(R.string.all_time)
+        }
+        reportBuilder.appendLine("Period: $dateRangeText")
+        reportBuilder.appendLine()
+
         if (filteredPayments.isEmpty()) {
+            reportBuilder.appendLine(getString(R.string.no_spending_data))
             AlertDialog.Builder(this)
                 .setTitle(R.string.spending_report)
-                .setMessage(R.string.no_spending_data)
+                .setMessage(reportBuilder.toString())
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
             return
@@ -349,7 +394,7 @@ class PaymentsActivity : BaseActivity() {
 
         // Group payments by category and calculate totals
         val categoryTotals = filteredPayments
-            .groupBy { it.categoryId ?: getString(R.string.all_categories).replace("All categories", "Uncategorized") }
+            .groupBy { it.categoryId ?: "Uncategorized" }
             .mapValues { (_, payments) ->
                 payments.sumOf { it.amount }
             }
@@ -359,20 +404,6 @@ class PaymentsActivity : BaseActivity() {
         val totalAmount = filteredPayments.sumOf { it.amount }
         val currency = filteredPayments.firstOrNull()?.currency ?: ""
 
-        // Build report message
-        val reportBuilder = StringBuilder()
-
-        // Date range info
-        val dateRangeText = when {
-            startDate != null && endDate != null ->
-                "${dateFormat.format(Date(startDate!!))} - ${dateFormat.format(Date(endDate!!))}"
-            startDate != null -> "From ${dateFormat.format(Date(startDate!!))}"
-            endDate != null -> "Until ${dateFormat.format(Date(endDate!!))}"
-            else -> getString(R.string.all_time)
-        }
-        reportBuilder.appendLine("Period: $dateRangeText")
-        reportBuilder.appendLine()
-
         // Total
         reportBuilder.appendLine(getString(R.string.total_spending, "%.2f".format(totalAmount), currency))
         reportBuilder.appendLine()
@@ -380,7 +411,7 @@ class PaymentsActivity : BaseActivity() {
         // Category breakdown
         reportBuilder.appendLine("By Category:")
         categoryTotals.forEach { (category, amount) ->
-            val percentage = (amount / totalAmount * 100).toInt()
+            val percentage = if (totalAmount > 0) (amount / totalAmount * 100).toInt() else 0
             reportBuilder.appendLine("  $category: ${"%.2f".format(amount)} $currency ($percentage%)")
         }
 
@@ -389,6 +420,157 @@ class PaymentsActivity : BaseActivity() {
             .setMessage(reportBuilder.toString())
             .setPositiveButton(android.R.string.ok, null)
             .show()
+    }
+
+    private fun showPaymentDetail(payment: Payment) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_payment_detail, null)
+
+        dialogView.findViewById<TextView>(R.id.tvMerchant).text = payment.merchant ?: "Unknown"
+        dialogView.findViewById<TextView>(R.id.tvAmount).text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
+        dialogView.findViewById<TextView>(R.id.tvCategory).text = payment.categoryId ?: "Uncategorized"
+        dialogView.findViewById<TextView>(R.id.tvCard).text = payment.card?.let { "****$it" } ?: "-"
+        dialogView.findViewById<TextView>(R.id.tvTimestamp).text = payment.timestamp ?: "-"
+        dialogView.findViewById<TextView>(R.id.tvBalance).text = payment.balance?.let { "${"%.2f".format(it)} ${payment.currency}" } ?: "-"
+        dialogView.findViewById<TextView>(R.id.tvSender).text = payment.senderAddress ?: "-"
+
+        val spinnerCategories = dialogView.findViewById<Spinner>(R.id.spinnerCategories)
+        val btnAddToCategory = dialogView.findViewById<Button>(R.id.btnAddToCategory)
+        val btnCreateCategory = dialogView.findViewById<Button>(R.id.btnCreateCategory)
+
+        // Load categories for spinner
+        lifecycleScope.launch {
+            val configCategories = ConfigRepository.getCategories()
+            val categoryNames = listOf(getString(R.string.select_category_hint)) +
+                configCategories.map { it.name }
+
+            val spinnerAdapter = ArrayAdapter(
+                this@PaymentsActivity,
+                android.R.layout.simple_spinner_item,
+                categoryNames
+            )
+            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinnerCategories.adapter = spinnerAdapter
+
+            val dialog = AlertDialog.Builder(this@PaymentsActivity)
+                .setTitle(R.string.payment_details)
+                .setView(dialogView)
+                .setNegativeButton(R.string.cancel, null)
+                .create()
+
+            btnAddToCategory.setOnClickListener {
+                val selectedPosition = spinnerCategories.selectedItemPosition
+                if (selectedPosition > 0 && payment.merchant != null) {
+                    val selectedCategory = configCategories[selectedPosition - 1]
+                    addMerchantToCategory(payment.merchant, selectedCategory, dialog)
+                } else {
+                    Toast.makeText(this@PaymentsActivity, R.string.no_sender_selected, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            btnCreateCategory.setOnClickListener {
+                if (payment.merchant != null) {
+                    showCreateCategoryDialog(payment.merchant, dialog)
+                }
+            }
+
+            dialog.show()
+        }
+    }
+
+    private fun addMerchantToCategory(merchant: String, category: Category, parentDialog: AlertDialog) {
+        lifecycleScope.launch {
+            try {
+                val updatedMerchants = category.merchants.toMutableList()
+                if (!updatedMerchants.any { it.equals(merchant, ignoreCase = true) }) {
+                    updatedMerchants.add(merchant)
+                    val updatedCategory = category.copy(merchants = updatedMerchants)
+                    withContext(Dispatchers.IO) {
+                        ConfigRepository.updateCategory(updatedCategory)
+                    }
+
+                    // Re-categorize this payment
+                    val payment = filteredPayments.find { it.merchant == merchant }
+                    if (payment != null) {
+                        payment.id?.let { paymentId ->
+                            withContext(Dispatchers.IO) {
+                                paymentRepository.updatePaymentCategory(paymentId, category.name)
+                            }
+                        }
+                    }
+
+                    Toast.makeText(
+                        this@PaymentsActivity,
+                        getString(R.string.merchant_added_to_category, merchant, category.name),
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    parentDialog.dismiss()
+                    loadData() // Refresh the list
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@PaymentsActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun showCreateCategoryDialog(merchant: String, parentDialog: AlertDialog) {
+        val input = EditText(this).apply {
+            hint = getString(R.string.enter_category_name)
+            setPadding(48, 32, 48, 32)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.create_new_category)
+            .setView(input)
+            .setPositiveButton(R.string.confirm) { _, _ ->
+                val categoryName = input.text.toString().trim()
+                if (categoryName.isNotEmpty()) {
+                    createCategoryWithMerchant(categoryName, merchant, parentDialog)
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun createCategoryWithMerchant(categoryName: String, merchant: String, parentDialog: AlertDialog) {
+        lifecycleScope.launch {
+            try {
+                // Create new category
+                val newCategory = withContext(Dispatchers.IO) {
+                    ConfigRepository.addCategory()
+                }
+
+                // Update with name and merchant
+                val updatedCategory = newCategory.copy(
+                    name = categoryName,
+                    merchants = mutableListOf(merchant)
+                )
+                withContext(Dispatchers.IO) {
+                    ConfigRepository.updateCategory(updatedCategory)
+                }
+
+                // Re-categorize the payment
+                val payment = filteredPayments.find { it.merchant == merchant }
+                if (payment != null) {
+                    payment.id?.let { paymentId ->
+                        withContext(Dispatchers.IO) {
+                            paymentRepository.updatePaymentCategory(paymentId, categoryName)
+                        }
+                    }
+                }
+
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.category_created, categoryName),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                parentDialog.dismiss()
+                loadData() // Refresh the list
+            } catch (e: Exception) {
+                Toast.makeText(this@PaymentsActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     // RecyclerView Adapter
@@ -431,6 +613,10 @@ class PaymentsActivity : BaseActivity() {
                     tvCard.text = "Card: ****${payment.card}"
                 } else {
                     tvCard.visibility = View.GONE
+                }
+
+                itemView.setOnClickListener {
+                    showPaymentDetail(payment)
                 }
             }
         }

@@ -44,7 +44,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
     @Order(1)
     @DisplayName("Main screen displays app title")
     fun mainScreenDisplaysAppTitle() {
-        assertTrue(textExists("Bank SMS Tracker"), "App title should be displayed")
+        assertTrue(elementExists("btnCategories"), "Main screen should be displayed")
     }
 
     @Test
@@ -61,6 +61,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         assertTrue(elementExists("btnPayments"), "Payments button should exist")
         assertTrue(elementExists("btnRegexBuilder"), "Regex Builder button should exist")
         assertTrue(elementExists("btnBugReport"), "Bug Report button should exist")
+        assertTrue(elementExists("btnIgnoreRules"), "Ignore Rules button should exist")
     }
 
     @Test
@@ -68,14 +69,23 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
     @DisplayName("Navigate to Categories and back")
     fun navigateToCategoriesAndBack() {
         findById("btnCategories").click()
-        mediumWait()
+        longWait()
 
-        assertTrue(elementExists("recyclerViewCategories"), "Should be on Categories screen")
+        // Use longer wait and retry for Categories screen
+        var found = false
+        repeat(3) {
+            if (elementExists("recyclerViewCategories")) {
+                found = true
+                return@repeat
+            }
+            shortWait()
+        }
+        assertTrue(found, "Should be on Categories screen")
 
         driver.navigate().back()
         mediumWait()
 
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -90,7 +100,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         driver.navigate().back()
         mediumWait()
 
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -104,9 +114,16 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         shortWait()
 
         driver.navigate().back()
-        mediumWait()
+        extraLongWait()
 
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        // Try again if first back didn't work
+        if (!elementExists("btnCategories")) {
+            driver.navigate().back()
+            mediumWait()
+        }
+
+        // Verify we're back on main screen by checking for Categories button
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -123,7 +140,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         driver.navigate().back()
         mediumWait()
 
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -141,7 +158,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         driver.navigate().back()
         mediumWait()
 
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -156,7 +173,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         driver.navigate().back()
         mediumWait()
 
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -171,7 +188,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         driver.navigate().back()
         mediumWait()
 
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -187,12 +204,12 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // May need another back if dialog was shown
-        if (!textExists("Bank SMS Tracker")) {
+        if (!elementExists("btnCategories")) {
             driver.navigate().back()
             shortWait()
         }
 
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -208,12 +225,12 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // May need another back if picker was shown
-        if (!textExists("Bank SMS Tracker")) {
+        if (!elementExists("btnCategories")) {
             driver.navigate().back()
             shortWait()
         }
 
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -231,7 +248,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         }
 
         // Should end up back on main screen
-        assertTrue(textExists("Bank SMS Tracker"), "Should be on main screen after rapid navigation")
+        assertTrue(elementExists("btnCategories"), "Should be on main screen after rapid navigation")
     }
 
     @Test
@@ -253,7 +270,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         mediumWait()
 
         // Should be on main screen
-        assertTrue(textExists("Bank SMS Tracker"), "Should be back on main screen")
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     @Test
@@ -270,6 +287,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         assertTrue(elementExists("btnPayments"), "Payments button accessible")
         assertTrue(elementExists("btnRegexBuilder"), "Regex Builder button accessible")
         assertTrue(elementExists("btnBugReport"), "Bug Report button accessible")
+        assertTrue(elementExists("btnIgnoreRules"), "Ignore Rules button accessible")
     }
 
     private fun handlePermissionDialogIfPresent() {

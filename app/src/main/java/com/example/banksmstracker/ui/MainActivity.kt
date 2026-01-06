@@ -62,6 +62,10 @@ class MainActivity : BaseActivity() {
         findViewById<Button>(R.id.btnBugReport).setOnClickListener {
             startActivity(Intent(this, BugReportActivity::class.java))
         }
+
+        findViewById<Button>(R.id.btnIgnoreRules).setOnClickListener {
+            startActivity(Intent(this, IgnoreRulesActivity::class.java))
+        }
     }
 
     private fun exportConfig() {

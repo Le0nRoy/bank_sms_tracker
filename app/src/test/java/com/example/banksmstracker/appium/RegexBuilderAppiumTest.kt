@@ -338,4 +338,82 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         // App should not crash, might show toast or error
         navigateToMain()
     }
+
+    // ==================== Phase 5.3: Regex Builder Enhancements ====================
+
+    @Test
+    @Order(14)
+    @DisplayName("Select SMS button is displayed")
+    fun selectSmsButtonExists() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        assertTrue(elementExists("btnSelectSms"), "Should have Select SMS button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(15)
+    @DisplayName("Existing patterns spinner is displayed")
+    fun existingPatternsSpinnerExists() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        // Scroll down to see the spinner
+        val hasSpinner = elementExistsWithScroll("spinnerExistingPatterns")
+        assertTrue(hasSpinner, "Should have existing patterns spinner")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(16)
+    @DisplayName("Can click existing patterns spinner")
+    fun canClickExistingPatternsSpinner() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        // Scroll to and click spinner
+        try {
+            scrollToElementById("spinnerExistingPatterns").click()
+            shortWait()
+
+            // Close any dropdown that opened
+            driver.navigate().back()
+            shortWait()
+        } catch (e: Exception) {
+            // Spinner might not be clickable if no patterns exist
+        }
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(17)
+    @DisplayName("Select SMS button opens SMS selection")
+    fun selectSmsButtonOpensSmsSelection() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        // Click select SMS button
+        findById("btnSelectSms").click()
+        mediumWait()
+
+        // Should either show SMS selection dialog/activity or request permission
+        // Just verify app doesn't crash
+        shortWait()
+
+        // Navigate back if dialog opened
+        driver.navigate().back()
+        shortWait()
+
+        // Might need another back if nested
+        if (!elementExists("etSampleSms")) {
+            driver.navigate().back()
+            shortWait()
+        }
+
+        navigateToMain()
+    }
 }

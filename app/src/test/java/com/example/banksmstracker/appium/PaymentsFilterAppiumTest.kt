@@ -170,4 +170,71 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
 
         navigateToMain()
     }
+
+    // ==================== Phase 5.6: Payment Detail & Categorization ====================
+
+    @Test
+    @Order(9)
+    @DisplayName("Export CSV button exists")
+    fun exportCsvButtonExists() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        val hasExportBtn = elementExists("btnExportCsv")
+        assertTrue(hasExportBtn, "Should have Export CSV button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(10)
+    @DisplayName("Spending report button exists")
+    fun spendingReportButtonExists() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        val hasReportBtn = elementExists("btnSpendingReport")
+        assertTrue(hasReportBtn, "Should have Spending Report button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(11)
+    @DisplayName("Spending report button opens report dialog")
+    fun spendingReportButtonOpensDialog() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        // Click spending report button
+        if (elementExists("btnSpendingReport")) {
+            findById("btnSpendingReport").click()
+            mediumWait()
+
+            // Should show a dialog with spending report
+            // Just verify app doesn't crash and close any dialog
+            driver.navigate().back()
+            shortWait()
+        }
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(12)
+    @DisplayName("Payment recycler view or empty state displayed")
+    fun paymentRecyclerOrEmptyStateDisplayed() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        val hasRecycler = elementExists("recyclerPayments")
+        val hasEmptyState = elementExists("tvEmptyState")
+
+        assertTrue(
+            hasRecycler || hasEmptyState,
+            "Should show either payment list or empty state"
+        )
+
+        navigateToMain()
+    }
 }

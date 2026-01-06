@@ -139,4 +139,81 @@ class DataClassesTest {
         assertEquals("Bank", config.senders[0].name)
         assertEquals("Shopping", config.categories[0].name)
     }
+
+    // ==================== IgnoreRule Tests ====================
+
+    @Test
+    fun `IgnoreRule default enabled is true`() {
+        val rule = IgnoreRule(pattern = "spam.*")
+        assertTrue(rule.enabled)
+    }
+
+    @Test
+    fun `IgnoreRule can be created with enabled false`() {
+        val rule = IgnoreRule(pattern = "spam.*", enabled = false)
+        assertFalse(rule.enabled)
+    }
+
+    @Test
+    fun `IgnoreRule can be created with all fields`() {
+        val rule = IgnoreRule(
+            id = 1,
+            pattern = "^SPAM.*",
+            description = "Blocks spam messages",
+            enabled = true
+        )
+        assertEquals(1, rule.id)
+        assertEquals("^SPAM.*", rule.pattern)
+        assertEquals("Blocks spam messages", rule.description)
+        assertTrue(rule.enabled)
+    }
+
+    @Test
+    fun `IgnoreRule can be created with null optional fields`() {
+        val rule = IgnoreRule(pattern = "test")
+        assertEquals(null, rule.id)
+        assertEquals("test", rule.pattern)
+        assertEquals(null, rule.description)
+        assertTrue(rule.enabled)
+    }
+
+    @Test
+    fun `IgnoreRule copy creates independent copy`() {
+        val original = IgnoreRule(
+            id = 1,
+            pattern = "original",
+            description = "Original description",
+            enabled = true
+        )
+        val copy = original.copy(pattern = "modified", enabled = false)
+
+        assertEquals("original", original.pattern)
+        assertTrue(original.enabled)
+        assertEquals("modified", copy.pattern)
+        assertFalse(copy.enabled)
+        assertEquals(original.id, copy.id)
+    }
+
+    @Test
+    fun `IgnoreRule pattern can be valid regex`() {
+        val rule = IgnoreRule(pattern = "\\d+\\.\\d{2}")
+        val regex = Regex(rule.pattern)
+        assertTrue(regex.containsMatchIn("123.45"))
+        assertFalse(regex.containsMatchIn("abc"))
+    }
+
+    @Test
+    fun `IgnoreRule pattern can match SMS content`() {
+        val rule = IgnoreRule(pattern = ".*promotional.*", enabled = true)
+        val sms = "This is a promotional message from ABC Bank"
+        val regex = Regex(rule.pattern, RegexOption.IGNORE_CASE)
+        assertTrue(regex.containsMatchIn(sms))
+    }
+
+    @Test
+    fun `IgnoreRule with disabled status should not filter`() {
+        val rule = IgnoreRule(pattern = "spam", enabled = false)
+        // When disabled, rule should not be applied (business logic test)
+        assertFalse(rule.enabled)
+    }
 }

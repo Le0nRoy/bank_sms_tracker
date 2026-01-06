@@ -95,6 +95,21 @@
                 android:background="@drawable/edit_text_themed"
                 android:padding="8dp" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/existing_patterns_label"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="4dp" />
+
+            <Spinner
+                android:id="@+id/spinnerExistingPatterns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edit_text_themed"
+                android:padding="8dp" />
+
             <Button
                 android:id="@+id/btnSaveRegex"
                 android:layout_width="match_parent"

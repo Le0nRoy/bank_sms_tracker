@@ -204,7 +204,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // Make sure we're back at main
-        if (!textExists("Bank SMS Tracker")) {
+        if (!elementExists("btnCategories")) {
             driver.navigate().back()
             shortWait()
         }

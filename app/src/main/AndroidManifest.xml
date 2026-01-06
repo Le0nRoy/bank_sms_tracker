@@ -61,6 +61,11 @@
             android:label="@string/bug_report"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.IgnoreRulesActivity"
+            android:label="@string/ignore_rules"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

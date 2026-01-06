@@ -77,8 +77,11 @@
     <string name="select_from_inbox">Select from SMS Inbox</string>
     <string name="select_sms_message">Select SMS Message</string>
     <string name="no_sms_found">No SMS messages found</string>
+    <string name="no_sms_from_sender">No SMS messages found from %1$s</string>
     <string name="sms_permission_denied">SMS permission is required to select messages</string>
     <string name="cancel">Cancel</string>
+    <string name="existing_patterns_label">Edit Existing Pattern</string>
+    <string name="new_pattern_hint">Create new pattern…</string>
     <string name="duplicate_sender_name">A sender with this name already exists</string>
     <string name="duplicate_category_name">A category with this name already exists</string>
     <string name="duplicate_sender_address">This address already exists in another sender</string>
@@ -123,4 +126,48 @@
     <string name="this_month">This Month</string>
     <string name="last_month">Last Month</string>
     <string name="custom_range">Custom Range</string>
+
+    <!-- Apply Rules -->
+    <string name="process_sms">Process SMS</string>
+    <string name="open_regex_builder">Open Regex Builder</string>
+    <string name="error_parsing">Error parsing message</string>
+    <string name="success_indicator">✅</string>
+    <string name="error_indicator">❌</string>
+    <string name="processing_results">Processing Results</string>
+    <string name="messages_processed">%1$d messages processed</string>
+    <string name="messages_failed">%1$d failed</string>
+
+    <!-- Payment Details -->
+    <string name="payment_details">Payment Details</string>
+    <string name="detail_category">Category:</string>
+    <string name="detail_card">Card:</string>
+    <string name="detail_date">Date:</string>
+    <string name="detail_balance">Balance:</string>
+    <string name="detail_sender">Sender:</string>
+    <string name="add_merchant_to_category">Add Merchant to Category</string>
+    <string name="add_to_category">Add to Category</string>
+    <string name="create_new_category">Create New Category</string>
+    <string name="select_category_hint">Select a category…</string>
+    <string name="merchant_added_to_category">%1$s added to %2$s</string>
+    <string name="category_created">Category created: %1$s</string>
+    <string name="enter_category_name">Enter category name</string>
+
+    <!-- Ignore Rules -->
+    <string name="ignore_rules">Ignore Rules</string>
+    <string name="ignore_rules_description">Messages matching these patterns will be ignored during processing. Use regex patterns to match spam or unwanted messages.</string>
+    <string name="no_ignore_rules">No ignore rules configured. Tap + to add one.</string>
+    <string name="add_ignore_rule">Add Ignore Rule</string>
+    <string name="edit_ignore_rule">Edit Ignore Rule</string>
+    <string name="delete_ignore_rule">Delete Ignore Rule</string>
+    <string name="delete_ignore_rule_confirm">Are you sure you want to delete this ignore rule?</string>
+    <string name="ignore_rule_added">Ignore rule added</string>
+    <string name="ignore_rule_deleted">Ignore rule deleted</string>
+    <string name="ignore_pattern_label">Pattern (Regex)</string>
+    <string name="ignore_pattern_hint">e.g., OTP|verification|balance inquiry</string>
+    <string name="ignore_pattern_help">Use | to separate multiple patterns. Use .* to match any text.</string>
+    <string name="description_label">Description (Optional)</string>
+    <string name="description_hint">e.g., Ignore OTP messages</string>
+    <string name="invalid_regex_pattern">Invalid regex pattern: %1$s</string>
+    <string name="delete">Delete</string>
+    <string name="message_ignored">Message ignored by rule</string>
 </resources>
