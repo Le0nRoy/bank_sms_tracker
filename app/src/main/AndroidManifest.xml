@@ -66,6 +66,11 @@
             android:label="@string/ignore_rules"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.SmsExportActivity"
+            android:label="@string/sms_export"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

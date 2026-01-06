@@ -64,7 +64,28 @@ class PaymentsActivity : BaseActivity() {
 
         initViews()
         setupRecyclerView()
+
+        // Restore saved state if available
+        if (savedInstanceState != null) {
+            startDate = savedInstanceState.getLong(KEY_START_DATE, -1L).takeIf { it >= 0 }
+            endDate = savedInstanceState.getLong(KEY_END_DATE, -1L).takeIf { it >= 0 }
+            updateDateButtons()
+        }
+
         loadData()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        startDate?.let { outState.putLong(KEY_START_DATE, it) }
+        endDate?.let { outState.putLong(KEY_END_DATE, it) }
+    }
+
+    private fun updateDateButtons() {
+        startDate?.let { btnStartDate.text = dateFormat.format(Date(it)) }
+            ?: run { btnStartDate.text = getString(R.string.start_date) }
+        endDate?.let { btnEndDate.text = dateFormat.format(Date(it)) }
+            ?: run { btnEndDate.text = getString(R.string.end_date) }
     }
 
     private fun initViews() {
@@ -176,8 +197,10 @@ class PaymentsActivity : BaseActivity() {
                     paymentRepository.getDistinctSenderAddresses()
             }
 
-            // Set default date range to current month
-            setDefaultDateRange()
+            // Set default date range only if not restored from savedInstanceState
+            if (startDate == null && endDate == null) {
+                setDefaultDateRange()
+            }
 
             setupCategorySpinner()
             setupSenderSpinner()
@@ -256,19 +279,14 @@ class PaymentsActivity : BaseActivity() {
             val matchesCategory = selectedCategory == null || payment.categoryId == selectedCategory
             val matchesSender = selectedSender == null || payment.senderAddress == selectedSender
             val matchesDateRange = when {
-                startDate != null && endDate != null -> {
+                startDate != null || endDate != null -> {
+                    // Date filter is active - payments without receivedAt are excluded
                     val receivedAt = payment.receivedAt ?: return@filter false
-                    receivedAt in startDate!!..endDate!!
+                    val afterStart = startDate?.let { receivedAt >= it } ?: true
+                    val beforeEnd = endDate?.let { receivedAt <= it } ?: true
+                    afterStart && beforeEnd
                 }
-                startDate != null -> {
-                    val receivedAt = payment.receivedAt ?: return@filter false
-                    receivedAt >= startDate!!
-                }
-                endDate != null -> {
-                    val receivedAt = payment.receivedAt ?: return@filter false
-                    receivedAt <= endDate!!
-                }
-                else -> true
+                else -> true // No date filter - include all payments
             }
             matchesCategory && matchesSender && matchesDateRange
         }
@@ -620,5 +638,10 @@ class PaymentsActivity : BaseActivity() {
                 }
             }
         }
+    }
+
+    companion object {
+        private const val KEY_START_DATE = "key_start_date"
+        private const val KEY_END_DATE = "key_end_date"
     }
 }

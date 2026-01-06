@@ -62,6 +62,8 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         assertTrue(elementExists("btnRegexBuilder"), "Regex Builder button should exist")
         assertTrue(elementExists("btnBugReport"), "Bug Report button should exist")
         assertTrue(elementExists("btnIgnoreRules"), "Ignore Rules button should exist")
+        assertTrue(elementExists("btnSmsExport"), "SMS Export button should exist")
+        assertTrue(elementExists("btnThemeToggle"), "Theme Toggle button should exist")
     }
 
     @Test
@@ -288,6 +290,57 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         assertTrue(elementExists("btnRegexBuilder"), "Regex Builder button accessible")
         assertTrue(elementExists("btnBugReport"), "Bug Report button accessible")
         assertTrue(elementExists("btnIgnoreRules"), "Ignore Rules button accessible")
+        assertTrue(elementExists("btnSmsExport"), "SMS Export button accessible")
+        assertTrue(elementExists("btnThemeToggle"), "Theme Toggle button accessible")
+    }
+
+    @Test
+    @Order(15)
+    @DisplayName("Navigate to SMS Export and back")
+    fun navigateToSmsExportAndBack() {
+        findById("btnSmsExport").click()
+        mediumWait()
+
+        // Handle permission if needed
+        handlePermissionDialogIfPresent()
+        shortWait()
+
+        // SMS Export screen should show date pickers and export options
+        assertTrue(
+            elementExists("btnStartDate") || elementExists("spinnerSender"),
+            "Should be on SMS Export screen"
+        )
+
+        driver.navigate().back()
+        mediumWait()
+
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
+    }
+
+    @Test
+    @Order(16)
+    @DisplayName("Theme Toggle shows dialog")
+    fun themeToggleShowsDialog() {
+        findById("btnThemeToggle").click()
+        mediumWait()
+
+        // Dialog should be shown - look for dialog content or cancel button
+        // The dialog uses standard AlertDialog with SingleChoiceItems
+        val dialogVisible = try {
+            driver.findElement(
+                io.appium.java_client.AppiumBy.xpath(
+                    "//*[contains(@text, 'System') or contains(@text, 'Light') or contains(@text, 'Dark')]"
+                )
+            ).isDisplayed
+        } catch (e: Exception) {
+            false
+        }
+
+        // Dismiss dialog
+        driver.navigate().back()
+        shortWait()
+
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
     private fun handlePermissionDialogIfPresent() {

@@ -144,13 +144,13 @@ class DataClassesTest {
 
     @Test
     fun `IgnoreRule default enabled is true`() {
-        val rule = IgnoreRule(pattern = "spam.*")
+        val rule = IgnoreRule(senderId = 1, pattern = "spam.*")
         assertTrue(rule.enabled)
     }
 
     @Test
     fun `IgnoreRule can be created with enabled false`() {
-        val rule = IgnoreRule(pattern = "spam.*", enabled = false)
+        val rule = IgnoreRule(senderId = 1, pattern = "spam.*", enabled = false)
         assertFalse(rule.enabled)
     }
 
@@ -158,11 +158,13 @@ class DataClassesTest {
     fun `IgnoreRule can be created with all fields`() {
         val rule = IgnoreRule(
             id = 1,
+            senderId = 2,
             pattern = "^SPAM.*",
             description = "Blocks spam messages",
             enabled = true
         )
         assertEquals(1, rule.id)
+        assertEquals(2, rule.senderId)
         assertEquals("^SPAM.*", rule.pattern)
         assertEquals("Blocks spam messages", rule.description)
         assertTrue(rule.enabled)
@@ -170,8 +172,9 @@ class DataClassesTest {
 
     @Test
     fun `IgnoreRule can be created with null optional fields`() {
-        val rule = IgnoreRule(pattern = "test")
+        val rule = IgnoreRule(senderId = 1, pattern = "test")
         assertEquals(null, rule.id)
+        assertEquals(1, rule.senderId)
         assertEquals("test", rule.pattern)
         assertEquals(null, rule.description)
         assertTrue(rule.enabled)
@@ -181,6 +184,7 @@ class DataClassesTest {
     fun `IgnoreRule copy creates independent copy`() {
         val original = IgnoreRule(
             id = 1,
+            senderId = 2,
             pattern = "original",
             description = "Original description",
             enabled = true
@@ -192,11 +196,12 @@ class DataClassesTest {
         assertEquals("modified", copy.pattern)
         assertFalse(copy.enabled)
         assertEquals(original.id, copy.id)
+        assertEquals(original.senderId, copy.senderId)
     }
 
     @Test
     fun `IgnoreRule pattern can be valid regex`() {
-        val rule = IgnoreRule(pattern = "\\d+\\.\\d{2}")
+        val rule = IgnoreRule(senderId = 1, pattern = "\\d+\\.\\d{2}")
         val regex = Regex(rule.pattern)
         assertTrue(regex.containsMatchIn("123.45"))
         assertFalse(regex.containsMatchIn("abc"))
@@ -204,7 +209,7 @@ class DataClassesTest {
 
     @Test
     fun `IgnoreRule pattern can match SMS content`() {
-        val rule = IgnoreRule(pattern = ".*promotional.*", enabled = true)
+        val rule = IgnoreRule(senderId = 1, pattern = ".*promotional.*", enabled = true)
         val sms = "This is a promotional message from ABC Bank"
         val regex = Regex(rule.pattern, RegexOption.IGNORE_CASE)
         assertTrue(regex.containsMatchIn(sms))
@@ -212,8 +217,138 @@ class DataClassesTest {
 
     @Test
     fun `IgnoreRule with disabled status should not filter`() {
-        val rule = IgnoreRule(pattern = "spam", enabled = false)
+        val rule = IgnoreRule(senderId = 1, pattern = "spam", enabled = false)
         // When disabled, rule should not be applied (business logic test)
         assertFalse(rule.enabled)
+    }
+
+    // ==================== Income Tests ====================
+
+    @Test
+    fun `Income can be created with all fields`() {
+        val income = Income(
+            id = 1,
+            amount = 5000.0,
+            currency = "USD",
+            source = "Salary",
+            timestamp = "2024-01-15",
+            balance = 10000.0,
+            senderAddress = "EMPLOYER",
+            receivedAt = 1705330800000,
+            ruleId = 5
+        )
+        assertEquals(1, income.id)
+        assertEquals(5000.0, income.amount)
+        assertEquals("USD", income.currency)
+        assertEquals("Salary", income.source)
+        assertEquals("2024-01-15", income.timestamp)
+        assertEquals(10000.0, income.balance)
+        assertEquals("EMPLOYER", income.senderAddress)
+        assertEquals(1705330800000, income.receivedAt)
+        assertEquals(5, income.ruleId)
+    }
+
+    @Test
+    fun `Income can be created with minimal required fields`() {
+        val income = Income(
+            amount = 1000.0,
+            currency = "EUR",
+            source = null,
+            timestamp = null,
+            balance = null
+        )
+        assertEquals(null, income.id)
+        assertEquals(1000.0, income.amount)
+        assertEquals("EUR", income.currency)
+        assertEquals(null, income.source)
+        assertEquals(null, income.timestamp)
+        assertEquals(null, income.balance)
+        assertEquals(null, income.senderAddress)
+        assertEquals(null, income.receivedAt)
+        assertEquals(null, income.ruleId)
+    }
+
+    @Test
+    fun `Income can be created with null optional fields`() {
+        val income = Income(
+            id = null,
+            amount = 250.50,
+            currency = "GBP",
+            source = null,
+            timestamp = null,
+            balance = null,
+            senderAddress = null,
+            receivedAt = null,
+            ruleId = null
+        )
+        assertEquals(null, income.id)
+        assertEquals(250.50, income.amount)
+        assertEquals("GBP", income.currency)
+        assertEquals(null, income.source)
+        assertEquals(null, income.timestamp)
+        assertEquals(null, income.balance)
+    }
+
+    @Test
+    fun `Income copy creates independent copy`() {
+        val original = Income(
+            id = 1,
+            amount = 500.0,
+            currency = "USD",
+            source = "Bonus",
+            timestamp = null,
+            balance = null
+        )
+        val copy = original.copy(amount = 750.0, source = "Commission")
+
+        assertEquals(500.0, original.amount)
+        assertEquals("Bonus", original.source)
+        assertEquals(750.0, copy.amount)
+        assertEquals("Commission", copy.source)
+        assertEquals(original.id, copy.id)
+        assertEquals(original.currency, copy.currency)
+    }
+
+    @Test
+    fun `Income equality based on content`() {
+        val income1 = Income(amount = 100.0, currency = "USD", source = null, timestamp = null, balance = null)
+        val income2 = Income(amount = 100.0, currency = "USD", source = null, timestamp = null, balance = null)
+        val income3 = Income(amount = 200.0, currency = "USD", source = null, timestamp = null, balance = null)
+
+        assertEquals(income1, income2)
+        assertFalse(income1 == income3)
+    }
+
+    @Test
+    fun `Income handles different currencies`() {
+        val currencies = listOf("USD", "EUR", "GBP", "JPY", "CNY", "INR")
+        currencies.forEach { currency ->
+            val income = Income(amount = 100.0, currency = currency, source = null, timestamp = null, balance = null)
+            assertEquals(currency, income.currency)
+        }
+    }
+
+    @Test
+    fun `Income handles large amounts`() {
+        val income = Income(
+            amount = 999999999.99,
+            currency = "USD",
+            source = null,
+            timestamp = null,
+            balance = null
+        )
+        assertEquals(999999999.99, income.amount)
+    }
+
+    @Test
+    fun `Income handles decimal precision`() {
+        val income = Income(
+            amount = 123.456789,
+            currency = "USD",
+            source = null,
+            timestamp = null,
+            balance = null
+        )
+        assertEquals(123.456789, income.amount, 0.000001)
     }
 }

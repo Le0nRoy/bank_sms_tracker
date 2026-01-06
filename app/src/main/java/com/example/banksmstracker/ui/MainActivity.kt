@@ -1,11 +1,14 @@
 package com.example.banksmstracker.ui
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
+import com.example.banksmstracker.BankSmsTrackerApp
 import com.example.banksmstracker.R
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.ImportResult
@@ -66,6 +69,47 @@ class MainActivity : BaseActivity() {
         findViewById<Button>(R.id.btnIgnoreRules).setOnClickListener {
             startActivity(Intent(this, IgnoreRulesActivity::class.java))
         }
+
+        findViewById<Button>(R.id.btnSmsExport).setOnClickListener {
+            startActivity(Intent(this, SmsExportActivity::class.java))
+        }
+
+        findViewById<Button>(R.id.btnThemeToggle).setOnClickListener {
+            showThemeDialog()
+        }
+    }
+
+    private fun showThemeDialog() {
+        val options = arrayOf(
+            getString(R.string.theme_system),
+            getString(R.string.light_mode),
+            getString(R.string.dark_mode)
+        )
+
+        val prefs = getSharedPreferences(BankSmsTrackerApp.PREFS_NAME, MODE_PRIVATE)
+        val currentMode = prefs.getInt(BankSmsTrackerApp.KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        val currentIndex = when (currentMode) {
+            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> 0
+            AppCompatDelegate.MODE_NIGHT_NO -> 1
+            AppCompatDelegate.MODE_NIGHT_YES -> 2
+            else -> 0
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.settings)
+            .setSingleChoiceItems(options, currentIndex) { dialog, which ->
+                val newMode = when (which) {
+                    0 -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                    1 -> AppCompatDelegate.MODE_NIGHT_NO
+                    2 -> AppCompatDelegate.MODE_NIGHT_YES
+                    else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+                }
+                prefs.edit().putInt(BankSmsTrackerApp.KEY_THEME_MODE, newMode).apply()
+                AppCompatDelegate.setDefaultNightMode(newMode)
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     private fun exportConfig() {

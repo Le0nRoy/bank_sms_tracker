@@ -16,6 +16,14 @@
             android:text="@string/ignore_rules_description"
             android:textColor="@color/text_secondary"
             android:textSize="13sp"
+            android:layout_marginBottom="8dp" />
+
+        <Spinner
+            android:id="@+id/spinnerFilterSender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:background="@drawable/edit_text_themed"
             android:layout_marginBottom="16dp" />
 
         <TextView

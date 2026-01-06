@@ -103,6 +103,14 @@ object ConfigRepository {
         refreshConfigInternal()
     }
 
+    suspend fun deleteCategory(categoryId: Long) = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            configDao.deleteMerchantsForCategory(categoryId)
+            configDao.deleteCategory(CategoryEntity(id = categoryId, name = ""))
+        }
+        refreshConfigInternal()
+    }
+
     suspend fun addSender(): Sender = withContext(Dispatchers.IO) {
         val senderId = configDao.insertSender(SenderEntity(name = ""))
         refreshConfigInternal()
@@ -136,6 +144,15 @@ object ConfigRepository {
                         )
                     )
                 }
+        }
+        refreshConfigInternal()
+    }
+
+    suspend fun deleteSender(senderId: Long) = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            configDao.deleteAddressesForSender(senderId)
+            configDao.deleteRulesForSender(senderId)
+            configDao.deleteSender(SenderEntity(id = senderId, name = ""))
         }
         refreshConfigInternal()
     }

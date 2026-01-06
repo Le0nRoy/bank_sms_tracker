@@ -13,33 +13,25 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- Documentation updated
+- All tasks completed - ready for commit
 
 ### Completed This Session
-- Phase 5.3: Regex Builder enhancements (SMS filtering, existing patterns editing)
-- Phase 5.4: Spending Reports improvements (default date range to current month)
-- Phase 5.5: Apply Rules improvements (time range selection, redirect to regex builder)
-- Phase 5.6: Payment Details & Categorization (detail dialog, add merchant to category)
-- Phase 5.7: Ignore Rules for Spam (full CRUD with database entity and UI)
-- Added comprehensive tests: 102 Appium E2E tests (100% pass rate)
-- New IgnoreRulesAppiumTest (10 tests)
-- Enhanced RegexBuilderAppiumTest (+4 tests)
-- Enhanced PaymentsFilterAppiumTest (+4 tests)
-- Unit tests for IgnoreRule data class (+8 tests)
-- Fixed Appium test flakiness with driver reconnection logic
+- Phase 5.9: SMS History Export (date/sender filtering, JSON/CSV export)
+- Phase 5.10: Income Tracking (database entity, DAO, migration v6→v7)
+- Phase 5.11: Light/Dark Mode Toggle (SharedPreferences, 3 theme options)
+- Regex Builder layout reorganization (improved workflow order)
+- Added Income data class tests (+9 tests)
+- Updated MainNavigationAppiumTest for SMS Export and Settings buttons (+2 tests)
+- All 104 Appium E2E tests passing with Docker
+- Unit test coverage: 87.50%
+- JaCoCo coverage verification fixed
 
 ### Previous Sessions
+- Phase 5.3-5.7: Regex Builder, Spending Reports, Apply Rules, Payment Details, Ignore Rules
 - Achieved 96.6% code coverage (target was 80%)
-- Fixed UI text color consistency (dark mode support)
-- All 84 Appium tests passing with Docker
-- All 174 unit tests passing
-- Fixed bugs: BUG-001 (SQL injection), BUG-003 (regex group validation), BUG-004 (blocking coroutines), BUG-006 (regex caching)
-- Phase 3.3: Save regex to sender rules (RegexBuilderActivity)
-- Phase 3.4: Filter payments by sender
-- Phase 3.4/3.6: Filter payments by date range with date picker UI
-- Phase 3.5: Category Cascade (ruleId tracking, re-categorize all feature)
-- Database migrations for new fields (senderAddress, receivedAt, ruleId)
-- All Appium E2E tests created (7 test classes, 77+ tests)
+- Fixed bugs: BUG-001 through BUG-006
+- Database migrations v1→v7
+- All Appium E2E tests created (9 test classes, 104 tests)
 
 ### Next Steps
 - Phase 5.8: Simplified Rules Creation (pending user feedback)
@@ -194,6 +186,19 @@
 - [x] Fix BUG-005: Race condition in PaymentsActivity (fixed by proper coroutine sequencing)
 - [x] Fix BUG-006: Regex pattern not cached
 
+### 4.5 Bug Documentation
+
+All bugs are documented in the `bugs/` directory with detailed reports:
+
+| Bug ID | Title | Status | File |
+|--------|-------|--------|------|
+| BUG-001 | SQL Injection in ApplyRulesActivity | Fixed | [BUG-001](bugs/BUG-001-sql-injection-apply-rules.md) |
+| BUG-002 | Race Condition in ConfigRepository | Fixed | [BUG-002](bugs/BUG-002-race-condition-config-repository.md) |
+| BUG-003 | Missing Regex Group Validation | Fixed | [BUG-003](bugs/BUG-003-missing-regex-group-validation.md) |
+| BUG-004 | Blocking Coroutines in Room Repository | Fixed | [BUG-004](bugs/BUG-004-blocking-coroutines-room-repository.md) |
+| BUG-005 | Race Condition in PaymentsActivity | Fixed | [BUG-005](bugs/BUG-005-race-condition-payments-activity.md) |
+| BUG-006 | Regex Pattern Not Cached | Fixed | [BUG-006](bugs/BUG-006-regex-not-cached.md) |
+
 ---
 
 ## Phase 5: UI Polish
@@ -257,6 +262,28 @@ Proposed solutions to investigate:
    - System generates regex from highlighted portions
 
 Implementation decision pending user feedback.
+
+### 5.9 SMS History Export
+- [x] SmsExportActivity with date range filtering
+- [x] Sender filtering (all or specific sender)
+- [x] Export to JSON format
+- [x] Export to CSV format
+- [x] Message count preview before export
+- [x] Share exported file via Intent
+
+### 5.10 Income Tracking
+- [x] Income data class with serialization
+- [x] IncomeEntity database entity
+- [x] IncomeDao with CRUD operations
+- [x] Database migration v6→v7 (incomes table)
+- [ ] Income processing rules (future)
+- [ ] Income UI screen (future)
+
+### 5.11 Theme Toggle
+- [x] Light/Dark/System theme options
+- [x] SharedPreferences persistence
+- [x] Theme applied on app startup
+- [x] Settings dialog in MainActivity
 
 ---
 
@@ -369,3 +396,11 @@ Implementation decision pending user feedback.
 | 2026-01-06 | Database migration v5 (ignore_rules table) | 6f62277 |
 | 2026-01-06 | IgnoreRulesAppiumTest (10 tests) | 6f62277 |
 | 2026-01-06 | Enhanced Appium tests (102 total, 100% pass) | 6f62277 |
+| 2026-01-06 | Phase 5.9: SMS History Export (JSON/CSV) | - |
+| 2026-01-06 | Phase 5.10: Income Tracking (entity, DAO, migration v6→v7) | - |
+| 2026-01-06 | Phase 5.11: Light/Dark Mode Toggle | - |
+| 2026-01-06 | Regex Builder layout reorganization | - |
+| 2026-01-06 | Income data class tests (+9 tests) | - |
+| 2026-01-06 | MainNavigationAppiumTest updates (+2 tests) | - |
+| 2026-01-06 | Bug documentation linked to TODO.md | - |
+| 2026-01-06 | All 104 Appium tests passing | - |

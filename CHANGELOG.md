@@ -8,11 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 5.9: SMS History Export**
+  - SmsExportActivity with date range filtering
+  - Sender filtering (all or specific sender)
+  - Export to JSON format with full message data
+  - Export to CSV format for spreadsheet compatibility
+  - Message count preview before export
+  - Share exported file via Intent
+
+- **Phase 5.10: Income Tracking (Database Infrastructure)**
+  - Income data class with kotlinx.serialization
+  - IncomeEntity database entity with unique messageHash
+  - IncomeDao with full CRUD operations
+  - Date range and sender filtering queries
+  - Database migration v6→v7 (incomes table)
+
+- **Phase 5.11: Light/Dark Mode Toggle**
+  - System Default / Light / Dark theme options
+  - SharedPreferences persistence
+  - Theme applied on app startup via BankSmsTrackerApp
+  - Settings dialog accessible from main menu
+
 - **Phase 5.3: Regex Builder Enhancements**
   - Filter SMS selection by configured senders
   - Sender selection dialog before showing messages
   - Full message content display with visual separation
   - Existing patterns spinner to edit saved regex patterns
+  - Reorganized layout (SMS input → Pattern → Test → Results → Save)
 
 - **Phase 5.4: Spending Reports Improvements**
   - Default date range set to current month (first to last day)
@@ -42,23 +64,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive README with build instructions
 - User manual documentation
 - Creative Commons BY-NC license for non-commercial use
+- PROMPT_TEMPLATE.md for session continuation
 
 ### Changed
 - Main menu reorganized into logical groups (Data, Tools, Settings)
-- Added Ignore Rules button to main menu
+- Added SMS Export and Settings buttons to main menu
 - Improved empty state messages
 - Enhanced loading indicators
 - JaCoCo coverage configuration optimized (excludes UI/database/repository tested by E2E)
-- Database version 5 with ignore_rules table migration
+- JaCoCo coverage verification fixed (handles DOCTYPE in XML)
+- Database version 7 with incomes table migration
 
 ### Quality
-- Code coverage: 96.6% (174 unit tests)
-- Appium E2E tests: 102 tests, 100% pass rate
-- New IgnoreRulesAppiumTest (10 tests)
-- Enhanced RegexBuilderAppiumTest (+4 tests for Phase 5.3)
-- Enhanced PaymentsFilterAppiumTest (+4 tests for Phase 5.6)
-- Unit tests for IgnoreRule data class (+8 tests)
+- Code coverage: 87.50% (unit tests)
+- Appium E2E tests: 104 tests, 100% pass rate (9 test suites)
+- New tests: SMS Export navigation, Theme Toggle dialog
+- Unit tests for Income data class (+9 tests)
+- Enhanced MainNavigationAppiumTest (+2 tests)
 - Fixed Appium test flakiness with driver reconnection logic
+- Bug documentation linked in TODO.md
 
 ## [1.0.0] - 2025-12-31
 
@@ -140,6 +164,9 @@ The app includes automatic database migrations:
 - v1 → v2: Added `enabled` field to senders and rules
 - v2 → v3: Added `senderAddress` and `receivedAt` to payments
 - v3 → v4: Added `ruleId` for category cascade
+- v4 → v5: Added `ignore_rules` table for spam filtering
+- v5 → v6: Added `senderId` to ignore_rules (foreign key)
+- v6 → v7: Added `incomes` table for income tracking
 
 ---
 

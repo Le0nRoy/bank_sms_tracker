@@ -5,9 +5,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
@@ -16,9 +19,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.R
 import com.example.banksmstracker.data.IgnoreRule
+import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.IgnoreRuleDao
 import com.example.banksmstracker.database.IgnoreRuleEntity
+import com.example.banksmstracker.repository.ConfigRepository
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -29,10 +34,13 @@ class IgnoreRulesActivity : BaseActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvEmptyState: TextView
     private lateinit var fabAdd: FloatingActionButton
+    private lateinit var spinnerFilterSender: Spinner
     private lateinit var ignoreRuleDao: IgnoreRuleDao
     private lateinit var adapter: IgnoreRuleAdapter
 
     private var ignoreRules: List<IgnoreRule> = emptyList()
+    private var senders: List<Sender> = emptyList()
+    private var selectedFilterSenderId: Long? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,19 +48,24 @@ class IgnoreRulesActivity : BaseActivity() {
 
         initViews()
         setupRecyclerView()
-        loadIgnoreRules()
+        loadData()
     }
 
     private fun initViews() {
         recyclerView = findViewById(R.id.recyclerIgnoreRules)
         tvEmptyState = findViewById(R.id.tvEmptyState)
         fabAdd = findViewById(R.id.fabAddIgnoreRule)
+        spinnerFilterSender = findViewById(R.id.spinnerFilterSender)
 
         val database = BankSmsDatabase.getInstance(this)
         ignoreRuleDao = database.ignoreRuleDao()
 
         fabAdd.setOnClickListener {
-            showAddEditDialog(null)
+            if (senders.isEmpty()) {
+                Toast.makeText(this, R.string.no_senders_available, Toast.LENGTH_SHORT).show()
+            } else {
+                showAddEditDialog(null)
+            }
         }
     }
 
@@ -62,12 +75,52 @@ class IgnoreRulesActivity : BaseActivity() {
         recyclerView.adapter = adapter
     }
 
+    private fun loadData() {
+        lifecycleScope.launch {
+            // Load senders
+            ConfigRepository.load(application)
+            senders = ConfigRepository.getSenders()
+
+            // Setup filter spinner
+            setupFilterSpinner()
+
+            // Load ignore rules
+            loadIgnoreRules()
+        }
+    }
+
+    private fun setupFilterSpinner() {
+        val senderNames = mutableListOf(getString(R.string.ignore_rules_filter_all))
+        senderNames.addAll(senders.map { it.name })
+
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, senderNames)
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerFilterSender.adapter = spinnerAdapter
+
+        spinnerFilterSender.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedFilterSenderId = if (position == 0) null else senders.getOrNull(position - 1)?.id
+                loadIgnoreRules()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                selectedFilterSenderId = null
+            }
+        }
+    }
+
     private fun loadIgnoreRules() {
         lifecycleScope.launch {
             ignoreRules = withContext(Dispatchers.IO) {
-                ignoreRuleDao.getAllIgnoreRules().map { entity ->
+                val entities = if (selectedFilterSenderId != null) {
+                    ignoreRuleDao.getIgnoreRulesBySender(selectedFilterSenderId!!)
+                } else {
+                    ignoreRuleDao.getAllIgnoreRules()
+                }
+                entities.map { entity ->
                     IgnoreRule(
                         id = entity.id,
+                        senderId = entity.senderId,
                         pattern = entity.pattern,
                         description = entity.description,
                         enabled = entity.enabled
@@ -94,18 +147,43 @@ class IgnoreRulesActivity : BaseActivity() {
         val isEdit = rule != null
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_ignore_rule, null)
 
+        val spinnerSender = dialogView.findViewById<Spinner>(R.id.spinnerSender)
         val etPattern = dialogView.findViewById<EditText>(R.id.etPattern)
         val etDescription = dialogView.findViewById<EditText>(R.id.etDescription)
+
+        // Setup sender spinner
+        val senderNames = senders.map { it.name }
+        val senderAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, senderNames)
+        senderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerSender.adapter = senderAdapter
 
         if (isEdit) {
             etPattern.setText(rule!!.pattern)
             etDescription.setText(rule.description ?: "")
+            // Select the sender
+            val senderIndex = senders.indexOfFirst { it.id == rule.senderId }
+            if (senderIndex >= 0) {
+                spinnerSender.setSelection(senderIndex)
+            }
+        } else if (selectedFilterSenderId != null) {
+            // Pre-select current filter sender
+            val senderIndex = senders.indexOfFirst { it.id == selectedFilterSenderId }
+            if (senderIndex >= 0) {
+                spinnerSender.setSelection(senderIndex)
+            }
         }
 
         AlertDialog.Builder(this)
             .setTitle(if (isEdit) R.string.edit_ignore_rule else R.string.add_ignore_rule)
             .setView(dialogView)
             .setPositiveButton(R.string.confirm) { _, _ ->
+                val selectedSenderIndex = spinnerSender.selectedItemPosition
+                if (selectedSenderIndex < 0 || selectedSenderIndex >= senders.size) {
+                    Toast.makeText(this, R.string.sender_required, Toast.LENGTH_SHORT).show()
+                    return@setPositiveButton
+                }
+
+                val selectedSenderId = senders[selectedSenderIndex].id ?: return@setPositiveButton
                 val pattern = etPattern.text.toString().trim()
                 val description = etDescription.text.toString().trim().ifEmpty { null }
 
@@ -123,9 +201,9 @@ class IgnoreRulesActivity : BaseActivity() {
                     }
 
                     if (isEdit) {
-                        updateIgnoreRule(rule!!.copy(pattern = pattern, description = description))
+                        updateIgnoreRule(rule!!.copy(senderId = selectedSenderId, pattern = pattern, description = description))
                     } else {
-                        addIgnoreRule(pattern, description)
+                        addIgnoreRule(selectedSenderId, pattern, description)
                     }
                 }
             }
@@ -133,11 +211,11 @@ class IgnoreRulesActivity : BaseActivity() {
             .show()
     }
 
-    private fun addIgnoreRule(pattern: String, description: String?) {
+    private fun addIgnoreRule(senderId: Long, pattern: String, description: String?) {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 ignoreRuleDao.insertIgnoreRule(
-                    IgnoreRuleEntity(pattern = pattern, description = description)
+                    IgnoreRuleEntity(senderId = senderId, pattern = pattern, description = description)
                 )
             }
             loadIgnoreRules()
@@ -151,6 +229,7 @@ class IgnoreRulesActivity : BaseActivity() {
                 ignoreRuleDao.updateIgnoreRule(
                     IgnoreRuleEntity(
                         id = rule.id ?: 0,
+                        senderId = rule.senderId,
                         pattern = rule.pattern,
                         description = rule.description,
                         enabled = rule.enabled
@@ -176,6 +255,10 @@ class IgnoreRulesActivity : BaseActivity() {
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    private fun getSenderName(senderId: Long): String {
+        return senders.find { it.id == senderId }?.name ?: "Unknown"
     }
 
     inner class IgnoreRuleAdapter : RecyclerView.Adapter<IgnoreRuleAdapter.ViewHolder>() {
@@ -207,8 +290,13 @@ class IgnoreRulesActivity : BaseActivity() {
 
             fun bind(rule: IgnoreRule) {
                 tvPattern.text = rule.pattern
-                tvDescription.text = rule.description ?: ""
-                tvDescription.visibility = if (rule.description.isNullOrEmpty()) View.GONE else View.VISIBLE
+                // Show sender name in description if viewing all senders
+                val senderPrefix = if (selectedFilterSenderId == null) {
+                    "[${getSenderName(rule.senderId)}] "
+                } else ""
+                val descText = senderPrefix + (rule.description ?: "")
+                tvDescription.text = descText
+                tvDescription.visibility = if (descText.isEmpty()) View.GONE else View.VISIBLE
                 switchEnabled.isChecked = rule.enabled
 
                 switchEnabled.setOnCheckedChangeListener { _, isChecked ->

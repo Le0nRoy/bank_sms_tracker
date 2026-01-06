@@ -15,19 +15,21 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Section 1: Sample SMS Input -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/sample_sms_label"
                 android:textStyle="bold"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="4dp" />
 
             <EditText
                 android:id="@+id/etSampleSms"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minLines="4"
-                android:maxLines="8"
+                android:minLines="3"
+                android:maxLines="6"
                 android:gravity="top|start"
                 android:hint="@string/sample_sms_hint"
                 android:inputType="textMultiLine"
@@ -43,11 +45,13 @@
                 android:layout_marginTop="8dp"
                 style="?android:attr/buttonBarButtonStyle" />
 
+            <!-- Section 2: Regex Pattern -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/regex_pattern_label"
                 android:textStyle="bold"
+                android:textColor="@color/text_primary"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="4dp" />
 
@@ -56,7 +60,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minLines="2"
-                android:maxLines="6"
+                android:maxLines="4"
                 android:gravity="top|start"
                 android:hint="@string/regex_pattern_hint"
                 android:inputType="textMultiLine"
@@ -78,14 +82,45 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/test_regex"
-                android:layout_marginTop="16dp" />
+                android:layout_marginTop="12dp" />
+
+            <!-- Section 3: Test Results (moved up for immediate feedback) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/results_label"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/tvResults"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="12sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/edit_text_themed"
+                android:padding="12dp"
+                android:minHeight="150dp"
+                android:gravity="top|start" />
+
+            <!-- Section 4: Save Options -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/text_hint"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="16dp"
+                android:alpha="0.3" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/save_to_sender_label"
                 android:textStyle="bold"
-                android:layout_marginTop="24dp"
+                android:textColor="@color/text_primary"
                 android:layout_marginBottom="4dp" />
 
             <Spinner
@@ -95,12 +130,52 @@
                 android:background="@drawable/edit_text_themed"
                 android:padding="8dp" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rule_type_label"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_gravity="center_vertical" />
+
+                <RadioGroup
+                    android:id="@+id/rgRuleType"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginStart="16dp">
+
+                    <RadioButton
+                        android:id="@+id/rbProcessRule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/rule_type_process"
+                        android:checked="true" />
+
+                    <RadioButton
+                        android:id="@+id/rbIgnoreRule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/rule_type_ignore"
+                        android:layout_marginStart="8dp" />
+
+                </RadioGroup>
+
+            </LinearLayout>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/existing_patterns_label"
                 android:textStyle="bold"
-                android:layout_marginTop="16dp"
+                android:textColor="@color/text_primary"
+                android:layout_marginTop="12dp"
                 android:layout_marginBottom="4dp" />
 
             <Spinner
@@ -115,27 +190,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/save_regex"
-                android:layout_marginTop="8dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/results_label"
-                android:textStyle="bold"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-
-            <TextView
-                android:id="@+id/tvResults"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:fontFamily="monospace"
-                android:textSize="12sp"
-                android:textColor="@color/text_primary"
-                android:background="@drawable/edit_text_themed"
-                android:padding="12dp"
-                android:minHeight="200dp"
-                android:gravity="top|start" />
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="16dp" />
 
         </LinearLayout>
 

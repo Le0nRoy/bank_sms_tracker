@@ -15,4 +15,5 @@
     <color name="amount_negative">#FFD32F2F</color>
     <color name="card_background">#FFFFFFFF</color>
     <color name="surface_background">#FFFAFAFA</color>
+    <color name="error_text">#FFD32F2F</color>
 </resources>

@@ -54,6 +54,39 @@ class CategoriesActivity :
         }
     }
 
+    override fun onCategoryDeleteRequested(category: Category, position: Int) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.delete_category_confirm_title)
+            .setMessage(R.string.delete_category_confirm_message)
+            .setPositiveButton(R.string.delete) { _, _ ->
+                deleteCategory(category, position)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun deleteCategory(category: Category, position: Int) {
+        lifecycleScope.launch {
+            try {
+                val categoryId = category.id ?: return@launch
+                ConfigRepository.deleteCategory(categoryId)
+                adapter.removeCategory(position)
+                updateEmptyState()
+                Toast.makeText(
+                    this@CategoriesActivity,
+                    R.string.category_deleted,
+                    Toast.LENGTH_SHORT
+                ).show()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@CategoriesActivity,
+                    getString(R.string.error_generic),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
     private fun setupViews() {
         progressBar = findViewById(R.id.progressBar)
         tvEmptyState = findViewById(R.id.tvEmptyState)
@@ -171,6 +204,7 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
 
     interface CategoryCallbacks {
         fun onCategoryUpdated(category: Category)
+        fun onCategoryDeleteRequested(category: Category, position: Int)
     }
 
     private val categories: MutableList<Category> = mutableListOf()
@@ -186,6 +220,14 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
         notifyItemInserted(categories.lastIndex)
     }
 
+    fun removeCategory(position: Int) {
+        if (position in categories.indices) {
+            categories.removeAt(position)
+            notifyItemRemoved(position)
+            notifyItemRangeChanged(position, categories.size)
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_category, parent, false)
@@ -193,7 +235,7 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
     }
 
     override fun onBindViewHolder(holder: CategoryViewHolder, position: Int) {
-        holder.bind(categories[position], callbacks)
+        holder.bind(categories[position], position, callbacks)
     }
 
     override fun getItemCount(): Int = categories.size
@@ -202,11 +244,12 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
 
         private val nameEditText: EditText = itemView.findViewById(R.id.nameEditText)
         private val switchEnabled: Switch = itemView.findViewById(R.id.switchEnabled)
+        private val btnDeleteCategory: android.widget.ImageButton = itemView.findViewById(R.id.btnDeleteCategory)
         private val merchantsContainer: LinearLayout = itemView.findViewById(R.id.merchantsContainer)
         private val btnAddMerchant: Button = itemView.findViewById(R.id.btnAddMerchant)
         private val bindingInProgress = AtomicBoolean(false)
 
-        fun bind(category: Category, callbacks: CategoryCallbacks) {
+        fun bind(category: Category, position: Int, callbacks: CategoryCallbacks) {
             bindingInProgress.set(true)
             if (nameEditText.text.toString() != category.name) {
                 nameEditText.setText(category.name)
@@ -228,6 +271,10 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
                 }
             }
 
+            btnDeleteCategory.setOnClickListener {
+                callbacks.onCategoryDeleteRequested(category, position)
+            }
+
             merchantsContainer.removeAllViews()
             category.merchants.forEachIndexed { index, merchant ->
                 addMerchantField(index, merchant, category, callbacks)
@@ -241,8 +288,11 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
         }
 
         private fun addMerchantField(index: Int, value: String, category: Category, callbacks: CategoryCallbacks) {
-            val editText = LayoutInflater.from(itemView.context)
-                .inflate(R.layout.view_dynamic_edit_text, merchantsContainer, false) as EditText
+            val view = LayoutInflater.from(itemView.context)
+                .inflate(R.layout.view_dynamic_edit_text_with_delete, merchantsContainer, false)
+            val editText: EditText = view.findViewById(R.id.etValue)
+            val btnDelete: android.widget.ImageButton = view.findViewById(R.id.btnDelete)
+
             editText.hint = itemView.context.getString(R.string.merchant_hint, index + 1)
             editText.setText(value)
             editText.setSimpleWatcher { newValue ->
@@ -251,7 +301,25 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
                     callbacks.onCategoryUpdated(category)
                 }
             }
-            merchantsContainer.addView(editText)
+
+            btnDelete.setOnClickListener {
+                if (index in category.merchants.indices) {
+                    category.merchants.removeAt(index)
+                    callbacks.onCategoryUpdated(category)
+                    merchantsContainer.removeView(view)
+                    // Refresh to update hints
+                    refreshMerchantFields(category, callbacks)
+                }
+            }
+
+            merchantsContainer.addView(view)
+        }
+
+        private fun refreshMerchantFields(category: Category, callbacks: CategoryCallbacks) {
+            merchantsContainer.removeAllViews()
+            category.merchants.forEachIndexed { index, merchant ->
+                addMerchantField(index, merchant, category, callbacks)
+            }
         }
     }
 }

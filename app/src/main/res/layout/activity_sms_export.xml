@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/sms_export_description"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Date Range Selection -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/select_date_range"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/btnStartDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/start_date"
+            android:layout_marginEnd="4dp"
+            style="?android:attr/buttonBarButtonStyle" />
+
+        <Button
+            android:id="@+id/btnEndDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/end_date"
+            android:layout_marginStart="4dp"
+            style="?android:attr/buttonBarButtonStyle" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnClearDates"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/clear"
+        android:layout_marginBottom="16dp"
+        style="?android:attr/buttonBarButtonStyle" />
+
+    <!-- Sender Filter -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/filter_by_sender"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="4dp" />
+
+    <Spinner
+        android:id="@+id/spinnerSender"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/edit_text_themed"
+        android:padding="8dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Export Format -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/export_format_label"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="4dp" />
+
+    <RadioGroup
+        android:id="@+id/rgExportFormat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+
+        <RadioButton
+            android:id="@+id/rbFormatJson"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/format_json"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/rbFormatCsv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/format_csv"
+            android:layout_marginStart="16dp" />
+
+    </RadioGroup>
+
+    <!-- Message Count Preview -->
+    <TextView
+        android:id="@+id/tvMessageCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/messages_to_export"
+        android:textColor="@color/text_secondary"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Export Button -->
+    <Button
+        android:id="@+id/btnExport"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/export_sms" />
+
+    <!-- Progress -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:visibility="gone" />
+
+</LinearLayout>

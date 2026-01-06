@@ -1,5 +1,6 @@
 package com.example.banksmstracker.ui
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +11,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.Switch
 import android.widget.TextView
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -45,6 +47,39 @@ class SendersActivity :
                 val sender = ConfigRepository.addSender()
                 adapter.addSender(sender.clone())
                 updateEmptyState()
+            }
+        }
+    }
+
+    override fun onSenderDeleteRequested(sender: Sender, position: Int) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.delete_sender_confirm_title)
+            .setMessage(R.string.delete_sender_confirm_message)
+            .setPositiveButton(R.string.delete) { _, _ ->
+                deleteSender(sender, position)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun deleteSender(sender: Sender, position: Int) {
+        lifecycleScope.launch {
+            try {
+                val senderId = sender.id ?: return@launch
+                ConfigRepository.deleteSender(senderId)
+                adapter.removeSender(position)
+                updateEmptyState()
+                Toast.makeText(
+                    this@SendersActivity,
+                    R.string.sender_deleted,
+                    Toast.LENGTH_SHORT
+                ).show()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@SendersActivity,
+                    getString(R.string.error_generic),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -121,6 +156,7 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
 
     interface SenderCallbacks {
         fun onSenderUpdated(sender: Sender)
+        fun onSenderDeleteRequested(sender: Sender, position: Int)
     }
 
     private val senders: MutableList<Sender> = mutableListOf()
@@ -136,6 +172,14 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
         notifyItemInserted(senders.lastIndex)
     }
 
+    fun removeSender(position: Int) {
+        if (position in senders.indices) {
+            senders.removeAt(position)
+            notifyItemRemoved(position)
+            notifyItemRangeChanged(position, senders.size)
+        }
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SenderViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_sender, parent, false)
@@ -143,7 +187,7 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
     }
 
     override fun onBindViewHolder(holder: SenderViewHolder, position: Int) {
-        holder.bind(senders[position], callbacks)
+        holder.bind(senders[position], position, callbacks)
     }
 
     override fun getItemCount(): Int = senders.size
@@ -152,13 +196,14 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
 
         private val nameEditText: EditText = itemView.findViewById(R.id.senderNameEditText)
         private val switchSenderEnabled: Switch = itemView.findViewById(R.id.switchSenderEnabled)
+        private val btnDeleteSender: android.widget.ImageButton = itemView.findViewById(R.id.btnDeleteSender)
         private val addressesContainer: LinearLayout = itemView.findViewById(R.id.addressesContainer)
         private val btnAddAddress: Button = itemView.findViewById(R.id.btnAddAddress)
         private val rulesContainer: LinearLayout = itemView.findViewById(R.id.rulesContainer)
         private val btnAddRule: Button = itemView.findViewById(R.id.btnAddRule)
         private val bindingInProgress = AtomicBoolean(false)
 
-        fun bind(sender: Sender, callbacks: SenderCallbacks) {
+        fun bind(sender: Sender, position: Int, callbacks: SenderCallbacks) {
             bindingInProgress.set(true)
             if (nameEditText.text.toString() != sender.name) {
                 nameEditText.setText(sender.name)
@@ -178,6 +223,10 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
                     sender.enabled = isChecked
                     callbacks.onSenderUpdated(sender)
                 }
+            }
+
+            btnDeleteSender.setOnClickListener {
+                callbacks.onSenderDeleteRequested(sender, position)
             }
 
             addressesContainer.removeAllViews()
@@ -202,8 +251,11 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
         }
 
         private fun addAddressField(index: Int, value: String, sender: Sender, callbacks: SenderCallbacks) {
-            val editText = LayoutInflater.from(itemView.context)
-                .inflate(R.layout.view_dynamic_edit_text, addressesContainer, false) as EditText
+            val view = LayoutInflater.from(itemView.context)
+                .inflate(R.layout.view_dynamic_edit_text_with_delete, addressesContainer, false)
+            val editText: EditText = view.findViewById(R.id.etValue)
+            val btnDelete: android.widget.ImageButton = view.findViewById(R.id.btnDelete)
+
             editText.hint = itemView.context.getString(R.string.sender_address_hint, index + 1)
             editText.setText(value)
             editText.setSimpleWatcher { newValue ->
@@ -212,7 +264,24 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
                     callbacks.onSenderUpdated(sender)
                 }
             }
-            addressesContainer.addView(editText)
+
+            btnDelete.setOnClickListener {
+                if (index in sender.addresses.indices) {
+                    sender.addresses.removeAt(index)
+                    callbacks.onSenderUpdated(sender)
+                    addressesContainer.removeView(view)
+                    refreshAddressFields(sender, callbacks)
+                }
+            }
+
+            addressesContainer.addView(view)
+        }
+
+        private fun refreshAddressFields(sender: Sender, callbacks: SenderCallbacks) {
+            addressesContainer.removeAllViews()
+            sender.addresses.forEachIndexed { index, address ->
+                addAddressField(index, address, sender, callbacks)
+            }
         }
 
         private fun addRuleField(index: Int, rule: PaymentRegexRule, sender: Sender, callbacks: SenderCallbacks) {
@@ -220,6 +289,7 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
                 .inflate(R.layout.view_rule_with_toggle, rulesContainer, false)
             val editText: EditText = ruleView.findViewById(R.id.etRuleRegex)
             val switchEnabled: Switch = ruleView.findViewById(R.id.switchRuleEnabled)
+            val btnDeleteRule: android.widget.ImageButton = ruleView.findViewById(R.id.btnDeleteRule)
 
             editText.hint = itemView.context.getString(R.string.sender_rule_hint, index + 1)
             editText.setText(rule.regex)
@@ -239,7 +309,23 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
                 }
             }
 
+            btnDeleteRule.setOnClickListener {
+                if (index in sender.rules.indices) {
+                    sender.rules.removeAt(index)
+                    callbacks.onSenderUpdated(sender)
+                    rulesContainer.removeView(ruleView)
+                    refreshRuleFields(sender, callbacks)
+                }
+            }
+
             rulesContainer.addView(ruleView)
+        }
+
+        private fun refreshRuleFields(sender: Sender, callbacks: SenderCallbacks) {
+            rulesContainer.removeAllViews()
+            sender.rules.forEachIndexed { index, rule ->
+                addRuleField(index, rule, sender, callbacks)
+            }
         }
     }
 }

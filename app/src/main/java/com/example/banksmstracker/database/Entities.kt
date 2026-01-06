@@ -102,7 +102,13 @@ data class SenderWithDetails(
         entityColumn = "senderId",
         entity = SenderRuleEntity::class
     )
-    val rules: List<SenderRuleEntity>
+    val rules: List<SenderRuleEntity>,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "senderId",
+        entity = IgnoreRuleEntity::class
+    )
+    val ignoreRules: List<IgnoreRuleEntity>
 )
 
 @Entity(
@@ -124,10 +130,40 @@ data class PaymentEntity(
     val ruleId: Long? = null
 )
 
-@Entity(tableName = "ignore_rules")
+@Entity(
+    tableName = "ignore_rules",
+    foreignKeys = [
+        ForeignKey(
+            entity = SenderEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["senderId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["senderId"])]
+)
 data class IgnoreRuleEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val senderId: Long,
     val pattern: String,
     val description: String? = null,
     val enabled: Boolean = true
+)
+
+@Entity(
+    tableName = "incomes",
+    indices = [Index(value = ["messageHash"], unique = true)]
+)
+data class IncomeEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val amount: Double,
+    val currency: String,
+    val source: String?,
+    val timestamp: String?,
+    val balance: Double?,
+    val messageHash: String,
+    val senderAddress: String? = null,
+    val receivedAt: Long? = null,
+    val ruleId: Long? = null
 )

@@ -8,6 +8,22 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="@string/select_sender_for_rule"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="4dp" />
+
+    <Spinner
+        android:id="@+id/spinnerSender"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:background="@drawable/edit_text_themed"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:text="@string/ignore_pattern_label"
         android:textStyle="bold"
         android:textColor="@color/text_primary"

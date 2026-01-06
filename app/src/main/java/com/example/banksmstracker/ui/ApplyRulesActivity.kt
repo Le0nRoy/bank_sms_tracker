@@ -45,13 +45,32 @@ class ApplyRulesActivity : BaseActivity() {
 
         initViews()
         setupListeners()
-        setDefaultDateRange()
 
-        if (checkSmsPermission()) {
-            // Don't auto-process, wait for button click
+        // Restore saved state if available
+        if (savedInstanceState != null) {
+            startDate = savedInstanceState.getLong(KEY_START_DATE, -1L).takeIf { it >= 0 }
+            endDate = savedInstanceState.getLong(KEY_END_DATE, -1L).takeIf { it >= 0 }
+            updateDateButtons()
         } else {
+            setDefaultDateRange()
+        }
+
+        if (!checkSmsPermission()) {
             requestSmsPermission()
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        startDate?.let { outState.putLong(KEY_START_DATE, it) }
+        endDate?.let { outState.putLong(KEY_END_DATE, it) }
+    }
+
+    private fun updateDateButtons() {
+        startDate?.let { btnStartDate.text = dateFormat.format(Date(it)) }
+            ?: run { btnStartDate.text = getString(R.string.start_date) }
+        endDate?.let { btnEndDate.text = dateFormat.format(Date(it)) }
+            ?: run { btnEndDate.text = getString(R.string.end_date) }
     }
 
     private fun initViews() {
@@ -92,8 +111,15 @@ class ApplyRulesActivity : BaseActivity() {
                     .maxOrNull()
             }
 
+            val today = Calendar.getInstance()
+            today.set(Calendar.HOUR_OF_DAY, 23)
+            today.set(Calendar.MINUTE, 59)
+            today.set(Calendar.SECOND, 59)
+            today.set(Calendar.MILLISECOND, 999)
+            val todayEnd = today.timeInMillis
+
             if (lastPaymentDate != null) {
-                // Start from day after last payment
+                // Start from day after last payment, but not later than today
                 val calendar = Calendar.getInstance()
                 calendar.timeInMillis = lastPaymentDate
                 calendar.add(Calendar.DAY_OF_MONTH, 1)
@@ -101,13 +127,32 @@ class ApplyRulesActivity : BaseActivity() {
                 calendar.set(Calendar.MINUTE, 0)
                 calendar.set(Calendar.SECOND, 0)
                 calendar.set(Calendar.MILLISECOND, 0)
-                startDate = calendar.timeInMillis
-                btnStartDate.text = dateFormat.format(Date(startDate!!))
+
+                // Ensure start date is not later than today
+                if (calendar.timeInMillis <= todayEnd) {
+                    startDate = calendar.timeInMillis
+                }
+            } else {
+                // No payments yet - default to start of current month
+                val startOfMonth = Calendar.getInstance()
+                startOfMonth.set(Calendar.DAY_OF_MONTH, 1)
+                startOfMonth.set(Calendar.HOUR_OF_DAY, 0)
+                startOfMonth.set(Calendar.MINUTE, 0)
+                startOfMonth.set(Calendar.SECOND, 0)
+                startOfMonth.set(Calendar.MILLISECOND, 0)
+                startDate = startOfMonth.timeInMillis
             }
 
-            // End date is now
-            endDate = System.currentTimeMillis()
-            btnEndDate.text = dateFormat.format(Date(endDate!!))
+            // End date: minimum of current day and last day of current month
+            val lastDayOfMonth = Calendar.getInstance()
+            lastDayOfMonth.set(Calendar.DAY_OF_MONTH, lastDayOfMonth.getActualMaximum(Calendar.DAY_OF_MONTH))
+            lastDayOfMonth.set(Calendar.HOUR_OF_DAY, 23)
+            lastDayOfMonth.set(Calendar.MINUTE, 59)
+            lastDayOfMonth.set(Calendar.SECOND, 59)
+            lastDayOfMonth.set(Calendar.MILLISECOND, 999)
+
+            endDate = minOf(todayEnd, lastDayOfMonth.timeInMillis)
+            updateDateButtons()
         }
     }
 
@@ -118,7 +163,7 @@ class ApplyRulesActivity : BaseActivity() {
             calendar.timeInMillis = existingDate
         }
 
-        DatePickerDialog(
+        val dialog = DatePickerDialog(
             this,
             { _, year, month, dayOfMonth ->
                 val selectedCalendar = Calendar.getInstance().apply {
@@ -149,7 +194,11 @@ class ApplyRulesActivity : BaseActivity() {
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
-        ).show()
+        )
+
+        // Prevent selecting future dates
+        dialog.datePicker.maxDate = System.currentTimeMillis()
+        dialog.show()
     }
 
     private fun checkSmsPermission(): Boolean = ContextCompat.checkSelfPermission(
@@ -274,9 +323,8 @@ class ApplyRulesActivity : BaseActivity() {
 
         view.findViewById<TextView>(R.id.tvErrorTitle).text = getString(R.string.error_parsing)
         view.findViewById<TextView>(R.id.tvErrorMessage).text = buildString {
-            append("From: $sender\n")
-            append("Error: $error\n\n")
-            append("Message:\n$message")
+            append("From: $sender\n\n")
+            append("Error:\n$message")
         }
 
         view.findViewById<Button>(R.id.btnOpenRegexBuilder).setOnClickListener {
@@ -345,5 +393,7 @@ class ApplyRulesActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_SAMPLE_SMS = "extra_sample_sms"
+        private const val KEY_START_DATE = "key_start_date"
+        private const val KEY_END_DATE = "key_end_date"
     }
 }

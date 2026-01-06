@@ -183,30 +183,32 @@ tasks.register("jacocoCoverageVerification") {
     doLast {
         val reportFile = file("${layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
         if (reportFile.exists()) {
-            val xmlParser = groovy.xml.XmlSlurper().parse(reportFile)
-            val counters = xmlParser.getProperty("counter") as groovy.util.slurpersupport.NodeChildren
+            // Parse XML using regex to avoid DOCTYPE issues
+            val content = reportFile.readText()
 
-            var totalCovered = 0
-            var totalMissed = 0
+            // Find all LINE counters at the report level (not inside packages)
+            val linePattern = """<counter type="LINE" missed="(\d+)" covered="(\d+)"/>""".toRegex()
+            val matches = linePattern.findAll(content).toList()
 
-            counters.forEach { counter ->
-                val node = counter as groovy.util.slurpersupport.Node
-                if (node.attributes()["type"] == "LINE") {
-                    totalCovered += (node.attributes()["covered"] as String).toInt()
-                    totalMissed += (node.attributes()["missed"] as String).toInt()
+            // Get the last match which is the total for the report
+            if (matches.isNotEmpty()) {
+                val lastMatch = matches.last()
+                val totalMissed = lastMatch.groupValues[1].toInt()
+                val totalCovered = lastMatch.groupValues[2].toInt()
+
+                val total = totalCovered + totalMissed
+                val coverage = if (total > 0) (totalCovered * 100.0 / total) else 0.0
+                println("Line coverage: %.2f%% (%d/%d lines)".format(coverage, totalCovered, total))
+
+                val minimumCoverage = 80.0
+                if (coverage < minimumCoverage) {
+                    println(
+                        "WARNING: Coverage %.2f%% is below minimum threshold of %.2f%%"
+                            .format(coverage, minimumCoverage)
+                    )
                 }
-            }
-
-            val total = totalCovered + totalMissed
-            val coverage = if (total > 0) (totalCovered * 100.0 / total) else 0.0
-            println("Line coverage: %.2f%% (%d/%d lines)".format(coverage, totalCovered, total))
-
-            val minimumCoverage = 80.0
-            if (coverage < minimumCoverage) {
-                println(
-                    "WARNING: Coverage %.2f%% is below minimum threshold of %.2f%%"
-                        .format(coverage, minimumCoverage)
-                )
+            } else {
+                println("WARNING: Could not parse coverage data from report")
             }
         }
     }

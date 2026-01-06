@@ -12,8 +12,14 @@ interface IgnoreRuleDao {
     @Query("SELECT * FROM ignore_rules ORDER BY id DESC")
     suspend fun getAllIgnoreRules(): List<IgnoreRuleEntity>
 
+    @Query("SELECT * FROM ignore_rules WHERE senderId = :senderId ORDER BY id DESC")
+    suspend fun getIgnoreRulesBySender(senderId: Long): List<IgnoreRuleEntity>
+
     @Query("SELECT * FROM ignore_rules WHERE enabled = 1 ORDER BY id DESC")
     suspend fun getEnabledIgnoreRules(): List<IgnoreRuleEntity>
+
+    @Query("SELECT * FROM ignore_rules WHERE senderId = :senderId AND enabled = 1 ORDER BY id DESC")
+    suspend fun getEnabledIgnoreRulesBySender(senderId: Long): List<IgnoreRuleEntity>
 
     @Query("SELECT * FROM ignore_rules WHERE id = :id")
     suspend fun getIgnoreRuleById(id: Long): IgnoreRuleEntity?
@@ -29,6 +35,9 @@ interface IgnoreRuleDao {
 
     @Query("DELETE FROM ignore_rules WHERE id = :id")
     suspend fun deleteIgnoreRuleById(id: Long)
+
+    @Query("DELETE FROM ignore_rules WHERE senderId = :senderId")
+    suspend fun deleteIgnoreRulesForSender(senderId: Long)
 
     @Query("SELECT COUNT(*) FROM ignore_rules")
     suspend fun getIgnoreRulesCount(): Int
