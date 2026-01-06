@@ -8,13 +8,13 @@ This document describes the testing strategy, test structure, and usage guidelin
 
 ```
         ┌─────────┐
-        │  E2E    │  ← Appium (84 tests)
+        │  E2E    │  ← Appium (102 tests)
         │  Tests  │     Full user flows
        ─┼─────────┼─
        │Integration│  ← AndroidJUnit (66 tests)
        │   Tests   │     Room DB, Repositories
       ─┼───────────┼─
-      │   Unit     │  ← JUnit 5 (174 tests)
+      │   Unit     │  ← JUnit 5 (182 tests)
       │   Tests    │     Processors, Parsers, Logic
       ─┴───────────┴─
 ```
@@ -58,7 +58,7 @@ Generate coverage report:
 | `PaymentProcessorTest` | SMS parsing, categorization | Active |
 | `ConfigLoaderTest` | JSON deserialization | Active |
 | `PaymentProcessorEnabledTest` | Enabled/disabled rule filtering | Active |
-| `DataClassesTest` | Data class coverage | Active |
+| `DataClassesTest` | Data class coverage (incl. IgnoreRule) | Active |
 | `ImportResultTest` | Import result sealed class | Active |
 
 **Running Unit Tests:**
@@ -122,9 +122,10 @@ Generate coverage report:
 | `SenderManagementAppiumTest` | 11 | Sender CRUD operations |
 | `SmsToPaymentFlowAppiumTest` | 10 | End-to-end payment flow |
 | `BugReportAppiumTest` | 12 | Bug report feature |
-| `RegexBuilderAppiumTest` | 13 | Regex builder feature + save-to-sender |
-| `PaymentsFilterAppiumTest` | 8 | Payment filtering by sender/date range |
+| `RegexBuilderAppiumTest` | 17 | Regex builder feature + Phase 5.3 enhancements |
+| `PaymentsFilterAppiumTest` | 12 | Payment filtering + Phase 5.6 features |
 | `CategoryCascadeAppiumTest` | 5 | Re-categorize all payments feature |
+| `IgnoreRulesAppiumTest` | 10 | Ignore rules CRUD operations (Phase 5.7) |
 
 **Prerequisites:**
 1. Appium server running: `make appium-start` or `make appium-docker-start`
@@ -369,7 +370,7 @@ Current CI pipeline:
 
 ## Future Improvements
 
-1. ~~**Appium Integration**~~ - ✅ Implemented (68 tests, Docker support)
+1. ~~**Appium Integration**~~ - ✅ Implemented (102 tests, Docker support, 100% pass rate)
 2. ~~**Code Coverage**~~ - ✅ JaCoCo configured (`./gradlew jacocoTestReport`)
 3. **Mutation Testing** - Verify test effectiveness
 4. **Performance Tests** - Test SMS processing throughput

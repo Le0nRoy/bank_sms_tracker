@@ -14,7 +14,12 @@
 - **Category Management** - Organize merchants into categories (Food, Transport, Shopping, etc.)
 - **Sender Configuration** - Configure multiple bank senders with custom parsing rules
 - **Transaction History** - View, filter, and export your payment history
+- **Spending Reports** - Category breakdown with percentage analysis and date range filtering
 - **Regex Builder** - Visual tool to create and test regex patterns with real SMS messages
+  - Select SMS from inbox with sender filtering
+  - Edit existing patterns via dropdown
+- **Payment Details** - Click payments to view details and categorize merchants
+- **Ignore Rules** - Filter out spam/promotional messages with regex patterns
 - **Import/Export** - Backup and restore your configuration as JSON
 - **Category Cascade** - Automatically re-categorize payments when rules change
 - **Bug Reporting** - Built-in bug report feature with device info collection

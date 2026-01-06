@@ -8,6 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 5.3: Regex Builder Enhancements**
+  - Filter SMS selection by configured senders
+  - Sender selection dialog before showing messages
+  - Full message content display with visual separation
+  - Existing patterns spinner to edit saved regex patterns
+
+- **Phase 5.4: Spending Reports Improvements**
+  - Default date range set to current month (first to last day)
+  - Show actual dates in report even for empty ranges
+
+- **Phase 5.5: Apply Rules Improvements**
+  - Time range selection UI for rule application
+  - Default time range since last processed payment
+  - "Open Regex Builder" button for failed messages
+  - Enhanced error formatting with CardView items
+
+- **Phase 5.6: Payment Details & Categorization**
+  - Click on payment opens detail dialog
+  - Add merchant to existing category from payment
+  - Create new category with merchant from payment
+
+- **Phase 5.7: Ignore Rules for Spam**
+  - IgnoreRule database entity and DAO
+  - IgnoreRulesActivity with full CRUD operations
+  - Toggle enabled/disabled state for rules
+  - Delete confirmation dialog
+
 - Spending report feature with category breakdown in PaymentsActivity
 - Error state views with retry functionality for Categories and Senders screens
 - Grouped main menu layout for better navigation
@@ -18,13 +45,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Main menu reorganized into logical groups (Data, Tools, Settings)
+- Added Ignore Rules button to main menu
 - Improved empty state messages
 - Enhanced loading indicators
 - JaCoCo coverage configuration optimized (excludes UI/database/repository tested by E2E)
+- Database version 5 with ignore_rules table migration
 
 ### Quality
 - Code coverage: 96.6% (174 unit tests)
-- Appium E2E tests: 80/84 passing with Docker
+- Appium E2E tests: 102 tests, 100% pass rate
+- New IgnoreRulesAppiumTest (10 tests)
+- Enhanced RegexBuilderAppiumTest (+4 tests for Phase 5.3)
+- Enhanced PaymentsFilterAppiumTest (+4 tests for Phase 5.6)
+- Unit tests for IgnoreRule data class (+8 tests)
+- Fixed Appium test flakiness with driver reconnection logic
 
 ## [1.0.0] - 2025-12-31
 

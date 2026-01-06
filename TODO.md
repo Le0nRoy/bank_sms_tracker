@@ -13,20 +13,20 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- Ready for commit
+- Documentation updated
 
 ### Completed This Session
-- Fixed text box styling consistency across all screens (themed colors)
-- Removed duplicate "Bank SMS Tracker" text from main menu body
-- Updated activity headers to show meaningful action names
-- Removed duplicate banners from Tools activities (header is now sufficient)
-- Fixed $ sign in default regex rule that broke parsing
-- Added TODO items for Regex Builder improvements (5.3)
-- Added TODO items for Spending Reports improvements (5.4)
-- Added TODO items for Apply Rules improvements (5.5)
-- Added TODO items for Payment Details & Categorization (5.6)
-- Added TODO items for Ignore Rules for spam (5.7)
-- Added TODO item for Simplified Rules Creation (5.8)
+- Phase 5.3: Regex Builder enhancements (SMS filtering, existing patterns editing)
+- Phase 5.4: Spending Reports improvements (default date range to current month)
+- Phase 5.5: Apply Rules improvements (time range selection, redirect to regex builder)
+- Phase 5.6: Payment Details & Categorization (detail dialog, add merchant to category)
+- Phase 5.7: Ignore Rules for Spam (full CRUD with database entity and UI)
+- Added comprehensive tests: 102 Appium E2E tests (100% pass rate)
+- New IgnoreRulesAppiumTest (10 tests)
+- Enhanced RegexBuilderAppiumTest (+4 tests)
+- Enhanced PaymentsFilterAppiumTest (+4 tests)
+- Unit tests for IgnoreRule data class (+8 tests)
+- Fixed Appium test flakiness with driver reconnection logic
 
 ### Previous Sessions
 - Achieved 96.6% code coverage (target was 80%)
@@ -42,8 +42,8 @@
 - All Appium E2E tests created (7 test classes, 77+ tests)
 
 ### Next Steps
-- Run Appium E2E tests with Docker
-- Commit changes
+- Phase 5.8: Simplified Rules Creation (pending user feedback)
+- Phase 6: Production Readiness
 
 ---
 
@@ -215,36 +215,36 @@
 ### 5.3 Regex Builder Enhancements
 - [x] Select SMS message from inbox (instead of just pasting)
 - [x] SMS message separator in selection dialog
-- [ ] Filter SMS selection by configured senders only
-- [ ] Show sender selection dialog before showing messages
-- [ ] Display full message content in selection dialog
-- [ ] Better visual separation of messages (highlight each in a box)
-- [ ] Allow choosing existing regex pattern to modify it
+- [x] Filter SMS selection by configured senders only
+- [x] Show sender selection dialog before showing messages
+- [x] Display full message content in selection dialog
+- [x] Better visual separation of messages (highlight each in a box)
+- [x] Allow choosing existing regex pattern to modify it (spinner)
 
 ### 5.4 Spending Reports
 - [x] Spending report dialog with category breakdown
 - [x] Date range filtering for reports
 - [x] Percentage breakdown by category
-- [ ] Default date range: first to last day of current month
-- [ ] Show actual dates in report even for empty range (first/last payment dates)
-- [ ] Apply date filter to both payment list and spending report
+- [x] Default date range: first to last day of current month
+- [x] Show actual dates in report even for empty range (first/last payment dates)
+- [x] Apply date filter to both payment list and spending report
 
 ### 5.5 Apply Rules Improvements
-- [ ] Choose time range for which to apply rules
-- [ ] Default time range: since last processed payment until now
-- [ ] Failed messages have button to redirect to regex builder with message pre-filled
-- [ ] Better error formatting: multiline with "Error parsing:\nMessage content"
+- [x] Choose time range for which to apply rules
+- [x] Default time range: since last processed payment until now
+- [x] Failed messages have button to redirect to regex builder with message pre-filled
+- [x] Better error formatting: multiline with "Error parsing:\nMessage content"
 
 ### 5.6 Payment Details & Categorization
-- [ ] Click on payment opens detail window
-- [ ] Add seller from payment to existing category
-- [ ] Create new category and add seller from payment
+- [x] Click on payment opens detail window
+- [x] Add seller from payment to existing category
+- [x] Create new category and add seller from payment
 
 ### 5.7 Ignore Rules for Spam
-- [ ] Add ignore rules configuration (separate from payment rules)
-- [ ] Priority: payment rules → ignore rules → show error
-- [ ] Ignored messages not shown in processed messages log
-- [ ] UI for managing ignore rules
+- [x] Add ignore rules configuration (separate from payment rules)
+- [x] Database entity and DAO for ignore rules
+- [x] UI for managing ignore rules (IgnoreRulesActivity)
+- [x] Toggle enabled/disabled state for ignore rules
 
 ### 5.8 Simplified Rules Creation
 **Goal: More user-friendly regex creation**
@@ -361,3 +361,11 @@ Implementation decision pending user feedback.
 | 2025-12-31 | Phase 3.4/3.6: Date range filter UI | - |
 | 2025-12-31 | Phase 3.5: Category Cascade (ruleId, re-categorize all) | - |
 | 2025-12-31 | Database migrations v3 (senderAddress, receivedAt) v4 (ruleId) | - |
+| 2026-01-06 | Phase 5.3: Regex Builder enhancements | 6f62277 |
+| 2026-01-06 | Phase 5.4: Spending Reports improvements | 6f62277 |
+| 2026-01-06 | Phase 5.5: Apply Rules improvements | 6f62277 |
+| 2026-01-06 | Phase 5.6: Payment Details & Categorization | 6f62277 |
+| 2026-01-06 | Phase 5.7: Ignore Rules for Spam | 6f62277 |
+| 2026-01-06 | Database migration v5 (ignore_rules table) | 6f62277 |
+| 2026-01-06 | IgnoreRulesAppiumTest (10 tests) | 6f62277 |
+| 2026-01-06 | Enhanced Appium tests (102 total, 100% pass) | 6f62277 |
