@@ -15,13 +15,56 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Section 1: Sample SMS Input -->
+            <!-- Section 1: Sender Selection -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/save_to_sender_label"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="4dp" />
+
+            <Spinner
+                android:id="@+id/spinnerSenders"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edit_text_themed"
+                android:padding="8dp" />
+
+            <!-- Section 2: Rule Type -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rule_type_label"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+                <Spinner
+                    android:id="@+id/spinnerRuleType"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"
+                    android:background="@drawable/edit_text_themed"
+                    android:padding="8dp" />
+
+            </LinearLayout>
+
+            <!-- Section 3: Sample SMS Input -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/sample_sms_label"
                 android:textStyle="bold"
                 android:textColor="@color/text_primary"
+                android:layout_marginTop="16dp"
                 android:layout_marginBottom="4dp" />
 
             <EditText
@@ -45,7 +88,24 @@
                 android:layout_marginTop="8dp"
                 style="?android:attr/buttonBarButtonStyle" />
 
-            <!-- Section 2: Regex Pattern -->
+            <!-- Section 4: Existing Patterns -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/existing_patterns_label"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="4dp" />
+
+            <Spinner
+                android:id="@+id/spinnerExistingPatterns"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edit_text_themed"
+                android:padding="8dp" />
+
+            <!-- Section 5: Regex Pattern -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -77,6 +137,84 @@
                 android:textColor="@color/text_hint"
                 android:layout_marginTop="4dp" />
 
+            <!-- Regex Presets -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/regex_presets_label"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="4dp" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/layoutPresets"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btnPresetAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/preset_amount"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp"
+                        style="?android:attr/buttonBarButtonStyle" />
+
+                    <Button
+                        android:id="@+id/btnPresetCurrency"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/preset_currency"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp"
+                        style="?android:attr/buttonBarButtonStyle" />
+
+                    <Button
+                        android:id="@+id/btnPresetCard"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/preset_card"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp"
+                        style="?android:attr/buttonBarButtonStyle" />
+
+                    <Button
+                        android:id="@+id/btnPresetMerchant"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/preset_merchant"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp"
+                        style="?android:attr/buttonBarButtonStyle" />
+
+                    <Button
+                        android:id="@+id/btnPresetTimestamp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/preset_timestamp"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp"
+                        style="?android:attr/buttonBarButtonStyle" />
+
+                    <Button
+                        android:id="@+id/btnPresetBalance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/preset_balance"
+                        android:textSize="12sp"
+                        style="?android:attr/buttonBarButtonStyle" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+
             <Button
                 android:id="@+id/btnTestRegex"
                 android:layout_width="match_parent"
@@ -84,7 +222,7 @@
                 android:text="@string/test_regex"
                 android:layout_marginTop="12dp" />
 
-            <!-- Section 3: Test Results (moved up for immediate feedback) -->
+            <!-- Section 6: Results -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -106,7 +244,7 @@
                 android:minHeight="150dp"
                 android:gravity="top|start" />
 
-            <!-- Section 4: Save Options -->
+            <!-- Section 7: Save Button -->
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -115,68 +253,11 @@
                 android:layout_marginBottom="16dp"
                 android:alpha="0.3" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/save_to_sender_label"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginBottom="4dp" />
-
-            <Spinner
-                android:id="@+id/spinnerSenders"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/edit_text_themed"
-                android:padding="8dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="12dp"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/rule_type_label"
-                    android:textStyle="bold"
-                    android:textColor="@color/text_primary" />
-
-                <Spinner
-                    android:id="@+id/spinnerRuleType"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="16dp"
-                    android:background="@drawable/edit_text_themed"
-                    android:padding="8dp" />
-
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/existing_patterns_label"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="4dp" />
-
-            <Spinner
-                android:id="@+id/spinnerExistingPatterns"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/edit_text_themed"
-                android:padding="8dp" />
-
             <Button
                 android:id="@+id/btnSaveRegex"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/save_regex"
-                android:layout_marginTop="12dp"
                 android:layout_marginBottom="16dp" />
 
         </LinearLayout>

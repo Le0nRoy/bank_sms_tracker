@@ -13,25 +13,31 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- Test verification session completed
+- Message processing workflow refactoring
 
 ### Completed This Session
-- Verified all unit tests pass (./gradlew test - BUILD SUCCESSFUL)
-- Verified all 104 Appium E2E tests pass with Docker compose
-- Updated docs/TESTING.md with current test counts (104 Appium tests)
-- Added "Quick Start Testing" section to AGENTS.md for instant AI context
-- Test infrastructure documentation is current
+- Removed Ignore Rules activity from main menu (access via Senders now)
+- Updated PaymentProcessor with unified workflow: PAYMENT → INCOME → IGNORE rules
+- Ignore rules no longer require capture groups (just pattern matching)
+- Created MessageProcessResult sealed class for type-safe processing results
+- Updated SmsReceiver to handle all message types (payment, income, ignored)
+- Refactored RegexBuilder UI with new order: Sender → Rule Type → Sample → Patterns → Regex → Results → Save
+- Added unregistered sender detection and registration proposal
+- Added regex preset buttons (Amount, Currency, Card, Merchant, Timestamp, Balance)
+- Added PaymentProcessorWorkflowTest (27 tests) for new workflow
+- Updated DataClassesTest with MessageProcessResult and RuleType tests
+- Updated DESIGN.md documentation
 
 ### Previous Sessions
 - Phase 5.3-5.7: Regex Builder, Spending Reports, Apply Rules, Payment Details, Ignore Rules
 - Achieved 96.6% code coverage (target was 80%)
 - Fixed bugs: BUG-001 through BUG-006
-- Database migrations v1→v7
+- Database migrations v1→v8 (unified rules table)
 - All Appium E2E tests created (9 test classes, 104 tests)
 
 ### Next Steps
-- Phase 5.8: Simplified Rules Creation (pending user feedback)
-- Phase 6: Production Readiness
+- Run all tests and fix any failures
+- Commit changes
 
 ---
 

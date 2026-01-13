@@ -351,4 +351,100 @@ class DataClassesTest {
         )
         assertEquals(123.456789, income.amount, 0.000001)
     }
+
+    // ==================== MessageProcessResult Tests ====================
+
+    @Test
+    fun `MessageProcessResult PaymentResult contains payment`() {
+        val payment = Payment(
+            amount = 100.0,
+            currency = "USD",
+            card = null,
+            merchant = "Test",
+            timestamp = null,
+            balance = null
+        )
+        val result = MessageProcessResult.PaymentResult(payment)
+
+        assertTrue(result is MessageProcessResult.PaymentResult)
+        assertEquals(100.0, result.payment.amount)
+        assertEquals("Test", result.payment.merchant)
+    }
+
+    @Test
+    fun `MessageProcessResult IncomeResult contains income`() {
+        val income = Income(
+            amount = 5000.0,
+            currency = "USD",
+            source = "Salary",
+            timestamp = null,
+            balance = null
+        )
+        val result = MessageProcessResult.IncomeResult(income)
+
+        assertTrue(result is MessageProcessResult.IncomeResult)
+        assertEquals(5000.0, result.income.amount)
+        assertEquals("Salary", result.income.source)
+    }
+
+    @Test
+    fun `MessageProcessResult Ignored contains rule name`() {
+        val result = MessageProcessResult.Ignored("OTP filter")
+
+        assertTrue(result is MessageProcessResult.Ignored)
+        assertEquals("OTP filter", result.ruleName)
+    }
+
+    @Test
+    fun `MessageProcessResult Ignored can have null rule name`() {
+        val result = MessageProcessResult.Ignored()
+
+        assertTrue(result is MessageProcessResult.Ignored)
+        assertEquals(null, result.ruleName)
+    }
+
+    @Test
+    fun `MessageProcessResult types are distinguishable`() {
+        val payment = Payment(amount = 100.0, currency = "USD", card = null, merchant = null, timestamp = null, balance = null)
+        val income = Income(amount = 500.0, currency = "USD", source = null, timestamp = null, balance = null)
+
+        val paymentResult: MessageProcessResult = MessageProcessResult.PaymentResult(payment)
+        val incomeResult: MessageProcessResult = MessageProcessResult.IncomeResult(income)
+        val ignoredResult: MessageProcessResult = MessageProcessResult.Ignored("test")
+
+        assertTrue(paymentResult is MessageProcessResult.PaymentResult)
+        assertFalse(paymentResult is MessageProcessResult.IncomeResult)
+        assertFalse(paymentResult is MessageProcessResult.Ignored)
+
+        assertTrue(incomeResult is MessageProcessResult.IncomeResult)
+        assertFalse(incomeResult is MessageProcessResult.PaymentResult)
+        assertFalse(incomeResult is MessageProcessResult.Ignored)
+
+        assertTrue(ignoredResult is MessageProcessResult.Ignored)
+        assertFalse(ignoredResult is MessageProcessResult.PaymentResult)
+        assertFalse(ignoredResult is MessageProcessResult.IncomeResult)
+    }
+
+    // ==================== RuleType Tests ====================
+
+    @Test
+    fun `RuleType has correct values`() {
+        assertEquals("payment", RuleType.PAYMENT.value)
+        assertEquals("ignore", RuleType.IGNORE.value)
+        assertEquals("income", RuleType.INCOME.value)
+    }
+
+    @Test
+    fun `RuleType fromValue returns correct enum`() {
+        assertEquals(RuleType.PAYMENT, RuleType.fromValue("payment"))
+        assertEquals(RuleType.IGNORE, RuleType.fromValue("ignore"))
+        assertEquals(RuleType.INCOME, RuleType.fromValue("income"))
+    }
+
+    @Test
+    fun `RuleType fromValue with unknown value returns PAYMENT`() {
+        assertEquals(RuleType.PAYMENT, RuleType.fromValue("unknown"))
+        assertEquals(RuleType.PAYMENT, RuleType.fromValue(""))
+        assertEquals(RuleType.PAYMENT, RuleType.fromValue("PAYMENT"))
+    }
 }

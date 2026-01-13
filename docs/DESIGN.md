@@ -109,10 +109,14 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 1. SMS Received → SmsReceiver.onReceive()
 2. Initialize PaymentProcessor from ConfigRepository
 3. Match sender address against configured senders
-4. Apply regex rules to extract payment data
-5. Assign category based on merchant name
-6. Save payment to database (dedupe by message hash)
-7. Log result
+4. Apply rule workflow:
+   a. Try PAYMENT rules → If match, extract payment data (6 capture groups)
+   b. Try INCOME rules → If match, extract income data (6 capture groups)
+   c. Try IGNORE rules → If match, skip message (no capture groups required)
+   d. If no match → Log as unparsed
+5. For payments: Assign category based on merchant name
+6. Save to appropriate repository (payment/income, dedupe by message hash)
+7. Log result (PaymentResult/IncomeResult/Ignored/Error)
 ```
 
 ### 4.2 Configuration Management Flow
@@ -174,8 +178,11 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | `category_merchants` | Merchant names for auto-categorization |
 | `senders` | Bank/financial institution senders |
 | `sender_addresses` | Phone numbers/addresses for a sender |
-| `sender_rules` | Regex patterns for parsing SMS |
+| `rules` | Unified regex patterns for all rule types (PAYMENT, INCOME, IGNORE) |
 | `payments` | Parsed and categorized transactions |
+| `incomes` | Parsed income transactions |
+| `sender_rules` | Legacy payment rules (retained for migration compatibility) |
+| `ignore_rules` | Legacy ignore rules (retained for migration compatibility) |
 
 ## 6. Feature Specifications
 
@@ -229,12 +236,17 @@ All configurable entities should have an `enabled` boolean field:
 - Disabled categories → Exclude from category assignment
 
 #### 6.4.3 Regex Builder (Implemented)
-Interactive UI component that:
-- Shows regex input field
-- Shows sample message input
-- Highlights matches in real-time
-- Displays captured groups with labels
-- **Save to Sender**: Select a sender and save the tested regex directly to its rules
+Interactive UI component with enhanced workflow:
+- **Sender Selection**: First select the target sender
+- **Rule Type Selection**: Choose PAYMENT, INCOME, or IGNORE rule type
+- **Sample Message**: Paste or select from SMS inbox
+- **Unregistered Sender Detection**: Prompts to register unknown senders when selecting SMS
+- **Existing Patterns**: View and edit existing patterns for selected sender/type
+- **Regex Pattern Input**: Enter or modify regex pattern
+- **Preset Buttons**: Insert common regex components (Amount, Currency, Card, etc.)
+- **Test Pattern**: Test regex against sample message (closes keyboard)
+- **Results Display**: Shows match status, captured groups, and payment preview
+- **Save to Sender**: Save the tested regex directly to selected sender's rules
 
 #### 6.4.4 Category Cascade (Implemented)
 Re-categorize all payments based on current category merchant mappings:

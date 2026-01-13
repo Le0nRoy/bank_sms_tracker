@@ -28,6 +28,8 @@ import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.RuleEntity
+import com.example.banksmstracker.database.SenderAddressEntity
+import com.example.banksmstracker.database.SenderEntity
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.util.Constants
 import com.example.banksmstracker.util.SmsAddressMatcher
@@ -48,12 +50,48 @@ class RegexBuilderActivity : BaseActivity() {
     private lateinit var spinnerExistingPatterns: Spinner
     private lateinit var spinnerRuleType: Spinner
 
+    // Preset buttons
+    private lateinit var btnPresetAmount: Button
+    private lateinit var btnPresetCurrency: Button
+    private lateinit var btnPresetCard: Button
+    private lateinit var btnPresetMerchant: Button
+    private lateinit var btnPresetTimestamp: Button
+    private lateinit var btnPresetBalance: Button
+
     private var senders: List<Sender> = emptyList()
     private var smsMessages: List<SmsMessage> = emptyList()
     private var selectedSenderForFilter: Sender? = null
     private var selectedRuleType: RuleType = RuleType.PAYMENT
+    private var lastSelectedSmsAddress: String? = null
+
+    // Regex presets extracted from default rules
+    private val regexPresets = RegexPresets()
 
     data class SmsMessage(val address: String, val body: String, val date: Long = 0)
+
+    /**
+     * Regex presets for common pattern components.
+     * These are extracted from the default TBC Bank rule pattern.
+     */
+    class RegexPresets {
+        // Amount: captures decimal numbers like "123.45"
+        val amount = "(\\d+(?:[.]\\d{2}))"
+
+        // Currency: captures 3-letter currency codes like "GEL", "USD"
+        val currency = "([A-Z]{3})"
+
+        // Card: captures card number/identifier (non-greedy any characters)
+        val card = "(.+?)"
+
+        // Merchant: captures merchant name (any characters until next field)
+        val merchant = "(.+?)"
+
+        // Timestamp: captures date-time in format "DD/MM/YYYY HH:MM:SS"
+        val timestamp = "(\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}:\\d{2})"
+
+        // Balance: captures decimal numbers (same as amount)
+        val balance = "(\\d+(?:[.]\\d{2}))"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,6 +117,14 @@ class RegexBuilderActivity : BaseActivity() {
         btnSaveRegex = findViewById(R.id.btnSaveRegex)
         spinnerExistingPatterns = findViewById(R.id.spinnerExistingPatterns)
         spinnerRuleType = findViewById(R.id.spinnerRuleType)
+
+        // Initialize preset buttons
+        btnPresetAmount = findViewById(R.id.btnPresetAmount)
+        btnPresetCurrency = findViewById(R.id.btnPresetCurrency)
+        btnPresetCard = findViewById(R.id.btnPresetCard)
+        btnPresetMerchant = findViewById(R.id.btnPresetMerchant)
+        btnPresetTimestamp = findViewById(R.id.btnPresetTimestamp)
+        btnPresetBalance = findViewById(R.id.btnPresetBalance)
 
         // Setup rule type spinner
         val ruleTypes = listOf(
@@ -120,6 +166,29 @@ class RegexBuilderActivity : BaseActivity() {
                 requestSmsPermission()
             }
         }
+
+        // Setup preset button listeners
+        setupPresetListeners()
+    }
+
+    private fun setupPresetListeners() {
+        btnPresetAmount.setOnClickListener { insertPresetAtCursor(regexPresets.amount) }
+        btnPresetCurrency.setOnClickListener { insertPresetAtCursor(regexPresets.currency) }
+        btnPresetCard.setOnClickListener { insertPresetAtCursor(regexPresets.card) }
+        btnPresetMerchant.setOnClickListener { insertPresetAtCursor(regexPresets.merchant) }
+        btnPresetTimestamp.setOnClickListener { insertPresetAtCursor(regexPresets.timestamp) }
+        btnPresetBalance.setOnClickListener { insertPresetAtCursor(regexPresets.balance) }
+    }
+
+    private fun insertPresetAtCursor(preset: String) {
+        val start = etRegexPattern.selectionStart.coerceAtLeast(0)
+        val end = etRegexPattern.selectionEnd.coerceAtLeast(0)
+        val editable = etRegexPattern.text
+        editable.replace(start.coerceAtMost(end), start.coerceAtLeast(end), preset)
+
+        // Move cursor to end of inserted text
+        etRegexPattern.setSelection(start + preset.length)
+        etRegexPattern.requestFocus()
     }
 
     private fun checkSmsPermission(): Boolean = ContextCompat.checkSelfPermission(
@@ -170,7 +239,8 @@ class RegexBuilderActivity : BaseActivity() {
             val configuredAddresses = if (selectedSenderForFilter != null) {
                 selectedSenderForFilter!!.addresses.toSet()
             } else {
-                senders.flatMap { it.addresses }.toSet()
+                // Load all SMS, not just from configured senders
+                null
             }
 
             smsMessages = withContext(Dispatchers.IO) {
@@ -204,11 +274,77 @@ class RegexBuilderActivity : BaseActivity() {
 
         val adapter = SmsMessageAdapter(smsMessages) { selectedSms ->
             etSampleSms.setText(selectedSms.body)
+            lastSelectedSmsAddress = selectedSms.address
             dialog.dismiss()
+
+            // Check if the sender is registered
+            checkAndOfferSenderRegistration(selectedSms.address)
         }
         recyclerView.adapter = adapter
 
         dialog.show()
+    }
+
+    private fun checkAndOfferSenderRegistration(smsAddress: String) {
+        // Check if any sender has this address
+        val isRegistered = senders.any { sender ->
+            sender.addresses.any { SmsAddressMatcher.matches(smsAddress, it) }
+        }
+
+        if (!isRegistered) {
+            showUnregisteredSenderDialog(smsAddress)
+        }
+    }
+
+    private fun showUnregisteredSenderDialog(smsAddress: String) {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.unregistered_sender_title)
+            .setMessage(getString(R.string.unregistered_sender_message, smsAddress))
+            .setPositiveButton(R.string.register_sender) { _, _ ->
+                registerNewSender(smsAddress)
+            }
+            .setNegativeButton(R.string.skip, null)
+            .show()
+    }
+
+    private fun registerNewSender(address: String) {
+        // Create a simple sender with the address as the name
+        val senderName = address.replace(Regex("[^a-zA-Z0-9]"), " ").trim()
+            .ifEmpty { "Sender $address" }
+
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    val db = BankSmsDatabase.getInstance(this@RegexBuilderActivity)
+
+                    // Insert sender
+                    val senderEntity = SenderEntity(name = senderName, enabled = true)
+                    val senderId = db.configDao().insertSender(senderEntity)
+
+                    // Insert address
+                    val addressEntity = SenderAddressEntity(
+                        senderId = senderId,
+                        address = address
+                    )
+                    db.configDao().insertAddress(addressEntity)
+                }
+
+                // Reload senders
+                loadSenders()
+
+                Toast.makeText(
+                    this@RegexBuilderActivity,
+                    getString(R.string.rule_saved, senderName),
+                    Toast.LENGTH_SHORT
+                ).show()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@RegexBuilderActivity,
+                    getString(R.string.error_generic),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     inner class SmsMessageAdapter(
@@ -293,6 +429,8 @@ class RegexBuilderActivity : BaseActivity() {
                 spinnerSenders.adapter = adapter
                 setupExistingPatternsSpinner(emptyList())
             } else {
+                spinnerSenders.isEnabled = true
+                btnSaveRegex.isEnabled = true
                 val senderNames = listOf(getString(R.string.select_sender_hint)) +
                     senders.map { it.name }
                 val adapter = ArrayAdapter(

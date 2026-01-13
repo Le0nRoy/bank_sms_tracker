@@ -66,10 +66,6 @@ class MainActivity : BaseActivity() {
             startActivity(Intent(this, BugReportActivity::class.java))
         }
 
-        findViewById<Button>(R.id.btnIgnoreRules).setOnClickListener {
-            startActivity(Intent(this, IgnoreRulesActivity::class.java))
-        }
-
         findViewById<Button>(R.id.btnSmsExport).setOnClickListener {
             startActivity(Intent(this, SmsExportActivity::class.java))
         }

@@ -215,4 +215,19 @@
     <string name="dark_mode">Dark Mode</string>
     <string name="light_mode">Light Mode</string>
     <string name="theme_system">System Default</string>
+
+    <!-- Regex Builder Presets -->
+    <string name="regex_presets_label">Insert Preset</string>
+    <string name="preset_amount">Amount</string>
+    <string name="preset_currency">Currency</string>
+    <string name="preset_card">Card</string>
+    <string name="preset_merchant">Merchant</string>
+    <string name="preset_timestamp">Timestamp</string>
+    <string name="preset_balance">Balance</string>
+
+    <!-- Unregistered sender -->
+    <string name="unregistered_sender_title">Unregistered Sender</string>
+    <string name="unregistered_sender_message">The SMS sender \"%1$s\" is not registered in the app. Would you like to register it?</string>
+    <string name="register_sender">Register Sender</string>
+    <string name="skip">Skip</string>
 </resources>

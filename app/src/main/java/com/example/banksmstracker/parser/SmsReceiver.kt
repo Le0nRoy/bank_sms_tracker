@@ -1,16 +1,21 @@
 package com.example.banksmstracker.parser
 
+import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.telephony.SmsMessage
 import android.util.Log
+import com.example.banksmstracker.data.MessageProcessResult
+import com.example.banksmstracker.database.BankSmsDatabase
+import com.example.banksmstracker.database.IncomeEntity
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.ConfigRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.security.MessageDigest
 
 class SmsReceiver : BroadcastReceiver() {
 
@@ -23,6 +28,7 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private lateinit var paymentProcessor: PaymentProcessor
+    private var applicationContext: Context? = null
 
     // For testing only
     fun setPaymentProcessorForTest(processor: PaymentProcessor) {
@@ -31,9 +37,10 @@ class SmsReceiver : BroadcastReceiver() {
 
     private fun initializePaymentProcessor(context: Context) {
         if (!::paymentProcessor.isInitialized) {
-            ConfigRepository.load(context.applicationContext as android.app.Application)
+            ConfigRepository.load(context.applicationContext as Application)
             paymentProcessor = ConfigRepository.getPaymentProcessor()
         }
+        applicationContext = context.applicationContext
     }
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -87,16 +94,64 @@ class SmsReceiver : BroadcastReceiver() {
 
     private suspend fun handleMessage(sender: String, body: String) {
         try {
-            val payment = paymentProcessor.processMessage(body, sender)
-            Log.d(
-                TAG,
-                "SMS from $sender processed successfully.\nMessage: $body\nParsed payment: $payment"
-            )
+            val result = paymentProcessor.processMessageFull(body, sender)
+            when (result) {
+                is MessageProcessResult.PaymentResult -> {
+                    Log.d(
+                        TAG,
+                        "SMS from $sender processed as payment.\nMessage: $body\nParsed: ${result.payment}"
+                    )
+                }
+                is MessageProcessResult.IncomeResult -> {
+                    saveIncome(result, body, sender)
+                    Log.d(
+                        TAG,
+                        "SMS from $sender processed as income.\nMessage: $body\nParsed: ${result.income}"
+                    )
+                }
+                is MessageProcessResult.Ignored -> {
+                    Log.d(
+                        TAG,
+                        "SMS from $sender ignored by rule: ${result.ruleName}\nMessage: $body"
+                    )
+                }
+            }
         } catch (e: Exception) {
             Log.e(
                 TAG,
                 "Error processing SMS from $sender:\n${e.message}\nMessage: $body"
             )
         }
+    }
+
+    private suspend fun saveIncome(result: MessageProcessResult.IncomeResult, body: String, sender: String) {
+        val context = applicationContext ?: return
+        val income = result.income
+        val messageHash = computeHash(body, sender)
+
+        val incomeEntity = IncomeEntity(
+            amount = income.amount,
+            currency = income.currency,
+            source = income.source,
+            timestamp = income.timestamp,
+            balance = income.balance,
+            messageHash = messageHash,
+            senderAddress = sender,
+            receivedAt = System.currentTimeMillis(),
+            ruleId = income.ruleId,
+        )
+
+        val db = BankSmsDatabase.getInstance(context)
+        val insertedId = db.incomeDao().insertIncome(incomeEntity)
+        if (insertedId == -1L) {
+            Log.d(TAG, "Duplicate income skipped for sender $sender")
+        }
+    }
+
+    private fun computeHash(message: String, sender: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val combined = "$sender::$message"
+        val hash = digest.digest(combined.toByteArray(Charsets.UTF_8))
+        return hash.joinToString("") { "%02x".format(it) }
     }
 }
