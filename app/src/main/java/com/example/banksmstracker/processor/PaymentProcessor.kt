@@ -3,6 +3,7 @@ package com.example.banksmstracker.processor
 import android.util.Log
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Payment
+import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.PaymentRepository
 
@@ -11,7 +12,7 @@ class UnparsedMessageException(message: String) : Exception("Cannot parse messag
 class PaymentProcessor(
     private val senders: List<Sender>,
     private val categories: List<Category>,
-    val paymentRepository: PaymentRepository
+    val paymentRepository: PaymentRepository,
 ) {
     companion object {
         private const val TAG = "PaymentProcessor"
@@ -29,10 +30,10 @@ class PaymentProcessor(
             sender.addresses.any { it.equals(address, ignoreCase = true) }
         } ?: throw UnparsedMessageException("No sender found for address: $address")
 
-        // Only use enabled rules
-        val enabledRules = sender.rules.filter { it.enabled }
+        // Only use enabled payment rules
+        val paymentRules = sender.rules.filter { it.enabled && it.ruleType == RuleType.PAYMENT }
 
-        for (rule in enabledRules) {
+        for (rule in paymentRules) {
             val pattern = rule.regexPattern
             val match = pattern.find(message) ?: continue
 

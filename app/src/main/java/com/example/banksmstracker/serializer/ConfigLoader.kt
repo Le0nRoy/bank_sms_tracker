@@ -14,11 +14,11 @@ fun SmsConfig.validate(): List<String> {
         errors.add("Duplicate category names: ${dupCats.keys}")
     }
 
-    // duplicate regex inside sender
+    // duplicate patterns inside sender
     senders.forEach { sender ->
-        val dupRegex = sender.rules.groupBy { it.regex }.filterValues { it.size > 1 }
-        if (dupRegex.isNotEmpty()) {
-            errors.add("Sender ${sender.name} has duplicate regex: ${dupRegex.keys}")
+        val dupPatterns = sender.rules.groupBy { it.pattern }.filterValues { it.size > 1 }
+        if (dupPatterns.isNotEmpty()) {
+            errors.add("Sender ${sender.name} has duplicate patterns: ${dupPatterns.keys}")
         }
     }
 

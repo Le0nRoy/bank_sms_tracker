@@ -1,7 +1,8 @@
 package com.example.banksmstracker.database
 
 import com.example.banksmstracker.data.Category
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
+import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 
 fun List<CategoryWithMerchants>.toDomainCategories(): List<Category> = map { categoryWithMerchants ->
@@ -11,7 +12,7 @@ fun List<CategoryWithMerchants>.toDomainCategories(): List<Category> = map { cat
         merchants = categoryWithMerchants.merchants
             .map { it.name }
             .toMutableList(),
-        enabled = categoryWithMerchants.category.enabled
+        enabled = categoryWithMerchants.category.enabled,
     )
 }
 
@@ -23,14 +24,26 @@ fun List<SenderWithDetails>.toDomainSenders(): List<Sender> = map { senderWithDe
             .map { it.address }
             .toMutableList(),
         rules = senderWithDetails.rules
-            .map { rule ->
-                PaymentRegexRule(
-                    id = rule.id,
-                    regex = rule.regex,
-                    enabled = rule.enabled
-                )
-            }
+            .map { it.toDomainRule() }
             .toMutableList(),
-        enabled = senderWithDetails.sender.enabled
+        enabled = senderWithDetails.sender.enabled,
     )
 }
+
+fun RuleEntity.toDomainRule(): Rule = Rule(
+    id = id,
+    senderId = senderId,
+    pattern = pattern,
+    description = description,
+    enabled = enabled,
+    ruleType = RuleType.fromValue(ruleType),
+)
+
+fun Rule.toEntity(): RuleEntity = RuleEntity(
+    id = id ?: 0,
+    senderId = senderId ?: 0,
+    pattern = pattern,
+    description = description,
+    enabled = enabled,
+    ruleType = ruleType.value,
+)

@@ -6,18 +6,21 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.room.withTransaction
 import com.example.banksmstracker.data.Category
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
+import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.data.SmsConfig
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.CategoryEntity
 import com.example.banksmstracker.database.CategoryMerchantEntity
 import com.example.banksmstracker.database.ConfigDao
+import com.example.banksmstracker.database.RuleDao
+import com.example.banksmstracker.database.RuleEntity
 import com.example.banksmstracker.database.SenderAddressEntity
 import com.example.banksmstracker.database.SenderEntity
-import com.example.banksmstracker.database.SenderRuleEntity
 import com.example.banksmstracker.database.toDomainCategories
 import com.example.banksmstracker.database.toDomainSenders
+import com.example.banksmstracker.database.toEntity
 import com.example.banksmstracker.serializer.ConfigLoader
 import java.io.File
 import java.io.FileNotFoundException
@@ -39,6 +42,7 @@ object ConfigRepository {
     private var _config: SmsConfig? = null
     private lateinit var database: BankSmsDatabase
     private lateinit var configDao: ConfigDao
+    private lateinit var ruleDao: RuleDao
     private lateinit var paymentRepository: PaymentRepository
 
     @Volatile
@@ -51,6 +55,7 @@ object ConfigRepository {
         if (_config != null) return
         database = BankSmsDatabase.getInstance(application)
         configDao = database.configDao()
+        ruleDao = database.ruleDao()
         paymentRepository = RoomPaymentRepository(database.paymentDao())
 
         runBlocking {
@@ -71,9 +76,7 @@ object ConfigRepository {
         config.senders.map { sender ->
             sender.copy(
                 addresses = sender.addresses.toMutableList(),
-                rules = sender.rules.map {
-                    PaymentRegexRule(id = it.id, regex = it.regex, enabled = it.enabled)
-                }.toMutableList()
+                rules = sender.rules.map { it.copy() }.toMutableList(),
             )
         }
     }
@@ -132,15 +135,17 @@ object ConfigRepository {
                         SenderAddressEntity(senderId = senderId, address = address)
                     )
                 }
-            configDao.deleteRulesForSender(senderId)
+            ruleDao.deleteRulesForSender(senderId)
             sender.rules
-                .filter { it.regex.trim().isNotEmpty() }
+                .filter { it.pattern.trim().isNotEmpty() }
                 .forEach { rule ->
-                    configDao.insertRule(
-                        SenderRuleEntity(
+                    ruleDao.insertRule(
+                        RuleEntity(
                             senderId = senderId,
-                            regex = rule.regex.trim(),
-                            enabled = rule.enabled
+                            pattern = rule.pattern.trim(),
+                            description = rule.description,
+                            enabled = rule.enabled,
+                            ruleType = rule.ruleType.value,
                         )
                     )
                 }
@@ -151,7 +156,7 @@ object ConfigRepository {
     suspend fun deleteSender(senderId: Long) = withContext(Dispatchers.IO) {
         database.withTransaction {
             configDao.deleteAddressesForSender(senderId)
-            configDao.deleteRulesForSender(senderId)
+            ruleDao.deleteRulesForSender(senderId)
             configDao.deleteSender(SenderEntity(id = senderId, name = ""))
         }
         refreshConfigInternal()
@@ -296,15 +301,15 @@ object ConfigRepository {
                         .distinct()
                         .toMutableList()
 
-                    val existingRegexes = existingSender.rules.map { it.regex.trim() }.toSet()
+                    val existingPatterns = existingSender.rules.map { it.pattern.trim() }.toSet()
                     val newRules = importedSender.rules.filter {
-                        it.regex.trim() !in existingRegexes
+                        it.pattern.trim() !in existingPatterns
                     }
                     val mergedRules = (existingSender.rules + newRules).toMutableList()
 
                     val mergedSender = existingSender.copy(
                         addresses = mergedAddresses,
-                        rules = mergedRules
+                        rules = mergedRules,
                     )
                     updateSenderInternal(mergedSender)
                     sendersMerged++
@@ -322,13 +327,15 @@ object ConfigRepository {
                             )
                         }
                     importedSender.rules
-                        .filter { it.regex.trim().isNotEmpty() }
+                        .filter { it.pattern.trim().isNotEmpty() }
                         .forEach { rule ->
-                            configDao.insertRule(
-                                SenderRuleEntity(
+                            ruleDao.insertRule(
+                                RuleEntity(
                                     senderId = senderId,
-                                    regex = rule.regex.trim(),
-                                    enabled = rule.enabled
+                                    pattern = rule.pattern.trim(),
+                                    description = rule.description,
+                                    enabled = rule.enabled,
+                                    ruleType = rule.ruleType.value,
                                 )
                             )
                         }
@@ -395,15 +402,17 @@ object ConfigRepository {
                     SenderAddressEntity(senderId = senderId, address = address)
                 )
             }
-        configDao.deleteRulesForSender(senderId)
+        ruleDao.deleteRulesForSender(senderId)
         sender.rules
-            .filter { it.regex.trim().isNotEmpty() }
+            .filter { it.pattern.trim().isNotEmpty() }
             .forEach { rule ->
-                configDao.insertRule(
-                    SenderRuleEntity(
+                ruleDao.insertRule(
+                    RuleEntity(
                         senderId = senderId,
-                        regex = rule.regex.trim(),
-                        enabled = rule.enabled
+                        pattern = rule.pattern.trim(),
+                        description = rule.description,
+                        enabled = rule.enabled,
+                        ruleType = rule.ruleType.value,
                     )
                 )
             }
@@ -484,13 +493,15 @@ object ConfigRepository {
                         )
                     }
                 sender.rules
-                    .filter { it.regex.trim().isNotEmpty() }
+                    .filter { it.pattern.trim().isNotEmpty() }
                     .forEach { rule ->
-                        configDao.insertRule(
-                            SenderRuleEntity(
+                        ruleDao.insertRule(
+                            RuleEntity(
                                 senderId = senderId,
-                                regex = rule.regex.trim(),
-                                enabled = rule.enabled
+                                pattern = rule.pattern.trim(),
+                                description = rule.description,
+                                enabled = rule.enabled,
+                                ruleType = rule.ruleType.value,
                             )
                         )
                     }

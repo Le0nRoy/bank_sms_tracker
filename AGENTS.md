@@ -100,6 +100,50 @@ fun second() { }
 - Config loading is idempotent; if a test needs a clean slate, call `ConfigRepository.reset()` (currently `internal`).
 - Keep UI changes aligned with `BaseActivity` navigation/back behaviour to maintain consistent titles/back stack handling.
 
+## Quick Start Testing (AI Context)
+
+**Run all tests immediately with these commands:**
+
+```bash
+# 1. Unit tests (fast, no emulator needed)
+./gradlew test
+
+# 2. Appium E2E tests (requires emulator + Appium server)
+# Start Appium (Docker - recommended):
+docker-compose -f docker-compose.appium.yml up -d
+# Or native: appium
+
+# Verify emulator is running:
+adb devices
+
+# Run Appium tests:
+./gradlew testDebugUnitTest --tests "*.appium.*"
+
+# Stop Appium when done:
+docker-compose -f docker-compose.appium.yml down
+
+# 3. Connected Android tests (requires emulator):
+./gradlew connectedAndroidTest
+```
+
+**Current Test Status:**
+- Unit tests: 182 tests (JUnit 5)
+- Appium E2E tests: 104 tests (100% pass rate)
+- Integration tests: 66 tests (AndroidJUnit)
+- Code coverage: 96.6%
+
+**Makefile shortcuts:**
+```bash
+make test          # Run unit tests
+make test-appium   # Run Appium tests (requires server)
+make test-android  # Run connected Android tests
+make coverage      # Run tests with coverage report
+make appium-docker-start  # Start Appium in Docker
+make appium-docker-stop   # Stop Appium Docker
+```
+
+**Test Documentation:** See `docs/TESTING.md` for comprehensive test guide.
+
 ## Task Tracking (CRITICAL)
 
 **After completing any feature or fixing any issue:**

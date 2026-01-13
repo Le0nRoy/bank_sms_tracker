@@ -16,7 +16,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.R
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
+import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.ConfigRepository
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -244,7 +245,7 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
                 addRuleField(index, rule, sender, callbacks)
             }
             btnAddRule.setOnClickListener {
-                sender.rules.add(PaymentRegexRule(regex = ""))
+                sender.rules.add(Rule(pattern = "", ruleType = RuleType.PAYMENT))
                 callbacks.onSenderUpdated(sender)
                 addRuleField(sender.rules.lastIndex, sender.rules.last(), sender, callbacks)
             }
@@ -284,20 +285,47 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
             }
         }
 
-        private fun addRuleField(index: Int, rule: PaymentRegexRule, sender: Sender, callbacks: SenderCallbacks) {
+        private fun addRuleField(index: Int, rule: Rule, sender: Sender, callbacks: SenderCallbacks) {
             val ruleView = LayoutInflater.from(itemView.context)
                 .inflate(R.layout.view_rule_with_toggle, rulesContainer, false)
             val editText: EditText = ruleView.findViewById(R.id.etRuleRegex)
             val switchEnabled: Switch = ruleView.findViewById(R.id.switchRuleEnabled)
             val btnDeleteRule: android.widget.ImageButton = ruleView.findViewById(R.id.btnDeleteRule)
+            val spinnerRuleType: android.widget.Spinner = ruleView.findViewById(R.id.spinnerRuleType)
 
             editText.hint = itemView.context.getString(R.string.sender_rule_hint, index + 1)
-            editText.setText(rule.regex)
+            editText.setText(rule.pattern)
             switchEnabled.isChecked = rule.enabled
 
+            // Set up rule type spinner
+            val ruleTypeLabels = listOf(
+                itemView.context.getString(R.string.rule_type_payment),
+                itemView.context.getString(R.string.rule_type_ignore_short),
+                itemView.context.getString(R.string.rule_type_income)
+            )
+            val ruleTypes = listOf(RuleType.PAYMENT, RuleType.IGNORE, RuleType.INCOME)
+            val adapter = android.widget.ArrayAdapter(
+                itemView.context,
+                android.R.layout.simple_spinner_item,
+                ruleTypeLabels
+            )
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            spinnerRuleType.adapter = adapter
+            spinnerRuleType.setSelection(ruleTypes.indexOf(rule.ruleType).coerceAtLeast(0))
+
+            spinnerRuleType.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                    if (index in sender.rules.indices && sender.rules[index].ruleType != ruleTypes[position]) {
+                        sender.rules[index].ruleType = ruleTypes[position]
+                        callbacks.onSenderUpdated(sender)
+                    }
+                }
+                override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
+            }
+
             editText.setSimpleWatcher { newValue ->
-                if (index in sender.rules.indices && sender.rules[index].regex != newValue) {
-                    sender.rules[index].regex = newValue
+                if (index in sender.rules.indices && sender.rules[index].pattern != newValue) {
+                    sender.rules[index].pattern = newValue
                     callbacks.onSenderUpdated(sender)
                 }
             }
@@ -334,6 +362,6 @@ private fun Sender.clone(): Sender = Sender(
     id = id,
     name = name,
     addresses = addresses.toMutableList(),
-    rules = rules.map { PaymentRegexRule(id = it.id, regex = it.regex, enabled = it.enabled) }.toMutableList(),
-    enabled = enabled
+    rules = rules.map { it.copy() }.toMutableList(),
+    enabled = enabled,
 )

@@ -134,38 +134,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="12dp">
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/rule_type_label"
                     android:textStyle="bold"
-                    android:textColor="@color/text_primary"
-                    android:layout_gravity="center_vertical" />
+                    android:textColor="@color/text_primary" />
 
-                <RadioGroup
-                    android:id="@+id/rgRuleType"
-                    android:layout_width="wrap_content"
+                <Spinner
+                    android:id="@+id/spinnerRuleType"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginStart="16dp">
-
-                    <RadioButton
-                        android:id="@+id/rbProcessRule"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/rule_type_process"
-                        android:checked="true" />
-
-                    <RadioButton
-                        android:id="@+id/rbIgnoreRule"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/rule_type_ignore"
-                        android:layout_marginStart="8dp" />
-
-                </RadioGroup>
+                    android:layout_weight="1"
+                    android:layout_marginStart="16dp"
+                    android:background="@drawable/edit_text_themed"
+                    android:padding="8dp" />
 
             </LinearLayout>
 

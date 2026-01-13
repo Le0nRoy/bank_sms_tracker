@@ -2,7 +2,7 @@ package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Payment
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.PaymentRepository
 import kotlin.test.assertEquals
@@ -34,7 +34,7 @@ class PaymentProcessorEnabledTest {
                 id = 1,
                 name = "Test Bank",
                 addresses = mutableListOf(testAddress),
-                rules = mutableListOf(PaymentRegexRule(regex = testRegex)),
+                rules = mutableListOf(Rule(pattern = testRegex)),
                 enabled = false
             )
         )
@@ -54,7 +54,7 @@ class PaymentProcessorEnabledTest {
                 id = 1,
                 name = "Test Bank",
                 addresses = mutableListOf(testAddress),
-                rules = mutableListOf(PaymentRegexRule(regex = testRegex)),
+                rules = mutableListOf(Rule(pattern = testRegex)),
                 enabled = true
             )
         )
@@ -74,7 +74,7 @@ class PaymentProcessorEnabledTest {
                 id = 1,
                 name = "Test Bank",
                 addresses = mutableListOf(testAddress),
-                rules = mutableListOf(PaymentRegexRule(regex = testRegex, enabled = false)),
+                rules = mutableListOf(Rule(pattern = testRegex, enabled = false)),
                 enabled = true
             )
         )
@@ -94,7 +94,7 @@ class PaymentProcessorEnabledTest {
                 id = 1,
                 name = "Test Bank",
                 addresses = mutableListOf(testAddress),
-                rules = mutableListOf(PaymentRegexRule(regex = testRegex, enabled = true)),
+                rules = mutableListOf(Rule(pattern = testRegex, enabled = true)),
                 enabled = true
             )
         )
@@ -113,7 +113,7 @@ class PaymentProcessorEnabledTest {
                 id = 1,
                 name = "Test Bank",
                 addresses = mutableListOf(testAddress),
-                rules = mutableListOf(PaymentRegexRule(regex = testRegex, enabled = true)),
+                rules = mutableListOf(Rule(pattern = testRegex, enabled = true)),
                 enabled = true
             )
         )
@@ -139,7 +139,7 @@ class PaymentProcessorEnabledTest {
                 id = 1,
                 name = "Test Bank",
                 addresses = mutableListOf(testAddress),
-                rules = mutableListOf(PaymentRegexRule(regex = testRegex, enabled = true)),
+                rules = mutableListOf(Rule(pattern = testRegex, enabled = true)),
                 enabled = true
             )
         )
@@ -167,8 +167,8 @@ class PaymentProcessorEnabledTest {
                 name = "Test Bank",
                 addresses = mutableListOf(testAddress),
                 rules = mutableListOf(
-                    PaymentRegexRule(regex = nonMatchingRegex, enabled = true),
-                    PaymentRegexRule(regex = testRegex, enabled = true)
+                    Rule(pattern = nonMatchingRegex, enabled = true),
+                    Rule(pattern = testRegex, enabled = true)
                 ),
                 enabled = true
             )

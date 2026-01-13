@@ -1,7 +1,7 @@
 package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Category
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.InMemoryPaymentRepository
 import kotlin.test.assertEquals
@@ -37,7 +37,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -52,7 +52,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -92,7 +92,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -113,7 +113,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = insufficientGroupsRegex))
+                rules = mutableListOf(Rule(pattern = insufficientGroupsRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -130,7 +130,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = extraGroupsRegex))
+                rules = mutableListOf(Rule(pattern = extraGroupsRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -149,8 +149,8 @@ class PaymentProcessorEdgeCaseTest {
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
                 rules = mutableListOf(
-                    PaymentRegexRule(regex = emptyAmountRegex),
-                    PaymentRegexRule(regex = validRegex2)
+                    Rule(pattern = emptyAmountRegex),
+                    Rule(pattern = validRegex2)
                 )
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
@@ -172,7 +172,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -187,7 +187,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -202,7 +202,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("BANK1", "BANK2", "BANK3"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -223,7 +223,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val category = Category(name = "Shopping", merchants = mutableListOf("Amazon", "Walmart"))
             val processor = PaymentProcessor(listOf(sender), listOf(category), repository)
@@ -243,7 +243,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = optionalMerchantRegex))
+                rules = mutableListOf(Rule(pattern = optionalMerchantRegex))
             )
             val category = Category(name = "Shopping", merchants = mutableListOf("Amazon"))
             val processor = PaymentProcessor(listOf(sender), listOf(category), repository)
@@ -258,7 +258,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val category = Category(name = "Shopping", merchants = mutableListOf("Amazon", "Walmart"))
             val processor = PaymentProcessor(listOf(sender), listOf(category), repository)
@@ -278,7 +278,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -293,7 +293,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -308,7 +308,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -325,7 +325,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = greedyRegex))
+                rules = mutableListOf(Rule(pattern = greedyRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -347,7 +347,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = digitRegex))
+                rules = mutableListOf(Rule(pattern = digitRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -364,7 +364,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = quantifierRegex))
+                rules = mutableListOf(Rule(pattern = quantifierRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -380,7 +380,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = anchoredRegex))
+                rules = mutableListOf(Rule(pattern = anchoredRegex))
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
@@ -400,7 +400,7 @@ class PaymentProcessorEdgeCaseTest {
             val disabledSender = Sender(
                 name = "Disabled Bank",
                 addresses = mutableListOf("DISABLEDBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex)),
+                rules = mutableListOf(Rule(pattern = validRegex)),
                 enabled = false
             )
             val processor = PaymentProcessor(listOf(disabledSender), emptyList(), repository)
@@ -417,7 +417,7 @@ class PaymentProcessorEdgeCaseTest {
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
                 rules = mutableListOf(
-                    PaymentRegexRule(regex = validRegex, enabled = false),
+                    Rule(pattern = validRegex, enabled = false),
                 )
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
@@ -433,7 +433,7 @@ class PaymentProcessorEdgeCaseTest {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex))
+                rules = mutableListOf(Rule(pattern = validRegex))
             )
             val disabledCategory = Category(
                 name = "Shopping",
@@ -453,13 +453,13 @@ class PaymentProcessorEdgeCaseTest {
             val disabledSender = Sender(
                 name = "Disabled Bank",
                 addresses = mutableListOf("BANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex)),
+                rules = mutableListOf(Rule(pattern = validRegex)),
                 enabled = false
             )
             val enabledSender = Sender(
                 name = "Enabled Bank",
                 addresses = mutableListOf("BANK"),
-                rules = mutableListOf(PaymentRegexRule(regex = validRegex)),
+                rules = mutableListOf(Rule(pattern = validRegex)),
                 enabled = true
             )
             val processor = PaymentProcessor(listOf(disabledSender, enabledSender), emptyList(), repository)
@@ -477,8 +477,8 @@ class PaymentProcessorEdgeCaseTest {
         @Test
         @DisplayName("First matching rule is used")
         fun `first matching rule is used`() {
-            val rule1 = PaymentRegexRule(regex = "(\\d+\\.\\d+)\\s*(USD)\\s*(\\d*)\\s*(Store1)\\s*()()") // matches Store1
-            val rule2 = PaymentRegexRule(regex = "(\\d+\\.\\d+)\\s*(USD)\\s*(\\d*)\\s*(\\w+)\\s*()()") // matches any word
+            val rule1 = Rule(pattern = "(\\d+\\.\\d+)\\s*(USD)\\s*(\\d*)\\s*(Store1)\\s*()()") // matches Store1
+            val rule2 = Rule(pattern = "(\\d+\\.\\d+)\\s*(USD)\\s*(\\d*)\\s*(\\w+)\\s*()()") // matches any word
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -494,8 +494,8 @@ class PaymentProcessorEdgeCaseTest {
         @Test
         @DisplayName("Falls through to second rule when first does not match")
         fun `falls through to second rule when first does not match`() {
-            val rule1 = PaymentRegexRule(regex = "(\\d+\\.\\d+)\\s*(EUR)\\s*(\\d*)\\s*(\\w+)\\s*()()") // EUR only
-            val rule2 = PaymentRegexRule(regex = "(\\d+\\.\\d+)\\s*(USD)\\s*(\\d*)\\s*(\\w+)\\s*()()") // USD only
+            val rule1 = Rule(pattern = "(\\d+\\.\\d+)\\s*(EUR)\\s*(\\d*)\\s*(\\w+)\\s*()()") // EUR only
+            val rule2 = Rule(pattern = "(\\d+\\.\\d+)\\s*(USD)\\s*(\\d*)\\s*(\\w+)\\s*()()") // USD only
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),

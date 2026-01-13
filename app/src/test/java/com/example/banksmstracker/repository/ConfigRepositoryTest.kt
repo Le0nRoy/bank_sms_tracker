@@ -85,8 +85,8 @@ class ConfigRepositoryTest {
             assertEquals(2, config.senders[0].addresses.size)
             assertEquals("12345", config.senders[0].addresses[0])
             assertEquals(2, config.senders[0].rules.size)
-            assertEquals("""Payment of (\d+\.\d{2}) made""", config.senders[0].rules[0].regex)
-            assertEquals("""Spent (\d+\.\d{2})""", config.senders[0].rules[1].regex)
+            assertEquals("""Payment of (\d+\.\d{2}) made""", config.senders[0].rules[0].pattern)
+            assertEquals("""Spent (\d+\.\d{2})""", config.senders[0].rules[1].pattern)
             assertEquals(1, config.categories.size)
             assertEquals("Groceries", config.categories[0].name)
         }

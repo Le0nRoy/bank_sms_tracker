@@ -8,7 +8,7 @@ This document describes the testing strategy, test structure, and usage guidelin
 
 ```
         ┌─────────┐
-        │  E2E    │  ← Appium (102 tests)
+        │  E2E    │  ← Appium (104 tests)
         │  Tests  │     Full user flows
        ─┼─────────┼─
        │Integration│  ← AndroidJUnit (66 tests)
@@ -117,7 +117,7 @@ Generate coverage report:
 
 | Test Class | Tests | Coverage |
 |------------|-------|----------|
-| `MainNavigationAppiumTest` | 14 | Main screen navigation |
+| `MainNavigationAppiumTest` | 16 | Main screen navigation + SMS Export + Settings |
 | `CategoryManagementAppiumTest` | 11 | Category CRUD operations |
 | `SenderManagementAppiumTest` | 11 | Sender CRUD operations |
 | `SmsToPaymentFlowAppiumTest` | 10 | End-to-end payment flow |
@@ -370,7 +370,7 @@ Current CI pipeline:
 
 ## Future Improvements
 
-1. ~~**Appium Integration**~~ - ✅ Implemented (102 tests, Docker support, 100% pass rate)
+1. ~~**Appium Integration**~~ - ✅ Implemented (104 tests, Docker support, 100% pass rate)
 2. ~~**Code Coverage**~~ - ✅ JaCoCo configured (`./gradlew jacocoTestReport`)
 3. **Mutation Testing** - Verify test effectiveness
 4. **Performance Tests** - Test SMS processing throughput

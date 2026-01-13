@@ -14,12 +14,13 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         SenderEntity::class,
         SenderAddressEntity::class,
         SenderRuleEntity::class,
+        RuleEntity::class,
         PaymentEntity::class,
         IgnoreRuleEntity::class,
-        IncomeEntity::class
+        IncomeEntity::class,
     ],
-    version = 7,
-    exportSchema = false
+    version = 8,
+    exportSchema = false,
 )
 abstract class BankSmsDatabase : RoomDatabase() {
 
@@ -27,6 +28,7 @@ abstract class BankSmsDatabase : RoomDatabase() {
     abstract fun paymentDao(): PaymentDao
     abstract fun ignoreRuleDao(): IgnoreRuleDao
     abstract fun incomeDao(): IncomeDao
+    abstract fun ruleDao(): RuleDao
 
     companion object {
         @Volatile
@@ -133,13 +135,69 @@ abstract class BankSmsDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 7 to 8: Unified rules table.
+         * Consolidates sender_rules and ignore_rules into a single rules table with rule_type column.
+         */
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Step 1: Create new unified rules table
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS rules (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        senderId INTEGER NOT NULL,
+                        pattern TEXT NOT NULL,
+                        description TEXT,
+                        enabled INTEGER NOT NULL DEFAULT 1,
+                        ruleType TEXT NOT NULL DEFAULT 'payment',
+                        FOREIGN KEY (senderId) REFERENCES senders(id) ON DELETE CASCADE ON UPDATE CASCADE
+                    )
+                    """.trimIndent()
+                )
+
+                // Step 2: Migrate payment rules (sender_rules -> rules)
+                db.execSQL(
+                    """
+                    INSERT INTO rules (senderId, pattern, description, enabled, ruleType)
+                    SELECT senderId, regex, NULL, enabled, 'payment'
+                    FROM sender_rules
+                    """.trimIndent()
+                )
+
+                // Step 3: Migrate ignore rules (ignore_rules -> rules)
+                db.execSQL(
+                    """
+                    INSERT INTO rules (senderId, pattern, description, enabled, ruleType)
+                    SELECT senderId, pattern, description, enabled, 'ignore'
+                    FROM ignore_rules
+                    """.trimIndent()
+                )
+
+                // Step 4: Create indices
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_rules_senderId ON rules(senderId)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_rules_ruleType ON rules(ruleType)")
+
+                // Note: Old tables (sender_rules, ignore_rules) are kept for backward compatibility
+                // They will be removed in a future migration after the transition is complete
+            }
+        }
+
         fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
                 BankSmsDatabase::class.java,
                 "bank_sms_tracker.db"
             )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                .addMigrations(
+                    MIGRATION_1_2,
+                    MIGRATION_2_3,
+                    MIGRATION_3_4,
+                    MIGRATION_4_5,
+                    MIGRATION_5_6,
+                    MIGRATION_6_7,
+                    MIGRATION_7_8,
+                )
                 .build()
                 .also { INSTANCE = it }
         }

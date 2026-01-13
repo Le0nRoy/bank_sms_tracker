@@ -86,7 +86,29 @@ data class SenderRuleEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val senderId: Long,
     val regex: String,
-    val enabled: Boolean = true
+    val enabled: Boolean = true,
+)
+
+@Entity(
+    tableName = "rules",
+    foreignKeys = [
+        ForeignKey(
+            entity = SenderEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["senderId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["senderId"]), Index(value = ["ruleType"])]
+)
+data class RuleEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val senderId: Long,
+    val pattern: String,
+    val description: String? = null,
+    val enabled: Boolean = true,
+    val ruleType: String = "payment",
 )
 
 data class SenderWithDetails(
@@ -100,15 +122,9 @@ data class SenderWithDetails(
     @Relation(
         parentColumn = "id",
         entityColumn = "senderId",
-        entity = SenderRuleEntity::class
+        entity = RuleEntity::class
     )
-    val rules: List<SenderRuleEntity>,
-    @Relation(
-        parentColumn = "id",
-        entityColumn = "senderId",
-        entity = IgnoreRuleEntity::class
-    )
-    val ignoreRules: List<IgnoreRuleEntity>
+    val rules: List<RuleEntity>,
 )
 
 @Entity(

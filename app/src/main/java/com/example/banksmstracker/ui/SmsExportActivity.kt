@@ -25,6 +25,7 @@ import com.example.banksmstracker.R
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.util.Constants
+import com.example.banksmstracker.util.SmsAddressMatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -226,30 +227,34 @@ class SmsExportActivity : BaseActivity() {
         val uri = Uri.parse("content://sms")
 
         val configuredAddresses = if (selectedSender != null) {
-            selectedSender!!.addresses.map { it.lowercase() }.toSet()
+            selectedSender!!.addresses.toSet()
         } else {
-            senders.flatMap { it.addresses }.map { it.lowercase() }.toSet()
+            senders.flatMap { it.addresses }.toSet()
         }
 
         if (configuredAddresses.isEmpty()) {
             return messages
         }
 
-        val placeholders = configuredAddresses.joinToString(",") { "?" }
-        val selectionArgs = configuredAddresses.toTypedArray()
-
+        // Build selection with only date filters (address filtering done in Kotlin for flexibility)
         val selection = buildString {
-            append("address IN ($placeholders)")
-            startDate?.let { append(" AND date >= $it") }
-            endDate?.let { append(" AND date <= $it") }
-        }
+            var hasCondition = false
+            startDate?.let {
+                append("date >= $it")
+                hasCondition = true
+            }
+            endDate?.let {
+                if (hasCondition) append(" AND ")
+                append("date <= $it")
+            }
+        }.ifEmpty { null }
 
         val cursor: Cursor? = contentResolver.query(
             uri,
             arrayOf("address", "body", "date", "type"),
             selection,
-            selectionArgs,
-            "date DESC"
+            null,
+            "date DESC LIMIT 5000",
         )
 
         cursor?.use {
@@ -264,7 +269,10 @@ class SmsExportActivity : BaseActivity() {
                 val date = it.getLong(dateColumn)
                 val type = it.getInt(typeColumn)
 
-                messages.add(SmsMessage(address, body, date, type))
+                // Filter using case-insensitive substring matching
+                if (SmsAddressMatcher.matchesAny(address, configuredAddresses)) {
+                    messages.add(SmsMessage(address, body, date, type))
+                }
             }
         }
 

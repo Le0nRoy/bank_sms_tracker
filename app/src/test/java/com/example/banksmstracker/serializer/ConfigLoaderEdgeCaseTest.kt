@@ -183,7 +183,7 @@ class ConfigLoaderEdgeCaseTest {
             val exception = assertFailsWith<IllegalArgumentException> {
                 ConfigLoader.load(configJson)
             }
-            assertTrue(exception.message?.contains("duplicate regex") == true)
+            assertTrue(exception.message?.contains("duplicate patterns") == true)
         }
 
         @Test
@@ -273,7 +273,7 @@ class ConfigLoaderEdgeCaseTest {
 
             val config = ConfigLoader.load(configJson)
             assertNotNull(config)
-            assertEquals("\\d+\\.\\d{2}\\s+\\w+", config.senders[0].rules[0].regex)
+            assertEquals("\\d+\\.\\d{2}\\s+\\w+", config.senders[0].rules[0].pattern)
         }
 
         @Test

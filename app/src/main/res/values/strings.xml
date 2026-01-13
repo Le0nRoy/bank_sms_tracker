@@ -186,7 +186,11 @@
     <string name="rule_type_label">Rule Type</string>
     <string name="rule_type_process">Process Rule (parse payments)</string>
     <string name="rule_type_ignore">Ignore Rule (skip messages)</string>
+    <string name="rule_type_payment">Payment</string>
+    <string name="rule_type_ignore_short">Ignore</string>
+    <string name="rule_type_income">Income</string>
     <string name="ignore_rule_saved">Ignore rule saved to %1$s</string>
+    <string name="rule_saved">Rule saved to %1$s</string>
 
     <!-- SMS Export -->
     <string name="sms_export">Export SMS</string>

@@ -15,8 +15,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
-import android.widget.RadioButton
-import android.widget.RadioGroup
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -25,13 +23,14 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.R
-import com.example.banksmstracker.data.IgnoreRule
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
+import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.database.BankSmsDatabase
-import com.example.banksmstracker.database.IgnoreRuleEntity
+import com.example.banksmstracker.database.RuleEntity
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.util.Constants
+import com.example.banksmstracker.util.SmsAddressMatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,14 +46,12 @@ class RegexBuilderActivity : BaseActivity() {
     private lateinit var spinnerSenders: Spinner
     private lateinit var btnSaveRegex: Button
     private lateinit var spinnerExistingPatterns: Spinner
-    private lateinit var rgRuleType: RadioGroup
-    private lateinit var rbProcessRule: RadioButton
-    private lateinit var rbIgnoreRule: RadioButton
+    private lateinit var spinnerRuleType: Spinner
 
     private var senders: List<Sender> = emptyList()
     private var smsMessages: List<SmsMessage> = emptyList()
     private var selectedSenderForFilter: Sender? = null
-    private var ignoreRules: List<IgnoreRule> = emptyList()
+    private var selectedRuleType: RuleType = RuleType.PAYMENT
 
     data class SmsMessage(val address: String, val body: String, val date: Long = 0)
 
@@ -81,9 +78,30 @@ class RegexBuilderActivity : BaseActivity() {
         spinnerSenders = findViewById(R.id.spinnerSenders)
         btnSaveRegex = findViewById(R.id.btnSaveRegex)
         spinnerExistingPatterns = findViewById(R.id.spinnerExistingPatterns)
-        rgRuleType = findViewById(R.id.rgRuleType)
-        rbProcessRule = findViewById(R.id.rbProcessRule)
-        rbIgnoreRule = findViewById(R.id.rbIgnoreRule)
+        spinnerRuleType = findViewById(R.id.spinnerRuleType)
+
+        // Setup rule type spinner
+        val ruleTypes = listOf(
+            getString(R.string.rule_type_payment),
+            getString(R.string.rule_type_ignore_short),
+            getString(R.string.rule_type_income),
+        )
+        val ruleTypeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ruleTypes)
+        ruleTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerRuleType.adapter = ruleTypeAdapter
+        spinnerRuleType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedRuleType = when (position) {
+                    0 -> RuleType.PAYMENT
+                    1 -> RuleType.IGNORE
+                    2 -> RuleType.INCOME
+                    else -> RuleType.PAYMENT
+                }
+                // Refresh existing patterns when rule type changes
+                refreshExistingPatterns()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
 
     private fun setupListeners() {
@@ -150,9 +168,9 @@ class RegexBuilderActivity : BaseActivity() {
     private fun loadAndShowSmsMessages() {
         CoroutineScope(Dispatchers.Main).launch {
             val configuredAddresses = if (selectedSenderForFilter != null) {
-                selectedSenderForFilter!!.addresses.map { it.lowercase() }.toSet()
+                selectedSenderForFilter!!.addresses.toSet()
             } else {
-                senders.flatMap { it.addresses }.map { it.lowercase() }.toSet()
+                senders.flatMap { it.addresses }.toSet()
             }
 
             smsMessages = withContext(Dispatchers.IO) {
@@ -233,7 +251,7 @@ class RegexBuilderActivity : BaseActivity() {
             arrayOf("address", "body", "date"),
             null,
             null,
-            "date DESC LIMIT 200"
+            "date DESC LIMIT 200",
         )
 
         cursor?.use {
@@ -245,8 +263,8 @@ class RegexBuilderActivity : BaseActivity() {
                 val body = it.getString(bodyColumn) ?: continue
                 val date = if (dateColumn >= 0) it.getLong(dateColumn) else 0L
 
-                // Filter by configured addresses if specified
-                if (filterAddresses != null && address.lowercase() !in filterAddresses) {
+                // Filter by configured addresses using case-insensitive substring matching
+                if (filterAddresses != null && !SmsAddressMatcher.matchesAny(address, filterAddresses)) {
                     continue
                 }
 
@@ -263,32 +281,24 @@ class RegexBuilderActivity : BaseActivity() {
                 ConfigRepository.getSenders()
             }
 
-            // Load ignore rules for all senders
-            ignoreRules = withContext(Dispatchers.IO) {
-                val db = BankSmsDatabase.getInstance(this@RegexBuilderActivity)
-                db.ignoreRuleDao().getAllIgnoreRules().map {
-                    IgnoreRule(id = it.id, senderId = it.senderId, pattern = it.pattern, description = it.description, enabled = it.enabled)
-                }
-            }
-
             if (senders.isEmpty()) {
                 spinnerSenders.isEnabled = false
                 btnSaveRegex.isEnabled = false
                 val adapter = ArrayAdapter(
                     this@RegexBuilderActivity,
                     android.R.layout.simple_spinner_item,
-                    listOf(getString(R.string.no_senders_available))
+                    listOf(getString(R.string.no_senders_available)),
                 )
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spinnerSenders.adapter = adapter
-                setupExistingPatternsSpinner(emptyList(), emptyList())
+                setupExistingPatternsSpinner(emptyList())
             } else {
                 val senderNames = listOf(getString(R.string.select_sender_hint)) +
                     senders.map { it.name }
                 val adapter = ArrayAdapter(
                     this@RegexBuilderActivity,
                     android.R.layout.simple_spinner_item,
-                    senderNames
+                    senderNames,
                 )
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spinnerSenders.adapter = adapter
@@ -296,63 +306,46 @@ class RegexBuilderActivity : BaseActivity() {
                 // Setup existing patterns spinner
                 spinnerSenders.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                        if (position > 0) {
-                            val selectedSender = senders[position - 1]
-                            val senderIgnoreRules = ignoreRules.filter { it.senderId == selectedSender.id }
-                            setupExistingPatternsSpinner(selectedSender.rules, senderIgnoreRules)
-                        } else {
-                            setupExistingPatternsSpinner(emptyList(), emptyList())
-                        }
+                        refreshExistingPatterns()
                     }
                     override fun onNothingSelected(parent: AdapterView<*>?) {
-                        setupExistingPatternsSpinner(emptyList(), emptyList())
+                        setupExistingPatternsSpinner(emptyList())
                     }
                 }
 
-                // Setup rule type change listener
-                rgRuleType.setOnCheckedChangeListener { _, _ ->
-                    // Refresh existing patterns when rule type changes
-                    val position = spinnerSenders.selectedItemPosition
-                    if (position > 0 && position <= senders.size) {
-                        val selectedSender = senders[position - 1]
-                        val senderIgnoreRules = ignoreRules.filter { it.senderId == selectedSender.id }
-                        setupExistingPatternsSpinner(selectedSender.rules, senderIgnoreRules)
-                    }
-                }
-
-                setupExistingPatternsSpinner(emptyList(), emptyList())
+                setupExistingPatternsSpinner(emptyList())
             }
         }
     }
 
-    private fun setupExistingPatternsSpinner(processRules: List<PaymentRegexRule>, senderIgnoreRules: List<IgnoreRule>) {
-        val isProcessRule = rbProcessRule.isChecked
-        val patternOptions = mutableListOf(getString(R.string.new_pattern_hint))
-
-        if (isProcessRule) {
-            patternOptions.addAll(processRules.map { truncatePattern(it.regex) })
+    private fun refreshExistingPatterns() {
+        val position = spinnerSenders.selectedItemPosition
+        if (position > 0 && position <= senders.size) {
+            val selectedSender = senders[position - 1]
+            val rulesOfType = selectedSender.rules.filter { it.ruleType == selectedRuleType }
+            setupExistingPatternsSpinner(rulesOfType)
         } else {
-            patternOptions.addAll(senderIgnoreRules.map { truncatePattern(it.pattern) })
+            setupExistingPatternsSpinner(emptyList())
         }
+    }
+
+    private fun setupExistingPatternsSpinner(rules: List<Rule>) {
+        val patternOptions = mutableListOf(getString(R.string.new_pattern_hint))
+        patternOptions.addAll(rules.map { truncatePattern(it.pattern) })
 
         val adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_item,
-            patternOptions
+            patternOptions,
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerExistingPatterns.adapter = adapter
 
         spinnerExistingPatterns.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (position > 0) {
-                    if (isProcessRule && position <= processRules.size) {
-                        val selectedRule = processRules[position - 1]
-                        etRegexPattern.setText(selectedRule.regex)
-                    } else if (!isProcessRule && position <= senderIgnoreRules.size) {
-                        val selectedIgnoreRule = senderIgnoreRules[position - 1]
-                        etRegexPattern.setText(selectedIgnoreRule.pattern)
-                    }
+                if (position > 0 && position <= rules.size) {
+                    val selectedRule = rules[position - 1]
+                    etRegexPattern.setText(selectedRule.pattern)
                 }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -369,7 +362,6 @@ class RegexBuilderActivity : BaseActivity() {
 
     private fun saveRegexToSender() {
         val regexPattern = etRegexPattern.text.toString().trim()
-        val isProcessRule = rbProcessRule.isChecked
 
         if (regexPattern.isBlank()) {
             Toast.makeText(this, R.string.error_empty_pattern, Toast.LENGTH_SHORT).show()
@@ -383,7 +375,7 @@ class RegexBuilderActivity : BaseActivity() {
             Toast.makeText(
                 this,
                 getString(R.string.regex_save_failed, e.message),
-                Toast.LENGTH_LONG
+                Toast.LENGTH_LONG,
             ).show()
             return
         }
@@ -397,72 +389,21 @@ class RegexBuilderActivity : BaseActivity() {
         // Adjust index because first item is the hint
         val sender = senders[selectedPosition - 1]
 
-        if (isProcessRule) {
-            // Check if this regex already exists for the sender's process rules
-            val existingRegexes = sender.rules.map { it.regex.trim() }.toSet()
-            if (regexPattern in existingRegexes) {
-                Toast.makeText(
-                    this,
-                    getString(R.string.regex_save_failed, "Pattern already exists"),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
-            showSaveConfirmation(sender, regexPattern)
-        } else {
-            // Check if this regex already exists for the sender's ignore rules
-            val senderIgnoreRules = ignoreRules.filter { it.senderId == sender.id }
-            val existingIgnorePatterns = senderIgnoreRules.map { it.pattern.trim() }.toSet()
-            if (regexPattern in existingIgnorePatterns) {
-                Toast.makeText(
-                    this,
-                    getString(R.string.regex_save_failed, "Pattern already exists"),
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
-            showSaveIgnoreRuleConfirmation(sender, regexPattern)
+        // Check if this pattern already exists for this sender and rule type
+        val existingPatterns = sender.rules
+            .filter { it.ruleType == selectedRuleType }
+            .map { it.pattern.trim() }
+            .toSet()
+        if (regexPattern in existingPatterns) {
+            Toast.makeText(
+                this,
+                getString(R.string.regex_save_failed, "Pattern already exists"),
+                Toast.LENGTH_SHORT,
+            ).show()
+            return
         }
-    }
 
-    private fun showSaveIgnoreRuleConfirmation(sender: Sender, regexPattern: String) {
-        AlertDialog.Builder(this)
-            .setTitle(R.string.save_regex_confirm_title)
-            .setMessage(getString(R.string.save_regex_confirm_message, sender.name, regexPattern))
-            .setPositiveButton(R.string.confirm) { _, _ ->
-                performSaveIgnoreRule(sender, regexPattern)
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
-    }
-
-    private fun performSaveIgnoreRule(sender: Sender, regexPattern: String) {
-        CoroutineScope(Dispatchers.Main).launch {
-            try {
-                val senderId = sender.id ?: return@launch
-                withContext(Dispatchers.IO) {
-                    val db = BankSmsDatabase.getInstance(this@RegexBuilderActivity)
-                    db.ignoreRuleDao().insertIgnoreRule(
-                        IgnoreRuleEntity(senderId = senderId, pattern = regexPattern)
-                    )
-                }
-
-                Toast.makeText(
-                    this@RegexBuilderActivity,
-                    getString(R.string.ignore_rule_saved, sender.name),
-                    Toast.LENGTH_SHORT
-                ).show()
-
-                // Refresh data
-                loadSenders()
-            } catch (e: Exception) {
-                Toast.makeText(
-                    this@RegexBuilderActivity,
-                    getString(R.string.regex_save_failed, e.message),
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
+        showSaveConfirmation(sender, regexPattern)
     }
 
     private fun showSaveConfirmation(sender: Sender, regexPattern: String) {
@@ -470,28 +411,31 @@ class RegexBuilderActivity : BaseActivity() {
             .setTitle(R.string.save_regex_confirm_title)
             .setMessage(getString(R.string.save_regex_confirm_message, sender.name, regexPattern))
             .setPositiveButton(R.string.confirm) { _, _ ->
-                performSaveRegex(sender, regexPattern)
+                performSaveRule(sender, regexPattern)
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
-    private fun performSaveRegex(sender: Sender, regexPattern: String) {
+    private fun performSaveRule(sender: Sender, regexPattern: String) {
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                val updatedRules = sender.rules.toMutableList()
-                updatedRules.add(PaymentRegexRule(regex = regexPattern))
-
-                val updatedSender = sender.copy(rules = updatedRules)
-
+                val senderId = sender.id ?: return@launch
                 withContext(Dispatchers.IO) {
-                    ConfigRepository.updateSender(updatedSender)
+                    val db = BankSmsDatabase.getInstance(this@RegexBuilderActivity)
+                    db.ruleDao().insertRule(
+                        RuleEntity(
+                            senderId = senderId,
+                            pattern = regexPattern,
+                            ruleType = selectedRuleType.value,
+                        )
+                    )
                 }
 
                 Toast.makeText(
                     this@RegexBuilderActivity,
-                    getString(R.string.regex_saved, sender.name),
-                    Toast.LENGTH_SHORT
+                    getString(R.string.rule_saved, sender.name),
+                    Toast.LENGTH_SHORT,
                 ).show()
 
                 // Refresh senders list
@@ -500,7 +444,7 @@ class RegexBuilderActivity : BaseActivity() {
                 Toast.makeText(
                     this@RegexBuilderActivity,
                     getString(R.string.regex_save_failed, e.message),
-                    Toast.LENGTH_LONG
+                    Toast.LENGTH_LONG,
                 ).show()
             }
         }
