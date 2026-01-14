@@ -19,5 +19,6 @@ class BankSmsTrackerApp : android.app.Application() {
     companion object {
         const val PREFS_NAME = "bank_sms_tracker_prefs"
         const val KEY_THEME_MODE = "theme_mode"
+        const val KEY_LANGUAGE = "language"
     }
 }

@@ -8,13 +8,13 @@ This document describes the testing strategy, test structure, and usage guidelin
 
 ```
         ┌─────────┐
-        │  E2E    │  ← Appium (104 tests)
+        │  E2E    │  ← Appium (116 tests)
         │  Tests  │     Full user flows
        ─┼─────────┼─
-       │Integration│  ← AndroidJUnit (66 tests)
+       │Integration│  ← AndroidJUnit (77 tests)
        │   Tests   │     Room DB, Repositories
       ─┼───────────┼─
-      │   Unit     │  ← JUnit 5 (182 tests)
+      │   Unit     │  ← JUnit 5 (195+ tests)
       │   Tests    │     Processors, Parsers, Logic
       ─┴───────────┴─
 ```
@@ -60,6 +60,7 @@ Generate coverage report:
 | `PaymentProcessorEnabledTest` | Enabled/disabled rule filtering | Active |
 | `DataClassesTest` | Data class coverage (incl. IgnoreRule) | Active |
 | `ImportResultTest` | Import result sealed class | Active |
+| `BankSmsTrackerAppTest` | Preference constants, theme/language keys | Active |
 
 **Running Unit Tests:**
 ```bash
@@ -82,6 +83,7 @@ Generate coverage report:
 | `ConfigExportE2ETest` | JSON export functionality | Active |
 | `PaymentFilterE2ETest` | Payment filtering by sender/date range | Active |
 | `CategoryCascadeE2ETest` | Category cascade and re-categorization | Active |
+| `LocaleE2ETest` | Locale preferences, string resources, theme modes | Active |
 
 **Running Integration Tests:**
 ```bash
@@ -126,6 +128,7 @@ Generate coverage report:
 | `PaymentsFilterAppiumTest` | 12 | Payment filtering + Phase 5.6 features |
 | `CategoryCascadeAppiumTest` | 5 | Re-categorize all payments feature |
 | `IgnoreRulesAppiumTest` | 10 | Ignore rules CRUD operations (Phase 5.7) |
+| `SettingsAppiumTest` | 12 | Settings screen theme/language selection (Phase 5.12) |
 
 **Prerequisites:**
 1. Appium server running: `make appium-start` or `make appium-docker-start`

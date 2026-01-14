@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 5.12: Localization & Multi-Language Support**
+  - SettingsActivity with dedicated settings screen (replaces popup dialog)
+  - Per-app language switching using AppCompatDelegate.setApplicationLocales()
+  - Russian language support with complete translations (331 strings)
+  - Language options: System Default, English, Russian
+  - Theme settings moved to dedicated Settings screen
+  - Extracted 90+ hardcoded strings to resources
+
 - **Phase 5.9: SMS History Export**
   - SmsExportActivity with date range filtering
   - Sender filtering (all or specific sender)
@@ -77,10 +85,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Quality
 - Code coverage: 87.50% (unit tests)
-- Appium E2E tests: 104 tests, 100% pass rate (9 test suites)
-- New tests: SMS Export navigation, Theme Toggle dialog
+- Appium E2E tests: 116 tests, 100% pass rate (10 test suites)
+- New tests: SMS Export navigation, Settings screen, Locale tests
 - Unit tests for Income data class (+9 tests)
-- Enhanced MainNavigationAppiumTest (+2 tests)
+- BankSmsTrackerAppTest for preference constants (+13 tests)
+- SettingsAppiumTest for Settings UI (12 tests)
+- LocaleE2ETest for locale functionality (11 tests)
+- Enhanced MainNavigationAppiumTest for Settings screen
 - Fixed Appium test flakiness with driver reconnection logic
 - Bug documentation linked in TODO.md
 

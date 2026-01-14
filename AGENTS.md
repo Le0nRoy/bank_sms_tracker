@@ -9,6 +9,7 @@
 
 - **Entry points**
   - `MainActivity` routes to category/sender management screens (`app/src/main/java/com/example/banksmstracker/ui/MainActivity.kt`).
+  - `SettingsActivity` handles theme and language preferences (`app/src/main/java/com/example/banksmstracker/ui/SettingsActivity.kt`).
   - `SmsReceiver` processes incoming SMS, bootstrapping `PaymentProcessor` from `ConfigRepository` (`app/src/main/java/com/example/banksmstracker/parser/SmsReceiver.kt`).
 - **Persistence**
   - Configuration + payments live in a Room database (`app/src/main/java/com/example/banksmstracker/database/*`).
@@ -81,6 +82,15 @@ fun second() { }
 ### Broadcast Receiver
 - `SmsReceiver` supports debug extras (`EXTRA_TEST_SENDER`, `EXTRA_TEST_BODY`) for instrumentation tests. Preserve this pathway when refactoring.
 
+### Localization
+- All user-visible strings are in `app/src/main/res/values/strings.xml` (English default)
+- Russian translations in `app/src/main/res/values-ru/strings.xml`
+- Use `AppCompatDelegate.setApplicationLocales()` for per-app language switching
+- Language preference stored in SharedPreferences via `BankSmsTrackerApp.KEY_LANGUAGE`
+- Supported language codes: `""` (system default), `"en"`, `"ru"`
+- When adding new strings: add to both `values/strings.xml` and `values-ru/strings.xml`
+- Use parameterized strings (`%1$s`, `%2$d`) for dynamic content
+
 ## Testing Expectations
 
 - **Frameworks**  
@@ -127,9 +137,9 @@ docker-compose -f docker-compose.appium.yml down
 ```
 
 **Current Test Status:**
-- Unit tests: 182 tests (JUnit 5)
-- Appium E2E tests: 104 tests (100% pass rate)
-- Integration tests: 66 tests (AndroidJUnit)
+- Unit tests: 195+ tests (JUnit 5) - includes BankSmsTrackerAppTest
+- Appium E2E tests: 116 tests (100% pass rate) - includes SettingsAppiumTest
+- Integration tests: 77 tests (AndroidJUnit) - includes LocaleE2ETest
 - Code coverage: 96.6%
 
 **Makefile shortcuts:**

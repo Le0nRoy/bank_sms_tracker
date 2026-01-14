@@ -13,31 +13,38 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- Message processing workflow refactoring
+- Running all tests and fixing failures
 
 ### Completed This Session
-- Removed Ignore Rules activity from main menu (access via Senders now)
-- Updated PaymentProcessor with unified workflow: PAYMENT → INCOME → IGNORE rules
-- Ignore rules no longer require capture groups (just pattern matching)
-- Created MessageProcessResult sealed class for type-safe processing results
-- Updated SmsReceiver to handle all message types (payment, income, ignored)
-- Refactored RegexBuilder UI with new order: Sender → Rule Type → Sample → Patterns → Regex → Results → Save
-- Added unregistered sender detection and registration proposal
-- Added regex preset buttons (Amount, Currency, Card, Merchant, Timestamp, Balance)
-- Added PaymentProcessorWorkflowTest (27 tests) for new workflow
-- Updated DataClassesTest with MessageProcessResult and RuleType tests
-- Updated DESIGN.md documentation
+- **Phase 5.12: Localization & Settings Activity**
+  - Created SettingsActivity with theme and language options
+  - Implemented per-app language switching using AppCompatDelegate.setApplicationLocales()
+  - Added Russian language support (331 translated strings)
+  - Extracted 90+ hardcoded strings to resources
+  - Settings Activity replaces theme popup dialog
+- **Test Enhancements**
+  - Created BankSmsTrackerAppTest (unit tests for preference constants)
+  - Created SettingsAppiumTest (12 tests for settings UI)
+  - Enhanced LocaleE2ETest (11 instrumented tests for locale functionality)
+  - Updated MainNavigationAppiumTest for Settings screen
+- **Documentation Updates**
+  - Updated AGENTS.md with localization section
+  - Updated TODO.md with Phase 5.12 tasks
+  - Updated CHANGELOG.md with localization features
+  - Updated docs/TESTING.md with new test counts
 
 ### Previous Sessions
 - Phase 5.3-5.7: Regex Builder, Spending Reports, Apply Rules, Payment Details, Ignore Rules
+- Phase 5.9-5.11: SMS Export, Income Tracking, Theme Toggle
 - Achieved 96.6% code coverage (target was 80%)
 - Fixed bugs: BUG-001 through BUG-006
 - Database migrations v1→v8 (unified rules table)
-- All Appium E2E tests created (9 test classes, 104 tests)
+- All Appium E2E tests created (10 test classes, 116 tests)
 
 ### Next Steps
-- Run all tests and fix any failures
-- Commit changes
+- Run unit tests and fix failures
+- Run Appium tests with Docker and fix failures
+- Run instrumented tests and fix failures
 
 ---
 
@@ -287,6 +294,15 @@ Implementation decision pending user feedback.
 - [x] Theme applied on app startup
 - [x] Settings dialog in MainActivity
 
+### 5.12 Localization & Multi-Language Support
+- [x] Create SettingsActivity (replaces theme popup dialog)
+- [x] Add language selection (System/English/Russian)
+- [x] Implement per-app language using AppCompatDelegate.setApplicationLocales()
+- [x] Extract hardcoded strings to resources (90+ strings)
+- [x] Create Russian translations (values-ru/strings.xml, 331 strings)
+- [x] Add localization tests (BankSmsTrackerAppTest, SettingsAppiumTest, LocaleE2ETest)
+- [x] Move theme settings from popup to SettingsActivity
+
 ---
 
 ## Phase 6: Production Readiness
@@ -406,3 +422,11 @@ Implementation decision pending user feedback.
 | 2026-01-06 | MainNavigationAppiumTest updates (+2 tests) | - |
 | 2026-01-06 | Bug documentation linked to TODO.md | - |
 | 2026-01-06 | All 104 Appium tests passing | - |
+| 2026-01-14 | Phase 5.12: Localization & Multi-Language Support | - |
+| 2026-01-14 | SettingsActivity created (theme + language) | - |
+| 2026-01-14 | Russian translations (values-ru/strings.xml) | - |
+| 2026-01-14 | Extracted 90+ hardcoded strings to resources | - |
+| 2026-01-14 | BankSmsTrackerAppTest added (preference constants) | - |
+| 2026-01-14 | SettingsAppiumTest added (12 tests) | - |
+| 2026-01-14 | LocaleE2ETest enhanced (11 tests) | - |
+| 2026-01-14 | Documentation updates (AGENTS.md, TESTING.md) | - |

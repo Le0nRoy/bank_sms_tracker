@@ -31,7 +31,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Categories"
+                android:text="@string/categories"
                 android:layout_marginEnd="4dp" />
 
             <Button
@@ -39,7 +39,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Senders"
+                android:text="@string/senders"
                 android:layout_marginStart="4dp" />
 
         </LinearLayout>
@@ -81,7 +81,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Test Rules"
+                android:text="@string/test_rules"
                 android:layout_marginStart="4dp" />
 
         </LinearLayout>
@@ -90,7 +90,7 @@
             android:id="@+id/btnApplyRules"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Process SMS"
+            android:text="@string/process_sms"
             android:layout_marginBottom="8dp" />
 
         <!-- Settings & Help Group -->

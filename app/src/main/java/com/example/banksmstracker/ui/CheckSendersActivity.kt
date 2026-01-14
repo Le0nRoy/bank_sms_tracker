@@ -48,7 +48,7 @@ class CheckSendersActivity : BaseActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 checkSenders()
             } else {
-                textView.text = "SMS permission denied. Cannot check senders."
+                textView.text = getString(R.string.sms_permission_denied_check)
             }
         }
     }
@@ -62,20 +62,24 @@ class CheckSendersActivity : BaseActivity() {
             val nonMatchingSenders = smsSenders - configuredSenders
 
             val result = StringBuilder()
-            result.append("SMS Senders Check Results:\n\n")
+            result.append(getString(R.string.senders_check_title))
 
             if (matchingSenders.isNotEmpty()) {
-                result.append("✅ Senders with rules found:\n")
+                result.append(getString(R.string.success_indicator))
+                result.append(" ")
+                result.append(getString(R.string.senders_with_rules_found))
                 matchingSenders.forEach { sender ->
                     result.append("• $sender\n")
                 }
                 result.append("\n")
             } else {
-                result.append("❌ No senders with rules found in SMS storage.\n\n")
+                result.append(getString(R.string.error_indicator))
+                result.append(" ")
+                result.append(getString(R.string.no_senders_with_rules_found))
             }
 
             if (nonMatchingSenders.isNotEmpty()) {
-                result.append("📋 All SMS senders (without rules):\n")
+                result.append(getString(R.string.all_sms_senders_without_rules))
                 nonMatchingSenders.sorted().forEach { sender ->
                     result.append("• $sender\n")
                 }
@@ -83,7 +87,7 @@ class CheckSendersActivity : BaseActivity() {
 
             textView.text = result.toString()
         } catch (e: Exception) {
-            textView.text = "Error: ${e.message}"
+            textView.text = getString(R.string.error_with_message, e.message ?: "")
             e.printStackTrace()
         }
     }

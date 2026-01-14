@@ -215,6 +215,13 @@
     <string name="dark_mode">Dark Mode</string>
     <string name="light_mode">Light Mode</string>
     <string name="theme_system">System Default</string>
+    <string name="theme">Theme</string>
+
+    <!-- Language -->
+    <string name="language">Language</string>
+    <string name="language_system">System Default</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Russian</string>
 
     <!-- Regex Builder Presets -->
     <string name="regex_presets_label">Insert Preset</string>
@@ -230,4 +237,95 @@
     <string name="unregistered_sender_message">The SMS sender \"%1$s\" is not registered in the app. Would you like to register it?</string>
     <string name="register_sender">Register Sender</string>
     <string name="skip">Skip</string>
+
+    <!-- Extracted hardcoded strings -->
+    <string name="unknown">Unknown</string>
+    <string name="uncategorized">Uncategorized</string>
+    <string name="error_with_message">Error: %1$s</string>
+    <string name="share_csv">Share CSV</string>
+    <string name="payments_summary">%1$d payments - Total: %2$s %3$s</string>
+    <string name="by_category">By Category:</string>
+    <string name="card_display">Card: ****%1$s</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="summary_processed">Summary: %1$d parsed, %2$d failed</string>
+    <string name="category_display">Category: %1$s</string>
+    <string name="from_sender">From: %1$s</string>
+    <string name="sms_permission_denied_apply">SMS permission denied. Cannot apply rules.</string>
+    <string name="sms_permission_denied_check">SMS permission denied. Cannot check senders.</string>
+    <string name="no_sms_in_range">No SMS messages found from configured senders in selected date range.</string>
+
+    <!-- Bug Report strings -->
+    <string name="report_header">BANK SMS TRACKER - BUG REPORT</string>
+    <string name="user_description_header">\n\nUSER DESCRIPTION:</string>
+    <string name="no_description_provided">(No description provided)</string>
+    <string name="device_info_header">\n\nDEVICE INFORMATION:</string>
+    <string name="app_version_label">App Version: %1$s (%2$d)</string>
+    <string name="build_type_label">Build Type: %1$s</string>
+    <string name="device_model_label">Device: %1$s %2$s</string>
+    <string name="android_version_label">Android Version: %1$s (API %2$d)</string>
+    <string name="product_label">Product: %1$s</string>
+    <string name="hardware_label">Hardware: %1$s</string>
+    <string name="config_summary_header">\n\nCONFIGURATION SUMMARY:</string>
+    <string name="senders_count_label">Senders: %1$d</string>
+    <string name="enabled_status">enabled</string>
+    <string name="disabled_status">disabled</string>
+    <string name="addresses_count">Addresses: %1$d</string>
+    <string name="rules_count">Rules: %1$d</string>
+    <string name="categories_count_label">Categories: %1$d</string>
+    <string name="merchants_count">Merchants: %1$d</string>
+    <string name="error_loading_config">Error loading config: %1$s</string>
+    <string name="payment_stats_header">\n\nPAYMENT STATISTICS:</string>
+    <string name="total_payments_count">Total Payments: %1$d</string>
+    <string name="categorized_count">Categorized: %1$d</string>
+    <string name="uncategorized_count">Uncategorized: %1$d</string>
+    <string name="currencies_label">Currencies: %1$s</string>
+    <string name="totals_label">Totals:</string>
+    <string name="currency_total">%1$s: %2$s</string>
+    <string name="end_of_report">\n\nEnd of Report</string>
+
+    <!-- Check Senders strings -->
+    <string name="senders_check_title">SMS Senders Check Results:\n\n</string>
+    <string name="senders_with_rules_found">Senders with rules found:\n</string>
+    <string name="sender_messages_count">%1$s: %2$d messages\n</string>
+    <string name="no_senders_with_rules_found">No senders with rules found in SMS storage.\n\n</string>
+    <string name="all_sms_senders_without_rules">All SMS senders (without rules):\n</string>
+
+    <!-- SMS Export strings -->
+    <string name="csv_header_sms">Address,Date,Type,Body</string>
+    <string name="csv_header_payments">Amount,Currency,Card,Merchant,Timestamp,Balance,Category,Sender,ReceivedAt</string>
+    <string name="sms_type_inbox">Inbox</string>
+    <string name="sms_type_sent">Sent</string>
+    <string name="sms_type_draft">Draft</string>
+    <string name="sms_type_outbox">Outbox</string>
+    <string name="sms_type_failed">Failed</string>
+    <string name="sms_type_queued">Queued</string>
+
+    <!-- Regex Builder result strings -->
+    <string name="match_found">MATCH FOUND</string>
+    <string name="no_match">NO MATCH</string>
+    <string name="regex_error">REGEX ERROR</string>
+    <string name="full_match_label">Full match:</string>
+    <string name="captured_groups_label">Captured groups:</string>
+    <string name="group_label">Group %1$d (%2$s):</string>
+    <string name="payment_preview_label">Payment preview:</string>
+    <string name="no_captured_groups">No captured groups.</string>
+    <string name="capture_hint">Use parentheses () to capture groups.</string>
+    <string name="pattern_no_match">The pattern did not match the SMS.</string>
+    <string name="regex_tips">Tips:</string>
+    <string name="tip_typos">- Check for typos in the pattern</string>
+    <string name="tip_wildcard">- Use .* to match any characters</string>
+    <string name="tip_digits">- Use \\d+ for numbers</string>
+    <string name="tip_escape">- Escape special chars: . * + ? [ ] ( ) { } | \\ ^ $</string>
+    <string name="invalid_pattern_error">Invalid regex pattern:</string>
+    <string name="common_issues">Common issues:</string>
+    <string name="issue_parentheses">- Unbalanced parentheses</string>
+    <string name="issue_special">- Unescaped special characters</string>
+    <string name="issue_escape">- Invalid escape sequences</string>
+    <string name="amount_label">Amount:</string>
+    <string name="card_label_regex">Card:</string>
+    <string name="merchant_label">Merchant:</string>
+    <string name="timestamp_label">Timestamp:</string>
+    <string name="balance_label">Balance:</string>
+    <string name="not_captured">(not captured)</string>
+    <string name="invalid_or_missing">(invalid or missing)</string>
 </resources>

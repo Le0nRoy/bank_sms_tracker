@@ -71,6 +71,11 @@
             android:label="@string/sms_export"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:label="@string/settings"
+            android:exported="false" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

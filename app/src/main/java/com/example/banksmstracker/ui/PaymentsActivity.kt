@@ -306,7 +306,7 @@ class PaymentsActivity : BaseActivity() {
 
         val total = filteredPayments.sumOf { it.amount }
         val currency = filteredPayments.firstOrNull()?.currency ?: ""
-        tvPaymentCount.text = "${filteredPayments.size} payments - Total: ${"%.2f".format(total)} $currency"
+        tvPaymentCount.text = getString(R.string.payments_summary, filteredPayments.size, "%.2f".format(total), currency)
     }
 
     private fun exportToCsv() {
@@ -338,7 +338,7 @@ class PaymentsActivity : BaseActivity() {
                     putExtra(Intent.EXTRA_STREAM, uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                startActivity(Intent.createChooser(shareIntent, "Share CSV"))
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_csv)))
             } catch (e: Exception) {
                 Toast.makeText(
                     this@PaymentsActivity,
@@ -352,7 +352,7 @@ class PaymentsActivity : BaseActivity() {
     private fun buildCsvContent(payments: List<Payment>): String {
         val sb = StringBuilder()
         // Header
-        sb.appendLine("Amount,Currency,Card,Merchant,Timestamp,Balance,Category,Sender,ReceivedAt")
+        sb.appendLine(getString(R.string.csv_header_payments))
         // Data
         for (payment in payments) {
             val receivedAtStr = payment.receivedAt?.let {
@@ -412,7 +412,7 @@ class PaymentsActivity : BaseActivity() {
 
         // Group payments by category and calculate totals
         val categoryTotals = filteredPayments
-            .groupBy { it.categoryId ?: "Uncategorized" }
+            .groupBy { it.categoryId ?: getString(R.string.uncategorized) }
             .mapValues { (_, payments) ->
                 payments.sumOf { it.amount }
             }
@@ -427,7 +427,7 @@ class PaymentsActivity : BaseActivity() {
         reportBuilder.appendLine()
 
         // Category breakdown
-        reportBuilder.appendLine("By Category:")
+        reportBuilder.appendLine(getString(R.string.by_category))
         categoryTotals.forEach { (category, amount) ->
             val percentage = if (totalAmount > 0) (amount / totalAmount * 100).toInt() else 0
             reportBuilder.appendLine("  $category: ${"%.2f".format(amount)} $currency ($percentage%)")
@@ -443,9 +443,9 @@ class PaymentsActivity : BaseActivity() {
     private fun showPaymentDetail(payment: Payment) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_payment_detail, null)
 
-        dialogView.findViewById<TextView>(R.id.tvMerchant).text = payment.merchant ?: "Unknown"
+        dialogView.findViewById<TextView>(R.id.tvMerchant).text = payment.merchant ?: getString(R.string.unknown)
         dialogView.findViewById<TextView>(R.id.tvAmount).text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
-        dialogView.findViewById<TextView>(R.id.tvCategory).text = payment.categoryId ?: "Uncategorized"
+        dialogView.findViewById<TextView>(R.id.tvCategory).text = payment.categoryId ?: getString(R.string.uncategorized)
         dialogView.findViewById<TextView>(R.id.tvCard).text = payment.card?.let { "****$it" } ?: "-"
         dialogView.findViewById<TextView>(R.id.tvTimestamp).text = payment.timestamp ?: "-"
         dialogView.findViewById<TextView>(R.id.tvBalance).text = payment.balance?.let { "${"%.2f".format(it)} ${payment.currency}" } ?: "-"
@@ -526,7 +526,7 @@ class PaymentsActivity : BaseActivity() {
                     loadData() // Refresh the list
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@PaymentsActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -586,7 +586,7 @@ class PaymentsActivity : BaseActivity() {
                 parentDialog.dismiss()
                 loadData() // Refresh the list
             } catch (e: Exception) {
-                Toast.makeText(this@PaymentsActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -621,14 +621,14 @@ class PaymentsActivity : BaseActivity() {
             private val tvCard: TextView = itemView.findViewById(R.id.tvCard)
 
             fun bind(payment: Payment) {
-                tvMerchant.text = payment.merchant ?: "Unknown"
+                tvMerchant.text = payment.merchant ?: getString(R.string.unknown)
                 tvAmount.text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
-                tvCategory.text = payment.categoryId ?: "Uncategorized"
+                tvCategory.text = payment.categoryId ?: getString(R.string.uncategorized)
                 tvTimestamp.text = payment.timestamp ?: ""
 
                 if (!payment.card.isNullOrBlank()) {
                     tvCard.visibility = View.VISIBLE
-                    tvCard.text = "Card: ****${payment.card}"
+                    tvCard.text = getString(R.string.card_display, payment.card)
                 } else {
                     tvCard.visibility = View.GONE
                 }

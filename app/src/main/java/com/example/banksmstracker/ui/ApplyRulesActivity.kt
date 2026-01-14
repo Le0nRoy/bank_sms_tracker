@@ -221,7 +221,7 @@ class ApplyRulesActivity : BaseActivity() {
                 applyRules()
             } else {
                 resultsContainer.removeAllViews()
-                addStatusText("SMS permission denied. Cannot apply rules.")
+                addStatusText(getString(R.string.sms_permission_denied_apply))
             }
         }
     }
@@ -242,7 +242,7 @@ class ApplyRulesActivity : BaseActivity() {
                 resultsContainer.removeAllViews()
 
                 if (smsMessages.isEmpty()) {
-                    addStatusText("No SMS messages found from configured senders in selected date range.")
+                    addStatusText(getString(R.string.no_sms_in_range))
                     return@launch
                 }
 
@@ -261,7 +261,7 @@ class ApplyRulesActivity : BaseActivity() {
                             addSuccessItem(payment)
                         } catch (e: Exception) {
                             failedCount++
-                            addErrorItem(sender, message, e.message ?: "Unknown error")
+                            addErrorItem(sender, message, e.message ?: getString(R.string.unknown_error))
                         }
                     }
                 }
@@ -269,12 +269,12 @@ class ApplyRulesActivity : BaseActivity() {
                 // Add summary at the top
                 val summaryView = LayoutInflater.from(this@ApplyRulesActivity)
                     .inflate(android.R.layout.simple_list_item_1, resultsContainer, false) as TextView
-                summaryView.text = "Summary: $parsedCount parsed, $failedCount failed"
+                summaryView.text = getString(R.string.summary_processed, parsedCount, failedCount)
                 summaryView.setTextColor(getColor(R.color.text_primary))
                 resultsContainer.addView(summaryView, 0)
             } catch (e: Exception) {
                 resultsContainer.removeAllViews()
-                addStatusText("Error: ${e.message}")
+                addStatusText(getString(R.string.error_with_message, e.message ?: ""))
                 e.printStackTrace()
             }
         }
@@ -305,10 +305,10 @@ class ApplyRulesActivity : BaseActivity() {
         val view = LayoutInflater.from(this)
             .inflate(R.layout.item_apply_rules_success, resultsContainer, false)
 
-        view.findViewById<TextView>(R.id.tvMerchant).text = payment.merchant ?: "Unknown"
+        view.findViewById<TextView>(R.id.tvMerchant).text = payment.merchant ?: getString(R.string.unknown)
         view.findViewById<TextView>(R.id.tvAmount).text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
         view.findViewById<TextView>(R.id.tvDetails).text = buildString {
-            append("Category: ${payment.categoryId ?: "Uncategorized"}")
+            append(getString(R.string.category_display, payment.categoryId ?: getString(R.string.uncategorized)))
             if (!payment.timestamp.isNullOrBlank()) {
                 append(" | ${payment.timestamp}")
             }
@@ -323,8 +323,9 @@ class ApplyRulesActivity : BaseActivity() {
 
         view.findViewById<TextView>(R.id.tvErrorTitle).text = getString(R.string.error_parsing)
         view.findViewById<TextView>(R.id.tvErrorMessage).text = buildString {
-            append("From: $sender\n\n")
-            append("Error:\n$message")
+            append(getString(R.string.from_sender, sender))
+            append("\n\n")
+            append("$error:\n$message")
         }
 
         view.findViewById<Button>(R.id.btnOpenRegexBuilder).setOnClickListener {

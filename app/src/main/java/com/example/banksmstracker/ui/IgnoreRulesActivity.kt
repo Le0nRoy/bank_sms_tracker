@@ -258,7 +258,7 @@ class IgnoreRulesActivity : BaseActivity() {
     }
 
     private fun getSenderName(senderId: Long): String {
-        return senders.find { it.id == senderId }?.name ?: "Unknown"
+        return senders.find { it.id == senderId }?.name ?: getString(R.string.unknown)
     }
 
     inner class IgnoreRuleAdapter : RecyclerView.Adapter<IgnoreRuleAdapter.ViewHolder>() {

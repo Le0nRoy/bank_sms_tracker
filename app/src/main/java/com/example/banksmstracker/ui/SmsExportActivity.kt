@@ -395,7 +395,7 @@ class SmsExportActivity : BaseActivity() {
         val isoFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
 
         // Header
-        sb.appendLine("Address,Date,Type,Body")
+        sb.appendLine(getString(R.string.csv_header_sms))
 
         // Data
         for (sms in smsMessages) {
@@ -421,12 +421,12 @@ class SmsExportActivity : BaseActivity() {
         }
 
     private fun getSmsTypeName(type: Int): String = when (type) {
-        1 -> "Inbox"
-        2 -> "Sent"
-        3 -> "Draft"
-        4 -> "Outbox"
-        5 -> "Failed"
-        6 -> "Queued"
-        else -> "Unknown"
+        1 -> getString(R.string.sms_type_inbox)
+        2 -> getString(R.string.sms_type_sent)
+        3 -> getString(R.string.sms_type_draft)
+        4 -> getString(R.string.sms_type_outbox)
+        5 -> getString(R.string.sms_type_failed)
+        6 -> getString(R.string.sms_type_queued)
+        else -> getString(R.string.unknown)
     }
 }

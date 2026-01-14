@@ -61,7 +61,6 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         assertTrue(elementExists("btnPayments"), "Payments button should exist")
         assertTrue(elementExists("btnRegexBuilder"), "Regex Builder button should exist")
         assertTrue(elementExists("btnBugReport"), "Bug Report button should exist")
-        assertTrue(elementExists("btnIgnoreRules"), "Ignore Rules button should exist")
         assertTrue(elementExists("btnSmsExport"), "SMS Export button should exist")
         assertTrue(elementExists("btnThemeToggle"), "Theme Toggle button should exist")
     }
@@ -289,7 +288,6 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         assertTrue(elementExists("btnPayments"), "Payments button accessible")
         assertTrue(elementExists("btnRegexBuilder"), "Regex Builder button accessible")
         assertTrue(elementExists("btnBugReport"), "Bug Report button accessible")
-        assertTrue(elementExists("btnIgnoreRules"), "Ignore Rules button accessible")
         assertTrue(elementExists("btnSmsExport"), "SMS Export button accessible")
         assertTrue(elementExists("btnThemeToggle"), "Theme Toggle button accessible")
     }
@@ -319,26 +317,19 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(16)
-    @DisplayName("Theme Toggle shows dialog")
-    fun themeToggleShowsDialog() {
+    @DisplayName("Settings button opens Settings screen")
+    fun settingsButtonOpensSettingsScreen() {
         findById("btnThemeToggle").click()
         mediumWait()
 
-        // Dialog should be shown - look for dialog content or cancel button
-        // The dialog uses standard AlertDialog with SingleChoiceItems
-        val dialogVisible = try {
-            driver.findElement(
-                io.appium.java_client.AppiumBy.xpath(
-                    "//*[contains(@text, 'System') or contains(@text, 'Light') or contains(@text, 'Dark')]"
-                )
-            ).isDisplayed
-        } catch (e: Exception) {
-            false
-        }
+        // Settings screen should show theme and language radio groups
+        assertTrue(
+            elementExists("radioGroupTheme") || elementExists("radioGroupLanguage"),
+            "Should be on Settings screen"
+        )
 
-        // Dismiss dialog
         driver.navigate().back()
-        shortWait()
+        mediumWait()
 
         assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
