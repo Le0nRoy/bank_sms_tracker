@@ -7,10 +7,12 @@ import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.PaymentDao
 import org.junit.jupiter.api.AfterEach
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -60,7 +62,8 @@ class RoomPaymentRepositoryTest {
     )
 
     @Test
-    fun `savePayment_addsPaymentToRepository`() {
+    @DisplayName("savePayment_addsPaymentToRepository")
+    fun savePaymentAddsPaymentToRepository() = runBlocking {
         val payment = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         val inserted = repository.savePayment(payment, "message-1", "sender-1")
 
@@ -73,7 +76,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getAllPayments_returnsAllSavedPayments`() {
+    @DisplayName("getAllPayments_returnsAllSavedPayments")
+    fun getAllPaymentsReturnsAllSavedPayments() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Test 1", categoryId = "cat1")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Test 2", categoryId = "cat2")
         repository.savePayment(payment1, "message-1", "sender-1")
@@ -84,12 +88,14 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getAllPayments_returnsEmptyList_whenNoPaymentsSaved`() {
+    @DisplayName("getAllPayments_returnsEmptyList_whenNoPaymentsSaved")
+    fun getAllPaymentsReturnsEmptyListWhenNoPaymentsSaved() = runBlocking {
         assertTrue(repository.getAllPayments().isEmpty())
     }
 
     @Test
-    fun `getPaymentsByCategory_returnsCorrectPayments`() {
+    @DisplayName("getPaymentsByCategory_returnsCorrectPayments")
+    fun getPaymentsByCategoryReturnsCorrectPayments() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Groceries", categoryId = "cat_grocery")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Transport", categoryId = "cat_transport")
         val payment3 = createTestPayment(amount = 30.0, merchant = "More Groceries", categoryId = "cat_grocery")
@@ -103,7 +109,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getPaymentsByCategory_returnsEmptyList_forUnknownCategory`() {
+    @DisplayName("getPaymentsByCategory_returnsEmptyList_forUnknownCategory")
+    fun getPaymentsByCategoryReturnsEmptyListForUnknownCategory() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Groceries", categoryId = "cat_grocery")
         repository.savePayment(payment1, "message-1", "sender-1")
         val utilityPayments = repository.getPaymentsByCategory("cat_utility")
@@ -111,7 +118,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getUncategorizedPayments_returnsOnlyPaymentsWithNullCategoryId`() {
+    @DisplayName("getUncategorizedPayments_returnsOnlyPaymentsWithNullCategoryId")
+    fun getUncategorizedPaymentsReturnsOnlyPaymentsWithNullCategoryId() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Categorized", categoryId = "cat_misc")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Uncategorized 1", categoryId = null)
         val payment3 = createTestPayment(amount = 30.0, merchant = "Uncategorized 2", categoryId = null)
@@ -125,14 +133,16 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getUncategorizedPayments_returnsEmptyList_whenAllAreCategorized`() {
+    @DisplayName("getUncategorizedPayments_returnsEmptyList_whenAllAreCategorized")
+    fun getUncategorizedPaymentsReturnsEmptyListWhenAllAreCategorized() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Categorized", categoryId = "cat_misc")
         repository.savePayment(payment1, "message-1", "sender-1")
         assertTrue(repository.getUncategorizedPayments().isEmpty())
     }
 
     @Test
-    fun `savePayment_returnsFalseWhenDuplicate`() {
+    @DisplayName("savePayment_returnsFalseWhenDuplicate")
+    fun savePaymentReturnsFalseWhenDuplicate() = runBlocking {
         val payment = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         val inserted = repository.savePayment(payment, "duplicate-message", "sender-1")
         val duplicateInsert = repository.savePayment(payment, "duplicate-message", "sender-1")
@@ -143,7 +153,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `savePayment_allowsDifferentPaymentsWithSameContentButDifferentMessage`() {
+    @DisplayName("savePayment_allowsDifferentPaymentsWithSameContentButDifferentMessage")
+    fun savePaymentAllowsDifferentPaymentsWithSameContentButDifferentMessage() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         val payment2 = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
 
@@ -156,7 +167,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `savePayment_allowsSameMessageFromDifferentSenders`() {
+    @DisplayName("savePayment_allowsSameMessageFromDifferentSenders")
+    fun savePaymentAllowsSameMessageFromDifferentSenders() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Test Merchant", categoryId = "cat1")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Test Merchant 2", categoryId = "cat2")
 
@@ -169,7 +181,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getAllPayments_returnsPaymentsInDescendingOrder`() {
+    @DisplayName("getAllPayments_returnsPaymentsInDescendingOrder")
+    fun getAllPaymentsReturnsPaymentsInDescendingOrder() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "First")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Second")
         val payment3 = createTestPayment(amount = 30.0, merchant = "Third")
@@ -188,7 +201,8 @@ class RoomPaymentRepositoryTest {
     // ==================== Sender Filtering Tests ====================
 
     @Test
-    fun `getPaymentsBySender_returnsCorrectPayments`() {
+    @DisplayName("getPaymentsBySender_returnsCorrectPayments")
+    fun getPaymentsBySenderReturnsCorrectPayments() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Store 1")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Store 2")
         val payment3 = createTestPayment(amount = 30.0, merchant = "Store 3")
@@ -202,7 +216,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getPaymentsBySender_returnsEmptyListForUnknownSender`() {
+    @DisplayName("getPaymentsBySender_returnsEmptyListForUnknownSender")
+    fun getPaymentsBySenderReturnsEmptyListForUnknownSender() = runBlocking {
         val payment = createTestPayment(amount = 10.0, merchant = "Store")
         repository.savePayment(payment, "msg-1", "BANK-A")
 
@@ -211,7 +226,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getDistinctSenderAddresses_returnsUniqueSortedList`() {
+    @DisplayName("getDistinctSenderAddresses_returnsUniqueSortedList")
+    fun getDistinctSenderAddressesReturnsUniqueSortedList() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Store 1")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Store 2")
         val payment3 = createTestPayment(amount = 30.0, merchant = "Store 3")
@@ -226,7 +242,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getDistinctSenderAddresses_returnsEmptyListWhenNoPayments`() {
+    @DisplayName("getDistinctSenderAddresses_returnsEmptyListWhenNoPayments")
+    fun getDistinctSenderAddressesReturnsEmptyListWhenNoPayments() = runBlocking {
         val senders = repository.getDistinctSenderAddresses()
         assertTrue(senders.isEmpty())
     }
@@ -234,7 +251,8 @@ class RoomPaymentRepositoryTest {
     // ==================== Date Range Filtering Tests ====================
 
     @Test
-    fun `getPaymentsByDateRange_returnsPaymentsInRange`() {
+    @DisplayName("getPaymentsByDateRange_returnsPaymentsInRange")
+    fun getPaymentsByDateRangeReturnsPaymentsInRange() = runBlocking {
         val payment1 = createTestPayment(amount = 10.0, merchant = "Store 1")
         val payment2 = createTestPayment(amount = 20.0, merchant = "Store 2")
         repository.savePayment(payment1, "msg-1", "BANK")
@@ -251,7 +269,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `getPaymentsByDateRange_excludesPaymentsOutsideRange`() {
+    @DisplayName("getPaymentsByDateRange_excludesPaymentsOutsideRange")
+    fun getPaymentsByDateRangeExcludesPaymentsOutsideRange() = runBlocking {
         val payment = createTestPayment(amount = 10.0, merchant = "Store")
         repository.savePayment(payment, "msg-1", "BANK")
 
@@ -264,7 +283,8 @@ class RoomPaymentRepositoryTest {
     // ==================== Category Update Tests ====================
 
     @Test
-    fun `updatePaymentCategory_updatesExistingPayment`() {
+    @DisplayName("updatePaymentCategory_updatesExistingPayment")
+    fun updatePaymentCategoryUpdatesExistingPayment() = runBlocking {
         val payment = createTestPayment(amount = 10.0, merchant = "Store", categoryId = "old-cat")
         repository.savePayment(payment, "msg-1", "BANK")
 
@@ -278,7 +298,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `updatePaymentCategory_canSetCategoryToNull`() {
+    @DisplayName("updatePaymentCategory_canSetCategoryToNull")
+    fun updatePaymentCategoryCanSetCategoryToNull() = runBlocking {
         val payment = createTestPayment(amount = 10.0, merchant = "Store", categoryId = "cat")
         repository.savePayment(payment, "msg-1", "BANK")
 
@@ -292,7 +313,8 @@ class RoomPaymentRepositoryTest {
     }
 
     @Test
-    fun `updatePaymentCategory_doesNothingForUnknownId`() {
+    @DisplayName("updatePaymentCategory_doesNothingForUnknownId")
+    fun updatePaymentCategoryDoesNothingForUnknownId() = runBlocking {
         val payment = createTestPayment(amount = 10.0, merchant = "Store", categoryId = "cat")
         repository.savePayment(payment, "msg-1", "BANK")
 

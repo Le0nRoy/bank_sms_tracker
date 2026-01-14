@@ -35,7 +35,7 @@ class InMemoryPaymentRepository : PaymentRepository {
         return true
     }
 
-    override suspend fun getAllPayments(): List<Payment> = payments.toList()
+    override suspend fun getAllPayments(): List<Payment> = payments.sortedByDescending { it.id }
 
     override suspend fun getPaymentsByCategory(categoryId: String): List<Payment> = payments.filter {
         it.categoryId == categoryId

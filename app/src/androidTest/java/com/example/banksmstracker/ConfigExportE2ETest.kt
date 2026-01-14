@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -38,7 +39,8 @@ class ConfigExportE2ETest {
     }
 
     @Test
-    fun `exportConfigJson_returnsValidJson`() = runBlocking {
+    @DisplayName("exportConfigJson_returnsValidJson")
+    fun exportConfigJsonReturnsValidJson() = runBlocking {
         // Create some test data
         val category = ConfigRepository.addCategory()
         category.name = "Test Category"
@@ -49,7 +51,7 @@ class ConfigExportE2ETest {
         sender.name = "Test Bank"
         sender.addresses = mutableListOf("12345")
         sender.rules = mutableListOf(
-            com.example.banksmstracker.data.PaymentRegexRule(regex = "Test Rule")
+            com.example.banksmstracker.data.Rule(pattern = "Test Rule")
         )
         ConfigRepository.updateSender(sender)
 
@@ -66,7 +68,8 @@ class ConfigExportE2ETest {
     }
 
     @Test
-    fun `exportConfigJson_isValidJsonFormat`() = runBlocking {
+    @DisplayName("exportConfigJson_isValidJsonFormat")
+    fun exportConfigJsonIsValidJsonFormat() = runBlocking {
         val category = ConfigRepository.addCategory()
         category.name = "Category"
         ConfigRepository.updateCategory(category)
@@ -84,7 +87,8 @@ class ConfigExportE2ETest {
     }
 
     @Test
-    fun `exportConfigJson_prettyPrint_formatIsReadable`() = runBlocking {
+    @DisplayName("exportConfigJson_prettyPrint_formatIsReadable")
+    fun exportConfigJsonPrettyPrintFormatIsReadable() = runBlocking {
         val category = ConfigRepository.addCategory()
         category.name = "Pretty Print Test"
         ConfigRepository.updateCategory(category)
@@ -99,7 +103,8 @@ class ConfigExportE2ETest {
     }
 
     @Test
-    fun `shareConfigFile_createsFileWithValidJson`() = runBlocking {
+    @DisplayName("shareConfigFile_createsFileWithValidJson")
+    fun shareConfigFileCreatesFileWithValidJson() = runBlocking {
         // Create test data
         val category = ConfigRepository.addCategory()
         category.name = "Export Category"
@@ -130,7 +135,8 @@ class ConfigExportE2ETest {
     }
 
     @Test
-    fun `shareConfigFile_filePathIsInCacheDir`() = runBlocking {
+    @DisplayName("shareConfigFile_filePathIsInCacheDir")
+    fun shareConfigFileFilePathIsInCacheDir() = runBlocking {
         val category = ConfigRepository.addCategory()
         category.name = "Path Test"
         ConfigRepository.updateCategory(category)
@@ -145,7 +151,8 @@ class ConfigExportE2ETest {
     }
 
     @Test
-    fun `shareConfigFile_uriIsValid`() = runBlocking {
+    @DisplayName("shareConfigFile_uriIsValid")
+    fun shareConfigFileUriIsValid() = runBlocking {
         val category = ConfigRepository.addCategory()
         category.name = "URI Test"
         ConfigRepository.updateCategory(category)
@@ -161,7 +168,8 @@ class ConfigExportE2ETest {
     }
 
     @Test
-    fun `shareConfigFile_jsonMatchesExport`() = runBlocking {
+    @DisplayName("shareConfigFile_jsonMatchesExport")
+    fun shareConfigFileJsonMatchesExport() = runBlocking {
         val category = ConfigRepository.addCategory()
         category.name = "Match Test"
         category.merchants = mutableListOf("Merchant")
@@ -183,7 +191,8 @@ class ConfigExportE2ETest {
     }
 
     @Test
-    fun `exportConfigJson_includesAllCategoriesAndSenders`() = runBlocking {
+    @DisplayName("exportConfigJson_includesAllCategoriesAndSenders")
+    fun exportConfigJsonIncludesAllCategoriesAndSenders() = runBlocking {
         // Create multiple categories and senders
         val cat1 = ConfigRepository.addCategory()
         cat1.name = "Category 1"
@@ -221,7 +230,8 @@ class ConfigExportE2ETest {
     }
 
     @Test
-    fun `exportConfigJson_withEmptyConfig_returnsValidEmptyJson`() = runBlocking {
+    @DisplayName("exportConfigJson_withEmptyConfig_returnsValidEmptyJson")
+    fun exportConfigJsonWithEmptyConfigReturnsValidEmptyJson() = runBlocking {
         // Reset to empty state (just load, don't add anything)
         val json = ConfigRepository.exportConfigJson()
 

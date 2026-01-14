@@ -2,16 +2,19 @@ package com.example.banksmstracker
 
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.database.BankSmsDatabase
+import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.parser.SmsReceiver
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -31,6 +34,24 @@ class PaymentDeduplicationE2ETest {
             putExtra(SmsReceiver.EXTRA_TEST_SENDER, sender)
             putExtra(SmsReceiver.EXTRA_TEST_BODY, body)
         }
+
+    /**
+     * Wait for payments to appear in repository with polling.
+     * onReceive() spawns async coroutine, so we need to wait for it to complete.
+     */
+    private suspend fun waitForPayments(
+        expectedCount: Int,
+        timeoutMs: Long = 5000,
+        pollIntervalMs: Long = 100
+    ): List<Payment> {
+        val startTime = System.currentTimeMillis()
+        while (System.currentTimeMillis() - startTime < timeoutMs) {
+            val payments = paymentRepository.getAllPayments()
+            if (payments.size >= expectedCount) return payments
+            delay(pollIntervalMs)
+        }
+        return paymentRepository.getAllPayments()
+    }
 
     @BeforeEach
     fun setup() {
@@ -57,8 +78,8 @@ class PaymentDeduplicationE2ETest {
             sender.name = "Test Bank"
             sender.addresses = mutableListOf("BANK123")
             sender.rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             )
             ConfigRepository.updateSender(sender)
@@ -73,7 +94,8 @@ class PaymentDeduplicationE2ETest {
     }
 
     @Test
-    fun `duplicateSmsMessage_isNotSavedTwice`() {
+    @DisplayName("duplicateSmsMessage_isNotSavedTwice")
+    fun duplicateSmsMessageIsNotSavedTwice() = runBlocking {
         val smsReceiver = SmsReceiver()
         smsReceiver.setPaymentProcessorForTest(processor)
 
@@ -83,9 +105,11 @@ class PaymentDeduplicationE2ETest {
         // Send same message twice
         val intent1 = buildSmsIntent(sender, body)
         smsReceiver.onReceive(context, intent1)
+        waitForPayments(1)
 
         val intent2 = buildSmsIntent(sender, body)
         smsReceiver.onReceive(context, intent2)
+        delay(500) // Give time for second processing attempt
 
         val allPayments = paymentRepository.getAllPayments()
 
@@ -98,7 +122,8 @@ class PaymentDeduplicationE2ETest {
     }
 
     @Test
-    fun `differentMessagesFromSameSender_areBothSaved`() {
+    @DisplayName("differentMessagesFromSameSender_areBothSaved")
+    fun differentMessagesFromSameSenderAreBothSaved() = runBlocking {
         val smsReceiver = SmsReceiver()
         smsReceiver.setPaymentProcessorForTest(processor)
 
@@ -108,11 +133,12 @@ class PaymentDeduplicationE2ETest {
 
         val intent1 = buildSmsIntent(sender, body1)
         smsReceiver.onReceive(context, intent1)
+        waitForPayments(1)
 
         val intent2 = buildSmsIntent(sender, body2)
         smsReceiver.onReceive(context, intent2)
 
-        val allPayments = paymentRepository.getAllPayments()
+        val allPayments = waitForPayments(2)
         assertEquals(2, allPayments.size, "Different messages should both be saved")
 
         val amounts = allPayments.map { it.amount }.sorted()
@@ -121,39 +147,40 @@ class PaymentDeduplicationE2ETest {
     }
 
     @Test
-    fun `sameMessageFromDifferentSenders_areBothSaved`() {
+    @DisplayName("sameMessageFromDifferentSenders_areBothSaved")
+    fun sameMessageFromDifferentSendersAreBothSaved() = runBlocking {
         val smsReceiver = SmsReceiver()
 
         // Create second sender
-        runBlocking {
-            val sender2 = ConfigRepository.addSender()
-            sender2.name = "Another Bank"
-            sender2.addresses = mutableListOf("BANK456")
-            sender2.rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
-                )
+        val sender2 = ConfigRepository.addSender()
+        sender2.name = "Another Bank"
+        sender2.addresses = mutableListOf("BANK456")
+        sender2.rules = mutableListOf(
+            Rule(
+                pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
             )
-            ConfigRepository.updateSender(sender2)
+        )
+        ConfigRepository.updateSender(sender2)
 
-            processor = ConfigRepository.getPaymentProcessor()
-            smsReceiver.setPaymentProcessorForTest(processor)
-        }
+        processor = ConfigRepository.getPaymentProcessor()
+        smsReceiver.setPaymentProcessorForTest(processor)
 
         val body = "Payment 150.00 USD card 9999 Store at 20230907 bal 400.00"
 
         val intent1 = buildSmsIntent("BANK123", body)
         smsReceiver.onReceive(context, intent1)
+        waitForPayments(1)
 
         val intent2 = buildSmsIntent("BANK456", body)
         smsReceiver.onReceive(context, intent2)
 
-        val allPayments = paymentRepository.getAllPayments()
+        val allPayments = waitForPayments(2)
         assertEquals(2, allPayments.size, "Same message from different senders should both be saved")
     }
 
     @Test
-    fun `slightlyDifferentMessages_areTreatedAsDifferent`() {
+    @DisplayName("slightlyDifferentMessages_areTreatedAsDifferent")
+    fun slightlyDifferentMessagesAreTreatedAsDifferent() = runBlocking {
         val smsReceiver = SmsReceiver()
         smsReceiver.setPaymentProcessorForTest(processor)
 
@@ -163,11 +190,12 @@ class PaymentDeduplicationE2ETest {
 
         val intent1 = buildSmsIntent(sender, body1)
         smsReceiver.onReceive(context, intent1)
+        waitForPayments(1)
 
         val intent2 = buildSmsIntent(sender, body2)
         smsReceiver.onReceive(context, intent2)
 
-        val allPayments = paymentRepository.getAllPayments()
+        val allPayments = waitForPayments(2)
         assertEquals(2, allPayments.size, "Messages with different content should both be saved")
     }
 }

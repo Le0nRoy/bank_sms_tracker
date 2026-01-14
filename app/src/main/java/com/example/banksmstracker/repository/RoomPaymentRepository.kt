@@ -4,12 +4,12 @@ import android.database.sqlite.SQLiteConstraintException
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.database.PaymentDao
 import com.example.banksmstracker.database.PaymentEntity
-import java.security.MessageDigest
+import com.example.banksmstracker.util.HashUtil
 
 class RoomPaymentRepository(private val paymentDao: PaymentDao) : PaymentRepository {
 
     override suspend fun savePayment(payment: Payment, rawMessage: String, senderAddress: String): Boolean {
-        val hash = computeHash(rawMessage, senderAddress)
+        val hash = HashUtil.computeMessageHash(rawMessage, senderAddress)
         return try {
             paymentDao.insertPayment(
                 PaymentEntity(
@@ -65,13 +65,6 @@ class RoomPaymentRepository(private val paymentDao: PaymentDao) : PaymentReposit
 
     override suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?) {
         paymentDao.updateCategoryForRule(ruleId, categoryName)
-    }
-
-    private fun computeHash(message: String, sender: String): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        val combined = "$sender::$message"
-        val hash = digest.digest(combined.toByteArray(Charsets.UTF_8))
-        return hash.joinToString("") { "%02x".format(it) }
     }
 }
 

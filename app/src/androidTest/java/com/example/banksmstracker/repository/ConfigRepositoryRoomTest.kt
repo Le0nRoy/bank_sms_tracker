@@ -2,13 +2,14 @@ package com.example.banksmstracker.repository
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -42,7 +43,8 @@ class ConfigRepositoryRoomTest {
     }
 
     @Test
-    fun `addCategory_createsNewCategoryInDatabase`() = runBlocking {
+    @DisplayName("addCategory_createsNewCategoryInDatabase")
+    fun addCategoryCreatesNewCategoryInDatabase() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val category = ConfigRepository.addCategory()
@@ -54,7 +56,8 @@ class ConfigRepositoryRoomTest {
     }
 
     @Test
-    fun `updateCategory_persistsChangesToDatabase`() = runBlocking {
+    @DisplayName("updateCategory_persistsChangesToDatabase")
+    fun updateCategoryPersistsChangesToDatabase() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val category = ConfigRepository.addCategory()
@@ -72,7 +75,8 @@ class ConfigRepositoryRoomTest {
     }
 
     @Test
-    fun `updateCategory_filtersEmptyMerchants`() = runBlocking {
+    @DisplayName("updateCategory_filtersEmptyMerchants")
+    fun updateCategoryFiltersEmptyMerchants() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val category = ConfigRepository.addCategory()
@@ -88,7 +92,8 @@ class ConfigRepositoryRoomTest {
     }
 
     @Test
-    fun `updateCategory_replacesExistingMerchants`() = runBlocking {
+    @DisplayName("updateCategory_replacesExistingMerchants")
+    fun updateCategoryReplacesExistingMerchants() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val category = ConfigRepository.addCategory()
@@ -107,7 +112,8 @@ class ConfigRepositoryRoomTest {
     }
 
     @Test
-    fun `addSender_createsNewSenderInDatabase`() = runBlocking {
+    @DisplayName("addSender_createsNewSenderInDatabase")
+    fun addSenderCreatesNewSenderInDatabase() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val sender = ConfigRepository.addSender()
@@ -119,14 +125,15 @@ class ConfigRepositoryRoomTest {
     }
 
     @Test
-    fun `updateSender_persistsChangesToDatabase`() = runBlocking {
+    @DisplayName("updateSender_persistsChangesToDatabase")
+    fun updateSenderPersistsChangesToDatabase() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val sender = ConfigRepository.addSender()
         sender.name = "My Bank"
         sender.addresses = mutableListOf("12345", "67890")
         sender.rules = mutableListOf(
-            PaymentRegexRule(regex = "Payment (\\d+\\.\\d{2})")
+            Rule(pattern = "Payment (\\d+\\.\\d{2})")
         )
 
         ConfigRepository.updateSender(sender)
@@ -138,21 +145,22 @@ class ConfigRepositoryRoomTest {
         assertTrue(senders[0].addresses.contains("12345"))
         assertTrue(senders[0].addresses.contains("67890"))
         assertEquals(1, senders[0].rules.size)
-        assertEquals("Payment (\\d+\\.\\d{2})", senders[0].rules[0].regex)
+        assertEquals("Payment (\\d+\\.\\d{2})", senders[0].rules[0].pattern)
     }
 
     @Test
-    fun `updateSender_filtersEmptyAddressesAndRules`() = runBlocking {
+    @DisplayName("updateSender_filtersEmptyAddressesAndRules")
+    fun updateSenderFiltersEmptyAddressesAndRules() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val sender = ConfigRepository.addSender()
         sender.name = "Test Bank"
         sender.addresses = mutableListOf("12345", "", "   ", "67890")
         sender.rules = mutableListOf(
-            PaymentRegexRule(regex = "Rule1"),
-            PaymentRegexRule(regex = ""),
-            PaymentRegexRule(regex = "   "),
-            PaymentRegexRule(regex = "Rule2")
+            Rule(pattern = "Rule1"),
+            Rule(pattern = ""),
+            Rule(pattern = "   "),
+            Rule(pattern = "Rule2")
         )
 
         ConfigRepository.updateSender(sender)
@@ -162,24 +170,25 @@ class ConfigRepositoryRoomTest {
         assertTrue(senders[0].addresses.contains("12345"))
         assertTrue(senders[0].addresses.contains("67890"))
         assertEquals(2, senders[0].rules.size)
-        assertEquals("Rule1", senders[0].rules[0].regex)
-        assertEquals("Rule2", senders[0].rules[1].regex)
+        assertEquals("Rule1", senders[0].rules[0].pattern)
+        assertEquals("Rule2", senders[0].rules[1].pattern)
     }
 
     @Test
-    fun `updateSender_replacesExistingAddressesAndRules`() = runBlocking {
+    @DisplayName("updateSender_replacesExistingAddressesAndRules")
+    fun updateSenderReplacesExistingAddressesAndRules() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val sender = ConfigRepository.addSender()
         sender.name = "Bank"
         sender.addresses = mutableListOf("Old Address")
-        sender.rules = mutableListOf(PaymentRegexRule(regex = "Old Rule"))
+        sender.rules = mutableListOf(Rule(pattern = "Old Rule"))
         ConfigRepository.updateSender(sender)
 
         sender.addresses = mutableListOf("New Address 1", "New Address 2")
         sender.rules = mutableListOf(
-            PaymentRegexRule(regex = "New Rule 1"),
-            PaymentRegexRule(regex = "New Rule 2")
+            Rule(pattern = "New Rule 1"),
+            Rule(pattern = "New Rule 2")
         )
         ConfigRepository.updateSender(sender)
 
@@ -189,12 +198,13 @@ class ConfigRepositoryRoomTest {
         assertTrue(senders[0].addresses.contains("New Address 2"))
         assertTrue(!senders[0].addresses.contains("Old Address"))
         assertEquals(2, senders[0].rules.size)
-        assertEquals("New Rule 1", senders[0].rules[0].regex)
-        assertEquals("New Rule 2", senders[0].rules[1].regex)
+        assertEquals("New Rule 1", senders[0].rules[0].pattern)
+        assertEquals("New Rule 2", senders[0].rules[1].pattern)
     }
 
     @Test
-    fun `getCategories_returnsMutableCopies`() = runBlocking {
+    @DisplayName("getCategories_returnsMutableCopies")
+    fun getCategoriesReturnsMutableCopies() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val category = ConfigRepository.addCategory()
@@ -212,7 +222,8 @@ class ConfigRepositoryRoomTest {
     }
 
     @Test
-    fun `getSenders_returnsMutableCopies`() = runBlocking {
+    @DisplayName("getSenders_returnsMutableCopies")
+    fun getSendersReturnsMutableCopies() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val sender = ConfigRepository.addSender()
@@ -230,7 +241,8 @@ class ConfigRepositoryRoomTest {
     }
 
     @Test
-    fun `getPaymentProcessor_usesCurrentConfig`() = runBlocking {
+    @DisplayName("getPaymentProcessor_usesCurrentConfig")
+    fun getPaymentProcessorUsesCurrentConfig() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         val category = ConfigRepository.addCategory()
@@ -245,7 +257,8 @@ class ConfigRepositoryRoomTest {
     }
 
     @Test
-    fun `multipleCategoriesAndSenders_persistCorrectly`() = runBlocking {
+    @DisplayName("multipleCategoriesAndSenders_persistCorrectly")
+    fun multipleCategoriesAndSendersPersistCorrectly() = runBlocking {
         ConfigRepository.load(context.applicationContext as android.app.Application)
 
         // Add multiple categories
@@ -263,15 +276,15 @@ class ConfigRepositoryRoomTest {
         val sender1 = ConfigRepository.addSender()
         sender1.name = "Sender 1"
         sender1.addresses = mutableListOf("11111")
-        sender1.rules = mutableListOf(PaymentRegexRule(regex = "Rule1"))
+        sender1.rules = mutableListOf(Rule(pattern = "Rule1"))
         ConfigRepository.updateSender(sender1)
 
         val sender2 = ConfigRepository.addSender()
         sender2.name = "Sender 2"
         sender2.addresses = mutableListOf("22222", "33333")
         sender2.rules = mutableListOf(
-            PaymentRegexRule(regex = "Rule2a"),
-            PaymentRegexRule(regex = "Rule2b")
+            Rule(pattern = "Rule2a"),
+            Rule(pattern = "Rule2b")
         )
         ConfigRepository.updateSender(sender2)
 

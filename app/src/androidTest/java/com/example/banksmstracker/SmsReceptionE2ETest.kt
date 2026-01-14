@@ -5,13 +5,14 @@ import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Payment
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.parser.SmsReceiver
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.InMemoryPaymentRepository
 import kotlin.collections.listOf
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -45,8 +46,8 @@ class SmsReceiverE2ETest {
             name = "MyBank",
             addresses = mutableListOf("BANK"),
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             )
         )
@@ -72,7 +73,7 @@ class SmsReceiverE2ETest {
 
         smsReceiver.onReceive(context, intent)
 
-        val allPayments = repository.getAllPayments()
+        val allPayments = runBlocking { repository.getAllPayments() }
         assertEquals(1, allPayments.size)
         val payment: Payment = allPayments[0]
 
@@ -101,7 +102,7 @@ class SmsReceiverE2ETest {
 
         smsReceiver.onReceive(context, intent)
 
-        val allPayments = repository.getAllPayments()
+        val allPayments = runBlocking { repository.getAllPayments() }
         assertTrue(allPayments.isEmpty())
     }
 
@@ -113,8 +114,8 @@ class SmsReceiverE2ETest {
             name = "MyBank",
             addresses = mutableListOf("BANK"),
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             )
         )
@@ -133,7 +134,7 @@ class SmsReceiverE2ETest {
 
         smsReceiver.onReceive(context, intent)
 
-        val allPayments = repository.getAllPayments()
+        val allPayments = runBlocking { repository.getAllPayments() }
         assertTrue(allPayments.isEmpty())
     }
 }

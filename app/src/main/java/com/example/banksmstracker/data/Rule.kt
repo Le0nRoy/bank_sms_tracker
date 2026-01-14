@@ -30,17 +30,6 @@ data class Rule(
 
     companion object {
         /**
-         * Create a Rule from legacy PaymentRegexRule.
-         */
-        fun fromPaymentRegexRule(rule: PaymentRegexRule, senderId: Long): Rule = Rule(
-            id = rule.id,
-            senderId = senderId,
-            pattern = rule.regex,
-            enabled = rule.enabled,
-            ruleType = RuleType.PAYMENT,
-        )
-
-        /**
          * Create a Rule from legacy IgnoreRule.
          */
         fun fromIgnoreRule(rule: IgnoreRule): Rule = Rule(
@@ -52,13 +41,4 @@ data class Rule(
             ruleType = RuleType.IGNORE,
         )
     }
-
-    /**
-     * Convert to legacy PaymentRegexRule for backward compatibility.
-     */
-    fun toPaymentRegexRule(): PaymentRegexRule = PaymentRegexRule(
-        id = id,
-        regex = pattern,
-        enabled = enabled,
-    )
 }

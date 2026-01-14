@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -42,7 +43,8 @@ class ConfigImportE2ETest {
     }
 
     @Test
-    fun `importConfig_addsNewSendersAndCategories`() = runBlocking {
+    @DisplayName("importConfig_addsNewSendersAndCategories")
+    fun importConfigAddsNewSendersAndCategories() = runBlocking {
         val jsonConfig = """
             {
                 "senders": [
@@ -78,13 +80,14 @@ class ConfigImportE2ETest {
     }
 
     @Test
-    fun `importConfig_mergesExistingSendersByName`() = runBlocking {
+    @DisplayName("importConfig_mergesExistingSendersByName")
+    fun importConfigMergesExistingSendersByName() = runBlocking {
         // First, create an existing sender
         val existingSender = ConfigRepository.addSender()
         existingSender.name = "Test Bank"
         existingSender.addresses = mutableListOf("TESTBANK")
         existingSender.rules = mutableListOf(
-            com.example.banksmstracker.data.PaymentRegexRule(regex = "OldRule")
+            com.example.banksmstracker.data.Rule(pattern = "OldRule")
         )
         ConfigRepository.updateSender(existingSender)
 
@@ -118,12 +121,13 @@ class ConfigImportE2ETest {
         assertTrue(mergedSender.addresses.any { it.contains("testbank") })
         assertTrue(mergedSender.addresses.any { it.contains("newtestbank") })
         // Should have both old and new rules
-        assertTrue(mergedSender.rules.any { it.regex == "OldRule" })
-        assertTrue(mergedSender.rules.any { it.regex == "NewRule" })
+        assertTrue(mergedSender.rules.any { it.pattern == "OldRule" })
+        assertTrue(mergedSender.rules.any { it.pattern == "NewRule" })
     }
 
     @Test
-    fun `importConfig_mergesExistingCategoriesByName`() = runBlocking {
+    @DisplayName("importConfig_mergesExistingCategoriesByName")
+    fun importConfigMergesExistingCategoriesByName() = runBlocking {
         // Create existing category
         val existingCategory = ConfigRepository.addCategory()
         existingCategory.name = "Shopping"
@@ -160,7 +164,8 @@ class ConfigImportE2ETest {
     }
 
     @Test
-    fun `importConfig_withInvalidJson_returnsError`() = runBlocking {
+    @DisplayName("importConfig_withInvalidJson_returnsError")
+    fun importConfigWithInvalidJsonReturnsError() = runBlocking {
         val invalidJson = "{ invalid json }"
 
         val result = ConfigRepository.importConfig(invalidJson)
@@ -169,7 +174,8 @@ class ConfigImportE2ETest {
     }
 
     @Test
-    fun `importConfig_preservesEnabledState`() = runBlocking {
+    @DisplayName("importConfig_preservesEnabledState")
+    fun importConfigPreservesEnabledState() = runBlocking {
         val jsonConfig = """
             {
                 "senders": [
@@ -205,7 +211,8 @@ class ConfigImportE2ETest {
     }
 
     @Test
-    fun `importConfig_handlesEmptyConfig`() = runBlocking {
+    @DisplayName("importConfig_handlesEmptyConfig")
+    fun importConfigHandlesEmptyConfig() = runBlocking {
         val emptyConfig = """
             {
                 "senders": [],
@@ -221,7 +228,8 @@ class ConfigImportE2ETest {
     }
 
     @Test
-    fun `importConfig_caseInsensitiveMerge`() = runBlocking {
+    @DisplayName("importConfig_caseInsensitiveMerge")
+    fun importConfigCaseInsensitiveMerge() = runBlocking {
         // Create existing sender with lowercase name
         val existingSender = ConfigRepository.addSender()
         existingSender.name = "my bank"
@@ -255,7 +263,8 @@ class ConfigImportE2ETest {
     }
 
     @Test
-    fun `importConfig_deduplicatesAddresses`() = runBlocking {
+    @DisplayName("importConfig_deduplicatesAddresses")
+    fun importConfigDeduplicatesAddresses() = runBlocking {
         // Create existing sender
         val existingSender = ConfigRepository.addSender()
         existingSender.name = "Dupe Bank"
@@ -288,7 +297,8 @@ class ConfigImportE2ETest {
     }
 
     @Test
-    fun `exportAndReimport_producesEquivalentConfig`() = runBlocking {
+    @DisplayName("exportAndReimport_producesEquivalentConfig")
+    fun exportAndReimportProducesEquivalentConfig() = runBlocking {
         // Create config
         val category = ConfigRepository.addCategory()
         category.name = "Test Category"
@@ -299,7 +309,7 @@ class ConfigImportE2ETest {
         sender.name = "Test Bank"
         sender.addresses = mutableListOf("12345")
         sender.rules = mutableListOf(
-            com.example.banksmstracker.data.PaymentRegexRule(regex = "Rule1")
+            com.example.banksmstracker.data.Rule(pattern = "Rule1")
         )
         ConfigRepository.updateSender(sender)
 

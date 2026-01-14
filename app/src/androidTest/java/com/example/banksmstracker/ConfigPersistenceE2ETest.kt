@@ -7,6 +7,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -35,7 +36,8 @@ class ConfigPersistenceE2ETest {
     }
 
     @Test
-    fun `categoryPersistsAfterAdd`() = runBlocking {
+    @DisplayName("categoryPersistsAfterAdd")
+    fun categoryPersistsAfterAdd() = runBlocking {
         val category = ConfigRepository.addCategory()
         category.name = "Test Category"
         category.merchants = mutableListOf("Merchant1", "Merchant2")
@@ -49,7 +51,8 @@ class ConfigPersistenceE2ETest {
     }
 
     @Test
-    fun `categoryPersistsAfterMultipleUpdates`() = runBlocking {
+    @DisplayName("categoryPersistsAfterMultipleUpdates")
+    fun categoryPersistsAfterMultipleUpdates() = runBlocking {
         val category = ConfigRepository.addCategory()
         category.name = "Original Name"
         ConfigRepository.updateCategory(category)
@@ -68,13 +71,14 @@ class ConfigPersistenceE2ETest {
     }
 
     @Test
-    fun `senderPersistsAfterAdd`() = runBlocking {
+    @DisplayName("senderPersistsAfterAdd")
+    fun senderPersistsAfterAdd() = runBlocking {
         val sender = ConfigRepository.addSender()
         sender.name = "Test Bank"
         sender.addresses = mutableListOf("12345", "67890")
         sender.rules = mutableListOf(
-            com.example.banksmstracker.data.PaymentRegexRule(regex = "Rule1"),
-            com.example.banksmstracker.data.PaymentRegexRule(regex = "Rule2")
+            com.example.banksmstracker.data.Rule(pattern = "Rule1"),
+            com.example.banksmstracker.data.Rule(pattern = "Rule2")
         )
         ConfigRepository.updateSender(sender)
 
@@ -86,20 +90,21 @@ class ConfigPersistenceE2ETest {
     }
 
     @Test
-    fun `senderPersistsAfterMultipleUpdates`() = runBlocking {
+    @DisplayName("senderPersistsAfterMultipleUpdates")
+    fun senderPersistsAfterMultipleUpdates() = runBlocking {
         val sender = ConfigRepository.addSender()
         sender.name = "Original Bank"
         sender.addresses = mutableListOf("11111")
         sender.rules = mutableListOf(
-            com.example.banksmstracker.data.PaymentRegexRule(regex = "Old Rule")
+            com.example.banksmstracker.data.Rule(pattern = "Old Rule")
         )
         ConfigRepository.updateSender(sender)
 
         sender.name = "Updated Bank"
         sender.addresses = mutableListOf("22222", "33333")
         sender.rules = mutableListOf(
-            com.example.banksmstracker.data.PaymentRegexRule(regex = "New Rule 1"),
-            com.example.banksmstracker.data.PaymentRegexRule(regex = "New Rule 2")
+            com.example.banksmstracker.data.Rule(pattern = "New Rule 1"),
+            com.example.banksmstracker.data.Rule(pattern = "New Rule 2")
         )
         ConfigRepository.updateSender(sender)
 
@@ -108,11 +113,12 @@ class ConfigPersistenceE2ETest {
         assertEquals("Updated Bank", senders[0].name)
         assertEquals(2, senders[0].addresses.size)
         assertEquals(2, senders[0].rules.size)
-        assertEquals("New Rule 1", senders[0].rules[0].regex)
+        assertEquals("New Rule 1", senders[0].rules[0].pattern)
     }
 
     @Test
-    fun `multipleCategoriesPersistCorrectly`() = runBlocking {
+    @DisplayName("multipleCategoriesPersistCorrectly")
+    fun multipleCategoriesPersistCorrectly() = runBlocking {
         val cat1 = ConfigRepository.addCategory()
         cat1.name = "Category 1"
         cat1.merchants = mutableListOf("Merchant1")
@@ -134,7 +140,8 @@ class ConfigPersistenceE2ETest {
     }
 
     @Test
-    fun `multipleSendersPersistCorrectly`() = runBlocking {
+    @DisplayName("multipleSendersPersistCorrectly")
+    fun multipleSendersPersistCorrectly() = runBlocking {
         val sender1 = ConfigRepository.addSender()
         sender1.name = "Bank 1"
         sender1.addresses = mutableListOf("11111")
@@ -156,7 +163,8 @@ class ConfigPersistenceE2ETest {
     }
 
     @Test
-    fun `paymentProcessorReflectsConfigChanges`() = runBlocking {
+    @DisplayName("paymentProcessorReflectsConfigChanges")
+    fun paymentProcessorReflectsConfigChanges() = runBlocking {
         // Add category and sender
         val category = ConfigRepository.addCategory()
         category.name = "Groceries"
@@ -167,8 +175,8 @@ class ConfigPersistenceE2ETest {
         sender.name = "Bank"
         sender.addresses = mutableListOf("BANK123")
         sender.rules = mutableListOf(
-            com.example.banksmstracker.data.PaymentRegexRule(
-                regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+            com.example.banksmstracker.data.Rule(
+                pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
             )
         )
         ConfigRepository.updateSender(sender)
@@ -186,7 +194,8 @@ class ConfigPersistenceE2ETest {
     }
 
     @Test
-    fun `configLoadsFromDatabaseAfterRestart`() = runBlocking {
+    @DisplayName("configLoadsFromDatabaseAfterRestart")
+    fun configLoadsFromDatabaseAfterRestart() = runBlocking {
         // Create some data
         val category = ConfigRepository.addCategory()
         category.name = "Persistence Test"

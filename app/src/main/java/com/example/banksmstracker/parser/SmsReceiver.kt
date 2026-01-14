@@ -12,10 +12,11 @@ import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.IncomeEntity
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.util.HashUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.security.MessageDigest
+import kotlinx.coroutines.runBlocking
 
 class SmsReceiver : BroadcastReceiver() {
 
@@ -53,12 +54,18 @@ class SmsReceiver : BroadcastReceiver() {
 
         if (!testSender.isNullOrBlank() && !testBody.isNullOrBlank()) {
             val pendingResult = goAsync()
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    handleMessage(testSender, testBody)
-                } finally {
-                    pendingResult.finish()
+            if (pendingResult != null) {
+                // Async mode - running from actual broadcast
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        handleMessage(testSender, testBody)
+                    } finally {
+                        pendingResult.finish()
+                    }
                 }
+            } else {
+                // Sync mode - running from tests (goAsync() returns null)
+                runBlocking { handleMessage(testSender, testBody) }
             }
             return
         }
@@ -79,15 +86,27 @@ class SmsReceiver : BroadcastReceiver() {
         } ?: return
 
         val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
+        if (pendingResult != null) {
+            // Async mode - running from actual broadcast
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    for (message in messages) {
+                        val sender = message.originatingAddress ?: continue
+                        val body = message.messageBody
+                        handleMessage(sender, body)
+                    }
+                } finally {
+                    pendingResult.finish()
+                }
+            }
+        } else {
+            // Sync mode - should not happen for real SMS, but handle gracefully
+            runBlocking {
                 for (message in messages) {
                     val sender = message.originatingAddress ?: continue
                     val body = message.messageBody
                     handleMessage(sender, body)
                 }
-            } finally {
-                pendingResult.finish()
             }
         }
     }
@@ -127,7 +146,7 @@ class SmsReceiver : BroadcastReceiver() {
     private suspend fun saveIncome(result: MessageProcessResult.IncomeResult, body: String, sender: String) {
         val context = applicationContext ?: return
         val income = result.income
-        val messageHash = computeHash(body, sender)
+        val messageHash = HashUtil.computeMessageHash(body, sender)
 
         val incomeEntity = IncomeEntity(
             amount = income.amount,
@@ -146,12 +165,5 @@ class SmsReceiver : BroadcastReceiver() {
         if (insertedId == -1L) {
             Log.d(TAG, "Duplicate income skipped for sender $sender")
         }
-    }
-
-    private fun computeHash(message: String, sender: String): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        val combined = "$sender::$message"
-        val hash = digest.digest(combined.toByteArray(Charsets.UTF_8))
-        return hash.joinToString("") { "%02x".format(it) }
     }
 }

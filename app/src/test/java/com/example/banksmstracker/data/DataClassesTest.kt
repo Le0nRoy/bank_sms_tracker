@@ -38,34 +38,6 @@ class DataClassesTest {
     }
 
     @Test
-    fun `PaymentRegexRule default enabled is true`() {
-        val rule = PaymentRegexRule(regex = ".*")
-        assertTrue(rule.enabled)
-    }
-
-    @Test
-    fun `PaymentRegexRule can be created with enabled false`() {
-        val rule = PaymentRegexRule(regex = ".*", enabled = false)
-        assertFalse(rule.enabled)
-    }
-
-    @Test
-    fun `PaymentRegexRule regexPattern returns valid Regex`() {
-        val rule = PaymentRegexRule(regex = "\\d+")
-        val pattern = rule.regexPattern
-        assertTrue(pattern.matches("123"))
-        assertFalse(pattern.matches("abc"))
-    }
-
-    @Test
-    fun `PaymentRegexRule with invalid regex throws exception on regexPattern access`() {
-        val rule = PaymentRegexRule(regex = "[invalid")
-        assertThrows<Exception> {
-            rule.regexPattern
-        }
-    }
-
-    @Test
     fun `Payment can be created with all fields`() {
         val payment = Payment(
             id = 1,
@@ -446,5 +418,144 @@ class DataClassesTest {
         assertEquals(RuleType.PAYMENT, RuleType.fromValue("unknown"))
         assertEquals(RuleType.PAYMENT, RuleType.fromValue(""))
         assertEquals(RuleType.PAYMENT, RuleType.fromValue("PAYMENT"))
+    }
+
+    // ==================== Rule Tests ====================
+
+    @Test
+    fun `Rule default values are correct`() {
+        val rule = Rule(pattern = ".*test.*")
+        assertEquals(null, rule.id)
+        assertEquals(null, rule.senderId)
+        assertEquals(".*test.*", rule.pattern)
+        assertEquals(null, rule.description)
+        assertTrue(rule.enabled)
+        assertEquals(RuleType.PAYMENT, rule.ruleType)
+    }
+
+    @Test
+    fun `Rule can be created with all fields`() {
+        val rule = Rule(
+            id = 1,
+            senderId = 2,
+            pattern = ".*payment.*",
+            description = "Payment rule",
+            enabled = false,
+            ruleType = RuleType.INCOME
+        )
+        assertEquals(1L, rule.id)
+        assertEquals(2L, rule.senderId)
+        assertEquals(".*payment.*", rule.pattern)
+        assertEquals("Payment rule", rule.description)
+        assertFalse(rule.enabled)
+        assertEquals(RuleType.INCOME, rule.ruleType)
+    }
+
+    @Test
+    fun `Rule regexPattern returns compiled Regex`() {
+        val rule = Rule(pattern = "\\d+\\.\\d{2}")
+        val regex = rule.regexPattern
+        assertTrue(regex.containsMatchIn("123.45"))
+        assertFalse(regex.containsMatchIn("abc"))
+    }
+
+    @Test
+    fun `Rule regexPattern is cached`() {
+        val rule = Rule(pattern = "test.*")
+        val regex1 = rule.regexPattern
+        val regex2 = rule.regexPattern
+        // Same instance should be returned
+        assertTrue(regex1 === regex2)
+    }
+
+    @Test
+    fun `Rule regexPattern updates when pattern changes`() {
+        val rule = Rule(pattern = "initial")
+        val regex1 = rule.regexPattern
+        assertTrue(regex1.containsMatchIn("initial"))
+
+        rule.pattern = "updated"
+        val regex2 = rule.regexPattern
+
+        // New regex should match new pattern
+        assertTrue(regex2.containsMatchIn("updated"))
+        assertFalse(regex2.containsMatchIn("initial"))
+        // Should be different instances
+        assertFalse(regex1 === regex2)
+    }
+
+    @Test
+    fun `Rule regexPattern handles complex patterns`() {
+        val rule = Rule(pattern = "(?i).*debited.*Rs\\.?\\s*(\\d+(?:,\\d+)*(?:\\.\\d+)?)")
+        val regex = rule.regexPattern
+        assertTrue(regex.containsMatchIn("Your account has been debited Rs.500.00"))
+        assertTrue(regex.containsMatchIn("DEBITED Rs 1,234.56"))
+    }
+
+    @Test
+    fun `Rule fromIgnoreRule creates Rule with correct values`() {
+        val ignoreRule = IgnoreRule(
+            id = 10,
+            senderId = 20,
+            pattern = ".*spam.*",
+            description = "Spam filter",
+            enabled = true
+        )
+        val rule = Rule.fromIgnoreRule(ignoreRule)
+
+        assertEquals(10L, rule.id)
+        assertEquals(20L, rule.senderId)
+        assertEquals(".*spam.*", rule.pattern)
+        assertEquals("Spam filter", rule.description)
+        assertTrue(rule.enabled)
+        assertEquals(RuleType.IGNORE, rule.ruleType)
+    }
+
+    @Test
+    fun `Rule fromIgnoreRule with disabled rule`() {
+        val ignoreRule = IgnoreRule(
+            id = 1,
+            senderId = 2,
+            pattern = ".*otp.*",
+            description = null,
+            enabled = false
+        )
+        val rule = Rule.fromIgnoreRule(ignoreRule)
+
+        assertEquals(null, rule.description)
+        assertFalse(rule.enabled)
+        assertEquals(RuleType.IGNORE, rule.ruleType)
+    }
+
+    @Test
+    fun `Rule fromIgnoreRule with null id`() {
+        val ignoreRule = IgnoreRule(
+            id = null,
+            senderId = 5,
+            pattern = "test"
+        )
+        val rule = Rule.fromIgnoreRule(ignoreRule)
+
+        assertEquals(null, rule.id)
+        assertEquals(5L, rule.senderId)
+    }
+
+    @Test
+    fun `Rule copy creates independent copy`() {
+        val original = Rule(
+            id = 1,
+            senderId = 2,
+            pattern = "original",
+            description = "Original description",
+            enabled = true,
+            ruleType = RuleType.PAYMENT
+        )
+        val copy = original.copy(pattern = "modified", ruleType = RuleType.IGNORE)
+
+        assertEquals("original", original.pattern)
+        assertEquals(RuleType.PAYMENT, original.ruleType)
+        assertEquals("modified", copy.pattern)
+        assertEquals(RuleType.IGNORE, copy.ruleType)
+        assertEquals(original.id, copy.id)
     }
 }

@@ -41,14 +41,14 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("Default language is system default (empty)")
-    fun `defaultLanguageIsSystemDefault`() {
+    fun defaultLanguageIsSystemDefault() {
         val language = prefs.getString(BankSmsTrackerApp.KEY_LANGUAGE, "")
         assertEquals("", language, "Default language should be empty (system default)")
     }
 
     @Test
     @DisplayName("Language preference persists when set to English")
-    fun `languagePreferencePersistsWhenSetToEnglish`() {
+    fun languagePreferencePersistsWhenSetToEnglish() {
         prefs.edit().putString(BankSmsTrackerApp.KEY_LANGUAGE, "en").apply()
 
         val language = prefs.getString(BankSmsTrackerApp.KEY_LANGUAGE, "")
@@ -57,7 +57,7 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("Language preference persists when set to Russian")
-    fun `languagePreferencePersistsWhenSetToRussian`() {
+    fun languagePreferencePersistsWhenSetToRussian() {
         prefs.edit().putString(BankSmsTrackerApp.KEY_LANGUAGE, "ru").apply()
 
         val language = prefs.getString(BankSmsTrackerApp.KEY_LANGUAGE, "")
@@ -66,7 +66,7 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("Language can be changed between options")
-    fun `languageCanBeChangedBetweenOptions`() {
+    fun languageCanBeChangedBetweenOptions() {
         // Set to English
         prefs.edit().putString(BankSmsTrackerApp.KEY_LANGUAGE, "en").apply()
         assertEquals("en", prefs.getString(BankSmsTrackerApp.KEY_LANGUAGE, ""))
@@ -82,7 +82,7 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("Theme preference is independent of language preference")
-    fun `themePreferenceIsIndependentOfLanguagePreference`() {
+    fun themePreferenceIsIndependentOfLanguagePreference() {
         // Set both preferences
         prefs.edit()
             .putInt(BankSmsTrackerApp.KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_YES)
@@ -100,7 +100,7 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("Russian string resources exist")
-    fun `russianStringResourcesExist`() {
+    fun russianStringResourcesExist() {
         // Get a sample of string resource IDs and verify they exist
         val stringIds = listOf(
             R.string.categories,
@@ -119,7 +119,7 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("AppCompatDelegate locale methods are available")
-    fun `appCompatDelegateLocaleMethodsAreAvailable`() {
+    fun appCompatDelegateLocaleMethodsAreAvailable() {
         // Test that we can set and get application locales
         val englishLocale = LocaleListCompat.forLanguageTags("en")
         AppCompatDelegate.setApplicationLocales(englishLocale)
@@ -136,7 +136,7 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("All key string resources have Russian translations")
-    fun `allKeyStringResourcesHaveRussianTranslations`() {
+    fun allKeyStringResourcesHaveRussianTranslations() {
         // Test a comprehensive list of key strings
         val stringIds = listOf(
             // Navigation
@@ -173,7 +173,7 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("Preference file name is consistent")
-    fun `preferenceFileNameIsConsistent`() {
+    fun preferenceFileNameIsConsistent() {
         val prefs1 = context.getSharedPreferences(BankSmsTrackerApp.PREFS_NAME, Context.MODE_PRIVATE)
         val prefs2 = context.getSharedPreferences("bank_sms_tracker_prefs", Context.MODE_PRIVATE)
 
@@ -187,7 +187,7 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("Theme mode values are valid")
-    fun `themeModeValuesAreValid`() {
+    fun themeModeValuesAreValid() {
         val validThemeModes = listOf(
             AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM,
             AppCompatDelegate.MODE_NIGHT_NO,
@@ -203,7 +203,7 @@ class LocaleE2ETest {
 
     @Test
     @DisplayName("Clearing preferences works correctly")
-    fun `clearingPreferencesWorksCorrectly`() {
+    fun clearingPreferencesWorksCorrectly() {
         // Set values
         prefs.edit()
             .putString(BankSmsTrackerApp.KEY_LANGUAGE, "ru")

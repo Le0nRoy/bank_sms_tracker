@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import com.example.banksmstracker.data.Category
-import com.example.banksmstracker.data.PaymentRegexRule
+import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.parser.SmsReceiver
 import com.example.banksmstracker.processor.PaymentProcessor
@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -55,15 +56,16 @@ class EnabledDisabledE2ETest {
         }
 
     @Test
-    fun `disabledSender_smsIsNotProcessed`() {
+    @DisplayName("disabledSender_smsIsNotProcessed")
+    fun disabledSenderSmsIsNotProcessed() {
         val repository = InMemoryPaymentRepository()
 
         val sender = Sender(
             name = "Disabled Bank",
             addresses = mutableListOf("DISABLED"),
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             ),
             enabled = false // Disabled sender
@@ -84,19 +86,20 @@ class EnabledDisabledE2ETest {
         smsReceiver.onReceive(context, intent)
 
         // Should not save payment from disabled sender
-        assertTrue(repository.getAllPayments().isEmpty())
+        assertTrue(runBlocking { repository.getAllPayments() }.isEmpty())
     }
 
     @Test
-    fun `enabledSender_smsIsProcessed`() {
+    @DisplayName("enabledSender_smsIsProcessed")
+    fun enabledSenderSmsIsProcessed() {
         val repository = InMemoryPaymentRepository()
 
         val sender = Sender(
             name = "Enabled Bank",
             addresses = mutableListOf("ENABLED"),
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             ),
             enabled = true // Enabled sender
@@ -116,19 +119,20 @@ class EnabledDisabledE2ETest {
 
         smsReceiver.onReceive(context, intent)
 
-        assertEquals(1, repository.getAllPayments().size)
+        assertEquals(1, runBlocking { repository.getAllPayments() }.size)
     }
 
     @Test
-    fun `disabledRule_smsIsNotMatched`() {
+    @DisplayName("disabledRule_smsIsNotMatched")
+    fun disabledRuleSmsIsNotMatched() {
         val repository = InMemoryPaymentRepository()
 
         val sender = Sender(
             name = "Test Bank",
             addresses = mutableListOf("TESTBANK"),
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})",
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})",
                     enabled = false // Disabled rule
                 )
             ),
@@ -150,19 +154,20 @@ class EnabledDisabledE2ETest {
         smsReceiver.onReceive(context, intent)
 
         // Should not match with disabled rule
-        assertTrue(repository.getAllPayments().isEmpty())
+        assertTrue(runBlocking { repository.getAllPayments() }.isEmpty())
     }
 
     @Test
-    fun `enabledRule_smsIsMatched`() {
+    @DisplayName("enabledRule_smsIsMatched")
+    fun enabledRuleSmsIsMatched() {
         val repository = InMemoryPaymentRepository()
 
         val sender = Sender(
             name = "Test Bank",
             addresses = mutableListOf("TESTBANK"),
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})",
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})",
                     enabled = true // Enabled rule
                 )
             ),
@@ -183,19 +188,20 @@ class EnabledDisabledE2ETest {
 
         smsReceiver.onReceive(context, intent)
 
-        assertEquals(1, repository.getAllPayments().size)
+        assertEquals(1, runBlocking { repository.getAllPayments() }.size)
     }
 
     @Test
-    fun `disabledCategory_paymentIsNotCategorized`() {
+    @DisplayName("disabledCategory_paymentIsNotCategorized")
+    fun disabledCategoryPaymentIsNotCategorized() {
         val repository = InMemoryPaymentRepository()
 
         val sender = Sender(
             name = "Test Bank",
             addresses = mutableListOf("TESTBANK"),
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             ),
             enabled = true
@@ -221,22 +227,23 @@ class EnabledDisabledE2ETest {
 
         smsReceiver.onReceive(context, intent)
 
-        val payments = repository.getAllPayments()
+        val payments = runBlocking { repository.getAllPayments() }
         assertEquals(1, payments.size)
         // Payment should NOT be categorized because category is disabled
         assertNull(payments[0].categoryId)
     }
 
     @Test
-    fun `enabledCategory_paymentIsCategorized`() {
+    @DisplayName("enabledCategory_paymentIsCategorized")
+    fun enabledCategoryPaymentIsCategorized() {
         val repository = InMemoryPaymentRepository()
 
         val sender = Sender(
             name = "Test Bank",
             addresses = mutableListOf("TESTBANK"),
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             ),
             enabled = true
@@ -262,13 +269,14 @@ class EnabledDisabledE2ETest {
 
         smsReceiver.onReceive(context, intent)
 
-        val payments = repository.getAllPayments()
+        val payments = runBlocking { repository.getAllPayments() }
         assertEquals(1, payments.size)
         assertEquals("Shopping", payments[0].categoryId)
     }
 
     @Test
-    fun `multipleRules_onlyEnabledRulesAreUsed`() {
+    @DisplayName("multipleRules_onlyEnabledRulesAreUsed")
+    fun multipleRulesOnlyEnabledRulesAreUsed() {
         val repository = InMemoryPaymentRepository()
 
         val sender = Sender(
@@ -276,13 +284,13 @@ class EnabledDisabledE2ETest {
             addresses = mutableListOf("MULTIRULE"),
             rules = mutableListOf(
                 // Disabled rule that would match
-                PaymentRegexRule(
-                    regex = "NOMATCH (\\d+)",
+                Rule(
+                    pattern = "NOMATCH (\\d+)",
                     enabled = false
                 ),
                 // Enabled rule that will match
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})",
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})",
                     enabled = true
                 )
             ),
@@ -303,21 +311,22 @@ class EnabledDisabledE2ETest {
 
         smsReceiver.onReceive(context, intent)
 
-        val payments = repository.getAllPayments()
+        val payments = runBlocking { repository.getAllPayments() }
         assertEquals(1, payments.size)
         assertEquals(99.99, payments[0].amount)
     }
 
     @Test
-    fun `multipleSenders_onlyEnabledSendersAreUsed`() {
+    @DisplayName("multipleSenders_onlyEnabledSendersAreUsed")
+    fun multipleSendersOnlyEnabledSendersAreUsed() {
         val repository = InMemoryPaymentRepository()
 
         val disabledSender = Sender(
             name = "Disabled Bank",
             addresses = mutableListOf("BANK123"),
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             ),
             enabled = false
@@ -327,8 +336,8 @@ class EnabledDisabledE2ETest {
             name = "Enabled Bank",
             addresses = mutableListOf("BANK123"), // Same address
             rules = mutableListOf(
-                PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             ),
             enabled = true
@@ -349,11 +358,12 @@ class EnabledDisabledE2ETest {
         smsReceiver.onReceive(context, intent)
 
         // Should process because enabled sender matches
-        assertEquals(1, repository.getAllPayments().size)
+        assertEquals(1, runBlocking { repository.getAllPayments() }.size)
     }
 
     @Test
-    fun `configRepository_persistsEnabledState`() = runBlocking {
+    @DisplayName("configRepository_persistsEnabledState")
+    fun configRepositoryPersistsEnabledState() = runBlocking {
         // Add sender with enabled=false
         val sender = ConfigRepository.addSender()
         sender.name = "Persist Test Bank"
@@ -383,7 +393,8 @@ class EnabledDisabledE2ETest {
     }
 
     @Test
-    fun `configRepository_toggleEnabledState`() = runBlocking {
+    @DisplayName("configRepository_toggleEnabledState")
+    fun configRepositoryToggleEnabledState() = runBlocking {
         // Add sender with enabled=true
         val sender = ConfigRepository.addSender()
         sender.name = "Toggle Test Bank"

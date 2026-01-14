@@ -7,10 +7,12 @@ import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.parser.SmsReceiver
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -22,12 +24,31 @@ import org.junit.jupiter.api.TestInstance
 class SmsReceptionWithRoomE2ETest {
 
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    private lateinit var paymentRepository: RoomPaymentRepository
 
     private fun buildSmsIntent(sender: String, body: String): Intent =
         Intent("android.provider.Telephony.SMS_RECEIVED").apply {
             putExtra(SmsReceiver.EXTRA_TEST_SENDER, sender)
             putExtra(SmsReceiver.EXTRA_TEST_BODY, body)
         }
+
+    /**
+     * Wait for payments to appear in repository with polling.
+     * onReceive() spawns async coroutine, so we need to wait for it to complete.
+     */
+    private suspend fun waitForPayments(
+        expectedCount: Int,
+        timeoutMs: Long = 5000,
+        pollIntervalMs: Long = 100
+    ): List<Payment> {
+        val startTime = System.currentTimeMillis()
+        while (System.currentTimeMillis() - startTime < timeoutMs) {
+            val payments = paymentRepository.getAllPayments()
+            if (payments.size >= expectedCount) return payments
+            delay(pollIntervalMs)
+        }
+        return paymentRepository.getAllPayments()
+    }
 
     @BeforeEach
     fun setup() {
@@ -50,8 +71,8 @@ class SmsReceptionWithRoomE2ETest {
             sender.name = "Test Bank"
             sender.addresses = mutableListOf("BANK")
             sender.rules = mutableListOf(
-                com.example.banksmstracker.data.PaymentRegexRule(
-                    regex = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                com.example.banksmstracker.data.Rule(
+                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
                 )
             )
             ConfigRepository.updateSender(sender)
@@ -61,10 +82,15 @@ class SmsReceptionWithRoomE2ETest {
             category.merchants = mutableListOf("Amazon")
             ConfigRepository.updateCategory(category)
         }
+
+        paymentRepository = RoomPaymentRepository(
+            BankSmsDatabase.getInstance(context).paymentDao()
+        )
     }
 
     @Test
-    fun `validSms_isParsedAndSavedToDatabase`() {
+    @DisplayName("validSms_isParsedAndSavedToDatabase")
+    fun validSmsIsParsedAndSavedToDatabase() = runBlocking {
         val smsReceiver = SmsReceiver()
         // Use the actual processor from ConfigRepository
         val processor = ConfigRepository.getPaymentProcessor()
@@ -75,11 +101,8 @@ class SmsReceptionWithRoomE2ETest {
 
         smsReceiver.onReceive(context, intent)
 
-        // Verify payment was saved to database
-        val paymentRepository = RoomPaymentRepository(
-            BankSmsDatabase.getInstance(context).paymentDao()
-        )
-        val allPayments = paymentRepository.getAllPayments()
+        // Wait for async processing to complete
+        val allPayments = waitForPayments(1)
 
         assertEquals(1, allPayments.size)
         val payment: Payment = allPayments[0]
@@ -93,7 +116,8 @@ class SmsReceptionWithRoomE2ETest {
     }
 
     @Test
-    fun `duplicateSms_isNotSavedTwice`() {
+    @DisplayName("duplicateSms_isNotSavedTwice")
+    fun duplicateSmsIsNotSavedTwice() = runBlocking {
         val smsReceiver = SmsReceiver()
         val processor = ConfigRepository.getPaymentProcessor()
         smsReceiver.setPaymentProcessorForTest(processor)
@@ -103,11 +127,10 @@ class SmsReceptionWithRoomE2ETest {
 
         // Send same message twice
         smsReceiver.onReceive(context, intent)
+        waitForPayments(1)
         smsReceiver.onReceive(context, intent)
+        delay(500) // Give time for second processing attempt
 
-        val paymentRepository = RoomPaymentRepository(
-            BankSmsDatabase.getInstance(context).paymentDao()
-        )
         val allPayments = paymentRepository.getAllPayments()
 
         // Should only have one payment despite sending twice
@@ -115,7 +138,8 @@ class SmsReceptionWithRoomE2ETest {
     }
 
     @Test
-    fun `multipleValidSms_areAllSavedToDatabase`() {
+    @DisplayName("multipleValidSms_areAllSavedToDatabase")
+    fun multipleValidSmsAreAllSavedToDatabase() = runBlocking {
         val smsReceiver = SmsReceiver()
         val processor = ConfigRepository.getPaymentProcessor()
         smsReceiver.setPaymentProcessorForTest(processor)
@@ -124,12 +148,10 @@ class SmsReceptionWithRoomE2ETest {
         val body2 = "Payment 200.00 USD card 2222 Store2 at 20230908 bal 200.00"
 
         smsReceiver.onReceive(context, buildSmsIntent("BANK", body1))
+        waitForPayments(1)
         smsReceiver.onReceive(context, buildSmsIntent("BANK", body2))
 
-        val paymentRepository = RoomPaymentRepository(
-            BankSmsDatabase.getInstance(context).paymentDao()
-        )
-        val allPayments = paymentRepository.getAllPayments()
+        val allPayments = waitForPayments(2)
 
         assertEquals(2, allPayments.size)
         val amounts = allPayments.map { it.amount }.sorted()
@@ -137,14 +159,13 @@ class SmsReceptionWithRoomE2ETest {
     }
 
     @Test
-    fun `paymentIsCategorizedCorrectly`() {
+    @DisplayName("paymentIsCategorizedCorrectly")
+    fun paymentIsCategorizedCorrectly() = runBlocking {
         // Add TestStore to Shops category
-        runBlocking {
-            val category = ConfigRepository.getCategories().firstOrNull { it.name == "Shops" }
-            if (category != null) {
-                category.merchants.add("TestStore")
-                ConfigRepository.updateCategory(category)
-            }
+        val category = ConfigRepository.getCategories().firstOrNull { it.name == "Shops" }
+        if (category != null) {
+            category.merchants.add("TestStore")
+            ConfigRepository.updateCategory(category)
         }
 
         val smsReceiver = SmsReceiver()
@@ -154,10 +175,7 @@ class SmsReceptionWithRoomE2ETest {
         val body = "Payment 150.00 USD card 9999 TestStore at 20230909 bal 250.00"
         smsReceiver.onReceive(context, buildSmsIntent("BANK", body))
 
-        val paymentRepository = RoomPaymentRepository(
-            BankSmsDatabase.getInstance(context).paymentDao()
-        )
-        val allPayments = paymentRepository.getAllPayments()
+        val allPayments = waitForPayments(1)
 
         val testStorePayment = allPayments.find { it.merchant == "TestStore" }
         assertNotNull(testStorePayment)

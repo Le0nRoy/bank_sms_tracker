@@ -343,8 +343,8 @@ class PaymentRepositoryEdgeCaseTest {
     inner class OrderingAndRetrieval {
 
         @Test
-        @DisplayName("Payments are returned in insertion order")
-        fun `payments are returned in insertion order`() = runBlocking {
+        @DisplayName("Payments are returned in descending order by ID")
+        fun `payments are returned in descending order by ID`() = runBlocking {
             val payment1 = createTestPayment(amount = 1.0)
             val payment2 = createTestPayment(amount = 2.0)
             val payment3 = createTestPayment(amount = 3.0)
@@ -354,10 +354,10 @@ class PaymentRepositoryEdgeCaseTest {
             repository.savePayment(payment3, "msg-3", "SENDER")
 
             val all = repository.getAllPayments()
-            // InMemoryPaymentRepository returns in insertion order
-            assertEquals(1.0, all[0].amount)
+            // Payments are returned in descending order by ID (newest first)
+            assertEquals(3.0, all[0].amount)
             assertEquals(2.0, all[1].amount)
-            assertEquals(3.0, all[2].amount)
+            assertEquals(1.0, all[2].amount)
         }
 
         @Test
