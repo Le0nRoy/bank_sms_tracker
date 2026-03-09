@@ -118,19 +118,27 @@ fun second() { }
 # 1. Unit tests (fast, no emulator needed)
 ./gradlew test
 
-# 2. Appium E2E tests (requires emulator + Appium server)
+# 2. Appium E2E tests (requires real device or emulator + Appium server)
 # Start Appium (Docker - recommended):
-docker-compose -f docker-compose.appium.yml up -d
+docker compose up -d appium
+# Or start full cluster (Appium + Gradle build cache): docker compose up -d
 # Or native: appium
 
-# Verify emulator is running:
+# Install the app on the device (required before Appium tests):
+./gradlew installDebug
+
+# Verify device is connected:
 adb devices
 
 # Run Appium tests:
 ./gradlew testDebugUnitTest --tests "*.appium.*"
 
+# To install via Appium (useful in CI), set APPIUM_APK_PATH to the APK path on the Appium server:
+# APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest --tests "*.appium.*"
+
 # Stop Appium when done:
-docker-compose -f docker-compose.appium.yml down
+docker compose stop appium
+# Or tear down full cluster: docker compose down
 
 # 3. Connected Android tests (requires emulator):
 ./gradlew connectedAndroidTest
@@ -145,11 +153,13 @@ docker-compose -f docker-compose.appium.yml down
 **Makefile shortcuts:**
 ```bash
 make test          # Run unit tests
-make test-appium   # Run Appium tests (requires server)
-make test-android  # Run connected Android tests
-make coverage      # Run tests with coverage report
+make test-appium      # Install app + run Appium tests (requires server)
+make test-android     # Run connected Android tests
+make coverage         # Run tests with coverage report
 make appium-docker-start  # Start Appium in Docker
 make appium-docker-stop   # Stop Appium Docker
+make cluster-start    # Start full cluster (Appium + Gradle build cache)
+make cluster-stop     # Tear down all cluster services
 ```
 
 **Test Documentation:** See `docs/TESTING.md` for comprehensive test guide.

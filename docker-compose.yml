@@ -1,0 +1,57 @@
+# Unified testing and build infrastructure
+#
+# Services:
+#   appium        - Appium server for UI automation tests (requires real device or emulator on host)
+#   gradle-cache  - Gradle remote build cache node (speeds up incremental builds)
+#
+# Usage:
+#   Start all:   docker compose up -d
+#   Stop all:    docker compose down
+#   Start one:   docker compose up -d appium
+#   Logs:        docker compose logs -f
+#
+# Running Appium tests:
+#   1. Connect Android device (or start emulator)
+#   2. docker compose up -d appium
+#   3. ./gradlew testDebugUnitTest --tests "*.appium.*"
+#
+# Using remote build cache:
+#   1. docker compose up -d gradle-cache
+#   2. ./gradlew assembleDebug -PbuildCacheRemote=true
+
+services:
+
+  appium:
+    image: appium/appium:latest
+    container_name: appium-server
+    # host networking gives the container access to ADB on localhost (port 5037)
+    # and to the connected physical device via the host ADB daemon
+    network_mode: "host"
+    environment:
+      - APPIUM_LOG_LEVEL=info
+    volumes:
+      - ./app/build/outputs/apk:/apk:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:4723/status', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  gradle-cache:
+    image: gradle/build-cache-node:latest
+    container_name: gradle-build-cache
+    ports:
+      - "5071:5071"
+    volumes:
+      - gradle-cache-data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5071/api/v1/cache/info"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  gradle-cache-data:
+    name: banksms-gradle-cache

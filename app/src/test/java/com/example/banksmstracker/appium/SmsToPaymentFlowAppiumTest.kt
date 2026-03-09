@@ -36,7 +36,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
     @Order(1)
     @DisplayName("Setup: Create category for payments")
     fun createCategory() {
-        findByText("Categories").click()
+        clickButton("btnCategories")
         mediumWait()
 
         findById("fabAddCategory").click()
@@ -66,7 +66,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
     @Order(2)
     @DisplayName("Setup: Create sender with regex rule")
     fun createSenderWithRule() {
-        findByText("Senders").click()
+        clickButton("btnSenders")
         mediumWait()
 
         findById("fabAddSender").click()
@@ -130,7 +130,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
     @Order(4)
     @DisplayName("Navigate to Payments screen")
     fun navigateToPayments() {
-        findByText("Payments").click()
+        clickButton("btnPayments")
         mediumWait()
 
         // Verify we're on Payments screen by checking for the spinner or recycler
@@ -146,7 +146,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
     @Order(5)
     @DisplayName("Payments screen shows empty state when no payments")
     fun paymentsShowsEmptyState() {
-        findByText("Payments").click()
+        clickButton("btnPayments")
         mediumWait()
 
         // Check for empty state or payment list
@@ -162,7 +162,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
     @Order(6)
     @DisplayName("Payments screen has category filter")
     fun paymentsHasCategoryFilter() {
-        findByText("Payments").click()
+        clickButton("btnPayments")
         mediumWait()
 
         // Verify spinner exists
@@ -183,7 +183,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
     @Order(7)
     @DisplayName("Export CSV button is available")
     fun exportCsvButtonAvailable() {
-        findByText("Payments").click()
+        clickButton("btnPayments")
         mediumWait()
 
         assertTrue(elementExists("btnExportCsv"), "Should have Export CSV button")
@@ -227,7 +227,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
     @DisplayName("Complete user journey: Setup and view")
     fun completeUserJourney() {
         // 1. Create a new category
-        findByText("Categories").click()
+        clickButton("btnCategories")
         mediumWait()
 
         findById("fabAddCategory").click()
@@ -252,7 +252,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
         navigateToMain()
 
         // 2. Create a new sender
-        findByText("Senders").click()
+        clickButton("btnSenders")
         mediumWait()
 
         findById("fabAddSender").click()
@@ -265,7 +265,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
         navigateToMain()
 
         // 3. View payments (should be empty but screen should work)
-        findByText("Payments").click()
+        clickButton("btnPayments")
         mediumWait()
 
         assertTrue(
@@ -276,7 +276,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
         navigateToMain()
 
         // 4. Verify data persists
-        findByText("Categories").click()
+        clickButton("btnCategories")
         mediumWait()
 
         var foundGroceries = false

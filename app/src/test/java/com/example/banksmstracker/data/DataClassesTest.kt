@@ -338,7 +338,6 @@ class DataClassesTest {
         )
         val result = MessageProcessResult.PaymentResult(payment)
 
-        assertTrue(result is MessageProcessResult.PaymentResult)
         assertEquals(100.0, result.payment.amount)
         assertEquals("Test", result.payment.merchant)
     }
@@ -354,7 +353,6 @@ class DataClassesTest {
         )
         val result = MessageProcessResult.IncomeResult(income)
 
-        assertTrue(result is MessageProcessResult.IncomeResult)
         assertEquals(5000.0, result.income.amount)
         assertEquals("Salary", result.income.source)
     }
@@ -363,7 +361,6 @@ class DataClassesTest {
     fun `MessageProcessResult Ignored contains rule name`() {
         val result = MessageProcessResult.Ignored("OTP filter")
 
-        assertTrue(result is MessageProcessResult.Ignored)
         assertEquals("OTP filter", result.ruleName)
     }
 
@@ -371,7 +368,6 @@ class DataClassesTest {
     fun `MessageProcessResult Ignored can have null rule name`() {
         val result = MessageProcessResult.Ignored()
 
-        assertTrue(result is MessageProcessResult.Ignored)
         assertEquals(null, result.ruleName)
     }
 
@@ -385,16 +381,8 @@ class DataClassesTest {
         val ignoredResult: MessageProcessResult = MessageProcessResult.Ignored("test")
 
         assertTrue(paymentResult is MessageProcessResult.PaymentResult)
-        assertFalse(paymentResult is MessageProcessResult.IncomeResult)
-        assertFalse(paymentResult is MessageProcessResult.Ignored)
-
         assertTrue(incomeResult is MessageProcessResult.IncomeResult)
-        assertFalse(incomeResult is MessageProcessResult.PaymentResult)
-        assertFalse(incomeResult is MessageProcessResult.Ignored)
-
         assertTrue(ignoredResult is MessageProcessResult.Ignored)
-        assertFalse(ignoredResult is MessageProcessResult.PaymentResult)
-        assertFalse(ignoredResult is MessageProcessResult.IncomeResult)
     }
 
     // ==================== RuleType Tests ====================

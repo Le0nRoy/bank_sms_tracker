@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.os.Environment
 import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.runner.screenshot.Screenshot
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -149,11 +148,10 @@ object AndroidTestReporter {
      * Capture screenshot and return bytes.
      */
     internal fun captureScreenshotBytes(): ByteArray? = try {
-        val capture = Screenshot.capture()
-        val bitmap = capture.bitmap
+        val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
         val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-        stream.toByteArray()
+        bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        stream.toByteArray().takeIf { it.isNotEmpty() }
     } catch (e: Exception) {
         Log.w(TAG, "Failed to capture screenshot: ${e.message}")
         null

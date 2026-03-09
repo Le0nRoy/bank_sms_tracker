@@ -44,6 +44,15 @@ abstract class AppiumBaseTest {
         const val APPIUM_SERVER_URL = "http://127.0.0.1:4723"
         val DEFAULT_TIMEOUT: Duration = Duration.ofSeconds(10)
         val SHORT_TIMEOUT: Duration = Duration.ofSeconds(3)
+
+        /**
+         * Path to the APK on the Appium server (e.g. the Docker volume path /apk/debug/app-debug.apk).
+         * When set, Appium installs/reinstalls the APK before the session. When null, the app
+         * must already be installed on the device (noReset=true is used automatically).
+         *
+         * Override via env variable: APPIUM_APK_PATH=/apk/debug/app-debug.apk
+         */
+        val APK_PATH: String? = System.getenv("APPIUM_APK_PATH")
     }
 
     @BeforeAll
@@ -59,7 +68,13 @@ abstract class AppiumBaseTest {
             setAutomationName("UiAutomator2")
             setAppPackage(APP_PACKAGE)
             setAppActivity(APP_ACTIVITY)
-            setNoReset(false)
+            if (APK_PATH != null) {
+                setApp(APK_PATH)
+                setNoReset(false)
+            } else {
+                // App is pre-installed (e.g. via ./gradlew installDebug); just launch it
+                setNoReset(true)
+            }
             setFullReset(false)
             setNewCommandTimeout(Duration.ofSeconds(300))
         }
@@ -126,7 +141,12 @@ abstract class AppiumBaseTest {
                     setAutomationName("UiAutomator2")
                     setAppPackage(APP_PACKAGE)
                     setAppActivity(APP_ACTIVITY)
-                    setNoReset(false)
+                    if (APK_PATH != null) {
+                        setApp(APK_PATH)
+                        setNoReset(false)
+                    } else {
+                        setNoReset(true)
+                    }
                     setFullReset(false)
                     setNewCommandTimeout(Duration.ofSeconds(300))
                 }

@@ -2,7 +2,8 @@
 # Run `make help` to see all available targets
 
 .PHONY: help build clean lint test test-unit test-android test-appium test-all \
-        coverage install run appium-start appium-stop appium-docker-start appium-docker-stop
+        coverage install run appium-start appium-stop appium-docker-start appium-docker-stop \
+        cluster-start cluster-stop cluster-status
 
 # Default target
 .DEFAULT_GOAL := help
@@ -32,6 +33,9 @@ help: ## Show this help message
 	@echo ""
 	@echo "$(GREEN)Appium:$(NC)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E 'appium' | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
+	@echo ""
+	@echo "$(GREEN)Cluster (Docker):$(NC)"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E 'cluster' | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(GREEN)Other:$(NC)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -vE '(build|clean|install|lint|test|coverage|appium)' | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
@@ -74,9 +78,11 @@ test-unit: ## Run unit tests
 test-android: ## Run Android instrumented tests (requires emulator)
 	./gradlew connectedDebugAndroidTest --no-daemon
 
-test-appium: ## Run Appium UI tests (requires Appium server + emulator)
-	@echo "$(YELLOW)Note: Ensure Appium server is running and emulator is connected$(NC)"
-	./gradlew test --tests "*.appium.*" --no-daemon
+test-appium: ## Run Appium UI tests (requires Appium server + device/emulator)
+	@echo "$(YELLOW)Note: Ensure Appium server is running and device/emulator is connected$(NC)"
+	@# When Appium runs in Docker, pass APPIUM_APK_PATH so Appium installs fresh (clean state).
+	@# When running with a native Appium, install manually first: make install
+	APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest --tests "*.appium.*" --no-daemon
 
 test-all: lint test-unit test-android ## Run all tests (lint + unit + android)
 	@echo "$(GREEN)All tests completed!$(NC)"
@@ -113,13 +119,26 @@ appium-stop: ## Stop Appium server
 
 appium-docker-start: ## Start Appium server in Docker
 	@echo "$(BLUE)Starting Appium in Docker...$(NC)"
-	docker-compose -f docker-compose.appium.yml up -d
+	docker compose up -d appium
 	@sleep 5
 	@echo "$(GREEN)Appium Docker container started$(NC)"
 
 appium-docker-stop: ## Stop Appium Docker container
-	docker-compose -f docker-compose.appium.yml down
+	docker compose stop appium
 	@echo "$(YELLOW)Appium Docker container stopped$(NC)"
+
+cluster-start: ## Start all services (Appium + Gradle build cache)
+	@echo "$(BLUE)Starting full testing cluster...$(NC)"
+	docker compose up -d
+	@sleep 5
+	@echo "$(GREEN)Cluster started: Appium (4723) + Gradle build cache (5071)$(NC)"
+
+cluster-stop: ## Stop all services
+	docker compose down
+	@echo "$(YELLOW)All cluster services stopped$(NC)"
+
+cluster-status: ## Show cluster service status
+	docker compose ps
 
 appium-status: ## Check Appium server status
 	@curl -s http://localhost:4723/status | jq . || echo "$(RED)Appium server not running$(NC)"

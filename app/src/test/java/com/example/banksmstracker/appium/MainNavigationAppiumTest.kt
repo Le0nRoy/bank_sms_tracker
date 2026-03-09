@@ -111,7 +111,8 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         findById("btnCheckSenders").click()
         mediumWait()
 
-        // Check Senders screen should load
+        // Handle SMS permission dialog that CheckSendersActivity may show
+        handlePermissionDialogIfPresent()
         shortWait()
 
         driver.navigate().back()
