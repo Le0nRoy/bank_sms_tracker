@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
@@ -34,6 +35,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(1)
+    @Tag("smoke")
     @DisplayName("Setup: Create category for payments")
     fun createCategory() {
         clickButton("btnCategories")
@@ -64,6 +66,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(2)
+    @Tag("smoke")
     @DisplayName("Setup: Create sender with regex rule")
     fun createSenderWithRule() {
         clickButton("btnSenders")

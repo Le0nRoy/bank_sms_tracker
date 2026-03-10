@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
@@ -26,6 +27,7 @@ class CategoryCascadeAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(1)
+    @Tag("smoke")
     @DisplayName("Navigate to Categories screen")
     fun navigateToCategories() {
         findById("btnCategories").click()
@@ -43,6 +45,7 @@ class CategoryCascadeAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(2)
+    @Tag("smoke")
     @DisplayName("Re-categorize all button exists")
     fun recategorizeButtonExists() {
         findById("btnCategories").click()

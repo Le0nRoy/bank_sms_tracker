@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
@@ -35,6 +36,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(1)
+    @Tag("smoke")
     @DisplayName("Navigate to Regex Builder screen")
     fun navigateToRegexBuilder() {
         // Scroll to find Regex Builder button if needed
@@ -44,7 +46,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         // Verify we're on Regex Builder screen
         assertTrue(elementExists("etSampleSms"), "Should have sample SMS input")
         assertTrue(elementExists("etRegexPattern"), "Should have regex pattern input")
-        assertTrue(elementExists("btnTestRegex"), "Should have Test button")
+        assertTrue(elementExistsWithScroll("btnTestRegex"), "Should have Test button")
 
         navigateToMain()
     }
@@ -87,6 +89,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(4)
+    @Tag("smoke")
     @DisplayName("Test regex pattern with matching SMS")
     fun testRegexPatternMatching() {
         clickButton("btnRegexBuilder")
@@ -105,7 +108,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // Click test button
-        findById("btnTestRegex").click()
+        scrollToElementById("btnTestRegex").click()
         mediumWait()
 
         // Scroll to results area (may be below fold on small screens)
@@ -142,7 +145,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // Click test button
-        findById("btnTestRegex").click()
+        scrollToElementById("btnTestRegex").click()
         mediumWait()
 
         // Scroll to results area (may be below fold on small screens)
@@ -175,7 +178,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // Click test button
-        findById("btnTestRegex").click()
+        scrollToElementById("btnTestRegex").click()
         mediumWait()
 
         // Scroll to results area (may be below fold on small screens)
@@ -236,7 +239,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // Click test button
-        findById("btnTestRegex").click()
+        scrollToElementById("btnTestRegex").click()
         mediumWait()
 
         // Should show error or empty results
@@ -263,7 +266,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // Click test button
-        findById("btnTestRegex").click()
+        scrollToElementById("btnTestRegex").click()
         mediumWait()
 
         // Should show error or empty results
@@ -512,7 +515,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         clickButton("btnRegexBuilder")
         mediumWait()
 
-        val hasButton = elementExists("btnPresetDate") || elementExistsWithScroll("btnPresetDate")
+        val hasButton = try { scrollToPresetButton("btnPresetDate"); true } catch (e: Exception) { false }
         assertTrue(hasButton, "Should have preset date button")
 
         navigateToMain()
@@ -525,7 +528,7 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         clickButton("btnRegexBuilder")
         mediumWait()
 
-        val hasButton = elementExists("btnPresetTime") || elementExistsWithScroll("btnPresetTime")
+        val hasButton = try { scrollToPresetButton("btnPresetTime"); true } catch (e: Exception) { false }
         assertTrue(hasButton, "Should have preset time button")
 
         navigateToMain()
@@ -543,12 +546,8 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         regexInput.clear()
         shortWait()
 
-        // Click the date preset button (scroll to it if needed)
-        try {
-            scrollToElementById("btnPresetDate").click()
-        } catch (e: Exception) {
-            findById("btnPresetDate").click()
-        }
+        // Scroll to date preset button (inside HorizontalScrollView — needs two-step scroll)
+        scrollToPresetButton("btnPresetDate").click()
         shortWait()
 
         // Verify that clicking the preset appended something to the pattern field
@@ -573,12 +572,8 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         regexInput.clear()
         shortWait()
 
-        // Click the time preset button (scroll to it if needed)
-        try {
-            scrollToElementById("btnPresetTime").click()
-        } catch (e: Exception) {
-            findById("btnPresetTime").click()
-        }
+        // Scroll to time preset button (inside HorizontalScrollView — needs two-step scroll)
+        scrollToPresetButton("btnPresetTime").click()
         shortWait()
 
         // Verify that clicking the preset appended something to the pattern field

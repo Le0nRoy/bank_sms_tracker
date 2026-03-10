@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
@@ -42,6 +43,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(1)
+    @Tag("smoke")
     @DisplayName("Main screen displays app title")
     fun mainScreenDisplaysAppTitle() {
         assertTrue(elementExists("btnCategories"), "Main screen should be displayed")
@@ -49,6 +51,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(2)
+    @Tag("smoke")
     @DisplayName("Main screen has all navigation buttons")
     fun mainScreenHasAllNavigationButtons() {
         // Use button IDs for reliable detection (main screen is not scrollable)

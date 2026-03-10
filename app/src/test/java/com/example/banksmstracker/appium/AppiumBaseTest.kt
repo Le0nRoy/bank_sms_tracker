@@ -174,6 +174,33 @@ abstract class AppiumBaseTest {
     }
 
     /**
+     * Dismiss any Android system permission dialog that may be blocking the app.
+     * Uses a short timeout to avoid slowing down tests when no dialog is present.
+     */
+    protected fun dismissPermissionDialogIfPresent() {
+        try {
+            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(1))
+            // Android 10+ uses permissioncontroller; older uses packageinstaller
+            val denyIds = listOf(
+                "com.android.permissioncontroller:id/permission_deny_button",
+                "com.android.packageinstaller:id/permission_deny_button"
+            )
+            for (id in denyIds) {
+                val elements = driver.findElements(AppiumBy.id(id))
+                if (elements.isNotEmpty() && elements[0].isDisplayed) {
+                    elements[0].click()
+                    Thread.sleep(500)
+                    break
+                }
+            }
+        } catch (e: Exception) {
+            // No permission dialog present — normal case
+        } finally {
+            driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+        }
+    }
+
+    /**
      * Robust navigation to main screen with app restart fallback.
      */
     protected fun navigateToMainRobust() {
@@ -186,12 +213,16 @@ abstract class AppiumBaseTest {
             }
         }
 
+        // Dismiss any system permission dialog before checking screen state
+        dismissPermissionDialogIfPresent()
+
         // First try simple back navigation
         repeat(3) {
             if (isOnMainScreen()) return
             try {
                 driver.navigate().back()
                 Thread.sleep(1000)
+                dismissPermissionDialogIfPresent()
             } catch (e: org.openqa.selenium.remote.UnreachableBrowserException) {
                 // Driver died, try to reconnect
                 try {
@@ -212,6 +243,7 @@ abstract class AppiumBaseTest {
                 Thread.sleep(1000)
                 driver.activateApp(APP_PACKAGE)
                 Thread.sleep(2000)
+                dismissPermissionDialogIfPresent()
             } catch (e: Exception) {
                 // Ignore
             }
@@ -561,6 +593,29 @@ abstract class AppiumBaseTest {
         return driver.findElement(
             AppiumBy.androidUIAutomator(
                 "new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(new UiSelector().resourceId(\"$APP_PACKAGE:id/$resourceId\"))"
+            )
+        )
+    }
+
+    /**
+     * Scroll to a preset button that may be inside a HorizontalScrollView.
+     * Step 1: scroll the outer vertical container to make the preset row visible.
+     * Step 2: scroll the HorizontalScrollView horizontally to the button.
+     */
+    protected fun scrollToPresetButton(buttonId: String): WebElement {
+        // Step 1: scroll the outer ScrollView down to reveal the preset buttons row
+        try {
+            driver.findElement(
+                AppiumBy.androidUIAutomator(
+                    "new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(new UiSelector().resourceId(\"$APP_PACKAGE:id/layoutPresets\"))"
+                )
+            )
+            Thread.sleep(300)
+        } catch (e: Exception) { /* row already visible */ }
+        // Step 2: scroll horizontally within the HorizontalScrollView to the button
+        return driver.findElement(
+            AppiumBy.androidUIAutomator(
+                "new UiScrollable(new UiSelector().scrollable(true).className(\"android.widget.HorizontalScrollView\")).setAsHorizontalList().scrollIntoView(new UiSelector().resourceId(\"$APP_PACKAGE:id/$buttonId\"))"
             )
         )
     }

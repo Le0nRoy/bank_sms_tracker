@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
@@ -42,6 +43,7 @@ class SettingsAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(1)
+    @Tag("smoke")
     @DisplayName("Settings screen displays theme section")
     fun settingsScreenDisplaysThemeSection() {
         assertTrue(elementExists("radioGroupTheme"), "Theme radio group should exist")
@@ -52,6 +54,7 @@ class SettingsAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(2)
+    @Tag("smoke")
     @DisplayName("Settings screen displays language section")
     fun settingsScreenDisplaysLanguageSection() {
         assertTrue(elementExists("radioGroupLanguage"), "Language radio group should exist")

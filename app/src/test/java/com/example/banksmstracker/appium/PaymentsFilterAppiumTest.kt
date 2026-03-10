@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
@@ -27,6 +28,7 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(1)
+    @Tag("smoke")
     @DisplayName("Navigate to Payments screen")
     fun navigateToPaymentsScreen() {
         findById("btnPayments").click()
@@ -43,6 +45,7 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(2)
+    @Tag("smoke")
     @DisplayName("Sender filter spinner exists")
     fun senderFilterSpinnerExists() {
         findById("btnPayments").click()

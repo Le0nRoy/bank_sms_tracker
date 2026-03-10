@@ -1,7 +1,7 @@
 # BankSMSTracker Makefile
 # Run `make help` to see all available targets
 
-.PHONY: help build clean lint test test-unit test-android test-appium test-all \
+.PHONY: help build clean lint test test-unit test-android test-appium test-smoke test-all \
         coverage install run appium-start appium-stop appium-docker-start appium-docker-stop \
         cluster-start cluster-stop cluster-status
 
@@ -83,6 +83,29 @@ test-appium: ## Run Appium UI tests (requires Appium server + device/emulator)
 	@# When Appium runs in Docker, pass APPIUM_APK_PATH so Appium installs fresh (clean state).
 	@# When running with a native Appium, install manually first: make install
 	APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest --tests "*.appium.*" --no-daemon
+
+test-smoke: ## Run smoke tests only — 1-2 tests per feature (requires Appium server + device/emulator)
+	@echo "$(YELLOW)Running smoke tests (1-2 per feature)...$(NC)"
+	APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest \
+		--tests "*.appium.MainNavigationAppiumTest.mainScreenDisplaysAppTitle" \
+		--tests "*.appium.MainNavigationAppiumTest.mainScreenHasAllNavigationButtons" \
+		--tests "*.appium.RegexBuilderAppiumTest.navigateToRegexBuilder" \
+		--tests "*.appium.RegexBuilderAppiumTest.testRegexPatternMatching" \
+		--tests "*.appium.CategoryManagementAppiumTest.navigateToCategoriesScreen" \
+		--tests "*.appium.CategoryManagementAppiumTest.addNewCategoryWithName" \
+		--tests "*.appium.SenderManagementAppiumTest.navigateToSendersScreen" \
+		--tests "*.appium.SenderManagementAppiumTest.addNewSenderWithName" \
+		--tests "*.appium.SettingsAppiumTest.settingsScreenDisplaysThemeSection" \
+		--tests "*.appium.SettingsAppiumTest.settingsScreenDisplaysLanguageSection" \
+		--tests "*.appium.BugReportAppiumTest.navigateToBugReport" \
+		--tests "*.appium.BugReportAppiumTest.enterBugDescription" \
+		--tests "*.appium.CategoryCascadeAppiumTest.navigateToCategories" \
+		--tests "*.appium.CategoryCascadeAppiumTest.recategorizeButtonExists" \
+		--tests "*.appium.PaymentsFilterAppiumTest.navigateToPaymentsScreen" \
+		--tests "*.appium.PaymentsFilterAppiumTest.senderFilterSpinnerExists" \
+		--tests "*.appium.SmsToPaymentFlowAppiumTest.createCategory" \
+		--tests "*.appium.SmsToPaymentFlowAppiumTest.createSenderWithRule" \
+		--no-daemon
 
 test-all: lint test-unit test-android ## Run all tests (lint + unit + android)
 	@echo "$(GREEN)All tests completed!$(NC)"

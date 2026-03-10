@@ -93,16 +93,76 @@ fun second() { }
 
 ## Testing Expectations
 
-- **Frameworks**  
-  - Unit tests use JUnit 5 + Kotlin test assertions; Mockito handles Android dependencies (`app/src/test/java/com/example/banksmstracker/repository/ConfigRepositoryTest.kt`).  
+- **Frameworks**
+  - Unit tests use JUnit 5 + Kotlin test assertions; Mockito handles Android dependencies (`app/src/test/java/com/example/banksmstracker/repository/ConfigRepositoryTest.kt`).
   - Instrumented tests also rely on JUnit 5 via the Mannodermaus plugin (`app/build.gradle.kts`).
-- **SMS scenarios**  
-  - Parser tests load cases from `app/src/test/resources/sms_tests.json`; extend that file and reuse `SmsTestLoader` when adding cases.  
+- **SMS scenarios**
+  - Parser tests load cases from `app/src/test/resources/sms_tests.json`; extend that file and reuse `SmsTestLoader` when adding cases.
   - `SmsReceptionE2ETest` constructs intents via the new extras; keep helper methods aligned if receiver signatures change.
-- **Config export**  
+- **Config export**
   - Sharing/exporting uses `FileProvider` and JSON from `ConfigRepository.shareConfigFile`; respect cache-dir writes and grant URI permissions when adding new share flows.
-- **Utilities**  
+- **Utilities**
   - `send_sms_tests.sh` replays JSON cases against a running emulator using `adb emu sms send`; ensure new scenarios are compatible with this script (no spaces in sender addresses, or adjust script accordingly).
+
+## Testing Strategy (Token-Efficient)
+
+### Rule 1 — Run only affected tests during development
+**NEVER run the full suite when iterating on a feature or fixing a bug.**
+Only run the test class(es) directly related to the code changed:
+```bash
+# Fix in RegexBuilderActivity → run only RegexBuilder tests
+APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest \
+  --tests "*.appium.RegexBuilderAppiumTest" --no-daemon
+
+# Fix in CategoryManagement → run only Category tests
+APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest \
+  --tests "*.appium.CategoryManagementAppiumTest" --no-daemon
+
+# Fix failing tests by name (most efficient — runs only what failed)
+APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest \
+  --tests "*.appium.RegexBuilderAppiumTest.clearSampleSmsButtonExists" \
+  --tests "*.appium.RegexBuilderAppiumTest.presetDateButtonExists" --no-daemon
+```
+
+### Rule 2 — Smoke tests
+Each feature has 1-2 smoke tests annotated with `@Tag("smoke")` that verify the feature works at a high level. Run smoke tests to quickly check that changes didn't break unrelated features.
+
+**Smoke tests per feature** (annotated `@Tag("smoke")` in each class):
+| Feature | Smoke tests |
+|---------|------------|
+| Main Navigation | `mainScreenDisplaysAppTitle`, `mainScreenHasAllNavigationButtons` |
+| Regex Builder | `navigateToRegexBuilder`, `testRegexPatternMatching` |
+| Category Management | `navigateToCategoriesScreen`, `addNewCategoryWithName` |
+| Sender Management | `navigateToSendersScreen`, `addNewSenderWithName` |
+| Settings | `settingsScreenDisplaysThemeSection`, `settingsScreenDisplaysLanguageSection` |
+| Bug Report | `navigateToBugReport`, `enterBugDescription` |
+| Category Cascade | `navigateToCategories`, `recategorizeButtonExists` |
+| Payments Filter | `navigateToPaymentsScreen`, `senderFilterSpinnerExists` |
+| SMS-to-Payment Flow | `createCategory`, `createSenderWithRule` |
+
+```bash
+make test-smoke   # Run all smoke tests (~18 tests, ~10 min vs ~60 min full suite)
+```
+
+### Rule 3 — New feature testing
+When implementing a new feature, tests **must include both**:
+1. **Full feature test class** — comprehensive coverage of all new functionality
+2. **Smoke tests** — 1-2 `@Tag("smoke")` tests added to the new test class for future smoke runs
+
+### Rule 4 — Mandatory testing order
+Always follow this sequence when verifying any change:
+
+```
+1. Static analysis  →  ./gradlew ktlintCheck (or review changed files)
+2. Feature tests    →  run only the test class(es) for changed code
+3. Smoke tests      →  make test-smoke  (verify no regressions in other features)
+4. Full suite       →  make test-appium  (only before merging / on explicit request)
+```
+
+**Step 4 (full suite) is only run when:**
+- Explicitly requested by the user
+- Preparing to merge a branch
+- After a broad refactoring that touches multiple features
 
 ## Operational Notes
 
@@ -153,7 +213,8 @@ docker compose stop appium
 **Makefile shortcuts:**
 ```bash
 make test          # Run unit tests
-make test-appium      # Install app + run Appium tests (requires server)
+make test-smoke       # Run smoke tests only (~18 Appium tests, fast regression check)
+make test-appium      # Run full Appium suite (requires server)
 make test-android     # Run connected Android tests
 make coverage         # Run tests with coverage report
 make appium-docker-start  # Start Appium in Docker

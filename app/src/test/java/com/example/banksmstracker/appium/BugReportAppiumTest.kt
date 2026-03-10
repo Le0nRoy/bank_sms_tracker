@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
@@ -35,6 +36,7 @@ class BugReportAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(1)
+    @Tag("smoke")
     @DisplayName("Navigate to Bug Report screen")
     fun navigateToBugReport() {
         // Scroll to find Bug Report button if needed
@@ -54,6 +56,7 @@ class BugReportAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(2)
+    @Tag("smoke")
     @DisplayName("Enter bug description")
     fun enterBugDescription() {
         findById("btnBugReport").click()

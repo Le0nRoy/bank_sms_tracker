@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
@@ -39,6 +40,7 @@ class CategoryManagementAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(1)
+    @Tag("smoke")
     @DisplayName("Navigate to Categories screen from main menu")
     fun navigateToCategoriesScreen() {
         // Click on Categories button from main activity
@@ -51,6 +53,7 @@ class CategoryManagementAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(2)
+    @Tag("smoke")
     @DisplayName("Add new category with name")
     fun addNewCategoryWithName() {
         clickButton("btnCategories")
