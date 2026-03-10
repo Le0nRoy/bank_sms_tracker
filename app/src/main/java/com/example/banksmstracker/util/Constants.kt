@@ -13,28 +13,17 @@ object Constants {
     }
 
     /**
-     * Regex group indices for payment parsing.
-     * These indices correspond to capture groups in payment regex patterns.
+     * Named regex group constants for payment parsing.
+     * These names correspond to Java named capture groups in payment regex patterns.
      */
     object RegexGroups {
-        const val AMOUNT = 1
-        const val CURRENCY = 2
-        const val CARD = 3
-        const val MERCHANT = 4
-        const val TIMESTAMP = 5
-        const val BALANCE = 6
-
-        val GROUP_NAMES = mapOf(
-            AMOUNT to "amount",
-            CURRENCY to "currency",
-            CARD to "card",
-            MERCHANT to "merchant",
-            TIMESTAMP to "timestamp",
-            BALANCE to "balance"
-        )
-
-        fun getGroupName(index: Int): String =
-            GROUP_NAMES[index] ?: "extra"
+        const val AMOUNT = "amount"
+        const val CURRENCY = "currency"
+        const val CARD = "card"
+        const val MERCHANT = "merchant"
+        const val DATE = "date"
+        const val TIME = "time"
+        const val BALANCE = "balance"
     }
 
     /**

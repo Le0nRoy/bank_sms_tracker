@@ -50,7 +50,7 @@
     <string name="sample_sms_hint">Вставьте пример SMS сообщения…</string>
     <string name="regex_pattern_label">Regex шаблон</string>
     <string name="regex_pattern_hint">Введите regex шаблон…</string>
-    <string name="regex_groups_help">Группы: (1)сумма (2)валюта (3)карта (4)продавец (5)время (6)баланс</string>
+    <string name="regex_groups_help">Именованные группы: (?&lt;amount&gt;…) (?&lt;currency&gt;…) (?&lt;card&gt;…) (?&lt;merchant&gt;…) (?&lt;date&gt;…) (?&lt;time&gt;…) (?&lt;balance&gt;…)</string>
     <string name="test_regex">Тестировать шаблон</string>
     <string name="results_label">Результаты</string>
     <string name="error_empty_sms">Пожалуйста, введите SMS сообщение</string>
@@ -229,7 +229,8 @@
     <string name="preset_currency">Валюта</string>
     <string name="preset_card">Карта</string>
     <string name="preset_merchant">Продавец</string>
-    <string name="preset_timestamp">Время</string>
+    <string name="preset_date">Дата</string>
+    <string name="preset_time">Время</string>
     <string name="preset_balance">Баланс</string>
 
     <!-- Unregistered sender -->
@@ -247,7 +248,7 @@
     <string name="by_category">По категориям:</string>
     <string name="card_display">Карта: ****%1$s</string>
     <string name="unknown_error">Неизвестная ошибка</string>
-    <string name="summary_processed">Итого: %1$d обработано, %2$d ошибок</string>
+    <string name="summary_processed">Итого: %1$d обработано, %2$d ошибок, %3$d проигнорировано</string>
     <string name="category_display">Категория: %1$s</string>
     <string name="from_sender">От: %1$s</string>
     <string name="sms_permission_denied_apply">Нет разрешения на SMS. Невозможно применить правила.</string>

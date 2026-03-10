@@ -418,4 +418,176 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
 
         navigateToMain()
     }
+
+    // ==================== Phase 1: Clear Buttons and Date/Time Presets ====================
+
+    @Test
+    @Order(18)
+    @DisplayName("Clear sample SMS button is displayed")
+    fun clearSampleSmsButtonExists() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        assertTrue(elementExists("btnClearSampleSms"), "Should have Clear Sample SMS button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(19)
+    @DisplayName("Clear regex pattern button is displayed")
+    fun clearRegexPatternButtonExists() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        assertTrue(elementExists("btnClearRegexPattern"), "Should have Clear Regex Pattern button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(20)
+    @DisplayName("Clear sample SMS button clears the SMS field")
+    fun clearSampleSmsButtonClearsField() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        // Enter some text in the SMS field
+        val smsInput = findById("etSampleSms")
+        smsInput.clear()
+        smsInput.sendKeys("Sample payment message 100.00 USD")
+        shortWait()
+
+        // Verify text was entered
+        assertTrue(smsInput.text.isNotEmpty(), "SMS field should have text before clearing")
+
+        // Click the clear button
+        findById("btnClearSampleSms").click()
+        shortWait()
+
+        // Verify the field is cleared
+        val textAfterClear = findById("etSampleSms").text
+        assertTrue(
+            textAfterClear.isEmpty() || textAfterClear == findById("etSampleSms").getAttribute("hint"),
+            "SMS field should be empty after clicking clear"
+        )
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(21)
+    @DisplayName("Clear regex pattern button clears the pattern field")
+    fun clearRegexPatternButtonClearsField() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        // Enter some text in the regex pattern field
+        val regexInput = findById("etRegexPattern")
+        regexInput.clear()
+        regexInput.sendKeys("Payment (\\d+\\.\\d{2})")
+        shortWait()
+
+        // Verify text was entered
+        assertTrue(regexInput.text.isNotEmpty(), "Regex field should have text before clearing")
+
+        // Click the clear button
+        findById("btnClearRegexPattern").click()
+        shortWait()
+
+        // Verify the field is cleared
+        val textAfterClear = findById("etRegexPattern").text
+        assertTrue(
+            textAfterClear.isEmpty() || textAfterClear == findById("etRegexPattern").getAttribute("hint"),
+            "Regex pattern field should be empty after clicking clear"
+        )
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(22)
+    @DisplayName("Preset date button is displayed")
+    fun presetDateButtonExists() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        val hasButton = elementExists("btnPresetDate") || elementExistsWithScroll("btnPresetDate")
+        assertTrue(hasButton, "Should have preset date button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(23)
+    @DisplayName("Preset time button is displayed")
+    fun presetTimeButtonExists() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        val hasButton = elementExists("btnPresetTime") || elementExistsWithScroll("btnPresetTime")
+        assertTrue(hasButton, "Should have preset time button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(24)
+    @DisplayName("Preset date button appends date pattern to regex field")
+    fun presetDateButtonAppendsPattern() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        // Ensure regex field is empty first
+        val regexInput = findById("etRegexPattern")
+        regexInput.clear()
+        shortWait()
+
+        // Click the date preset button (scroll to it if needed)
+        try {
+            scrollToElementById("btnPresetDate").click()
+        } catch (e: Exception) {
+            findById("btnPresetDate").click()
+        }
+        shortWait()
+
+        // Verify that clicking the preset appended something to the pattern field
+        val patternText = findById("etRegexPattern").text
+        assertTrue(
+            patternText.isNotEmpty(),
+            "Date preset button should append a date pattern to the regex field"
+        )
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(25)
+    @DisplayName("Preset time button appends time pattern to regex field")
+    fun presetTimeButtonAppendsPattern() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        // Ensure regex field is empty first
+        val regexInput = findById("etRegexPattern")
+        regexInput.clear()
+        shortWait()
+
+        // Click the time preset button (scroll to it if needed)
+        try {
+            scrollToElementById("btnPresetTime").click()
+        } catch (e: Exception) {
+            findById("btnPresetTime").click()
+        }
+        shortWait()
+
+        // Verify that clicking the preset appended something to the pattern field
+        val patternText = findById("etRegexPattern").text
+        assertTrue(
+            patternText.isNotEmpty(),
+            "Time preset button should append a time pattern to the regex field"
+        )
+
+        navigateToMain()
+    }
 }

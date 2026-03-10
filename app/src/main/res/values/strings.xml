@@ -50,7 +50,7 @@
     <string name="sample_sms_hint">Paste a sample SMS message here…</string>
     <string name="regex_pattern_label">Regex Pattern</string>
     <string name="regex_pattern_hint">Enter your regex pattern here…</string>
-    <string name="regex_groups_help">Groups: (1)amount (2)currency (3)card (4)merchant (5)timestamp (6)balance</string>
+    <string name="regex_groups_help">Named groups: (?&lt;amount&gt;…) (?&lt;currency&gt;…) (?&lt;card&gt;…) (?&lt;merchant&gt;…) (?&lt;date&gt;…) (?&lt;time&gt;…) (?&lt;balance&gt;…)</string>
     <string name="test_regex">Test Pattern</string>
     <string name="results_label">Results</string>
     <string name="error_empty_sms">Please enter a sample SMS message</string>
@@ -229,7 +229,8 @@
     <string name="preset_currency">Currency</string>
     <string name="preset_card">Card</string>
     <string name="preset_merchant">Merchant</string>
-    <string name="preset_timestamp">Timestamp</string>
+    <string name="preset_date">Date</string>
+    <string name="preset_time">Time</string>
     <string name="preset_balance">Balance</string>
 
     <!-- Unregistered sender -->
@@ -247,7 +248,7 @@
     <string name="by_category">By Category:</string>
     <string name="card_display">Card: ****%1$s</string>
     <string name="unknown_error">Unknown error</string>
-    <string name="summary_processed">Summary: %1$d parsed, %2$d failed</string>
+    <string name="summary_processed">Summary: %1$d parsed, %2$d failed, %3$d ignored</string>
     <string name="category_display">Category: %1$s</string>
     <string name="from_sender">From: %1$s</string>
     <string name="sms_permission_denied_apply">SMS permission denied. Cannot apply rules.</string>

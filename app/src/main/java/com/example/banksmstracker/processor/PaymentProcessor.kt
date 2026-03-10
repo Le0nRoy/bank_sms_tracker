@@ -8,6 +8,7 @@ import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.PaymentRepository
+import com.example.banksmstracker.util.Constants
 
 class UnparsedMessageException(message: String) : Exception("Cannot parse message: $message")
 
@@ -20,6 +21,12 @@ class PaymentProcessor(
 ) {
     companion object {
         private const val TAG = "PaymentProcessor"
+
+        private fun MatchResult.namedGroup(name: String): String? = try {
+            groups[name]?.value
+        } catch (e: IllegalArgumentException) {
+            null
+        }
     }
 
     // Filter to only enabled senders and categories
@@ -70,18 +77,19 @@ class PaymentProcessor(
             val pattern = rule.regexPattern
             val match = pattern.find(message) ?: continue
 
-            // Validate that regex has at least 6 capture groups
-            if (match.groupValues.size < 7) {
-                Log.w(TAG, "Payment rule has insufficient groups (${match.groupValues.size - 1}), need 6")
-                continue
-            }
+            val amount = match.namedGroup(Constants.RegexGroups.AMOUNT)?.toDoubleOrNull()
+            val currency = match.namedGroup(Constants.RegexGroups.CURRENCY) ?: ""
+            val card = match.namedGroup(Constants.RegexGroups.CARD)
+            val merchant = match.namedGroup(Constants.RegexGroups.MERCHANT)
+            val dateStr = match.namedGroup(Constants.RegexGroups.DATE)
+            val timeStr = match.namedGroup(Constants.RegexGroups.TIME)
+            val balance = match.namedGroup(Constants.RegexGroups.BALANCE)?.toDoubleOrNull()
 
-            val amount = match.groupValues.getOrNull(1)?.toDoubleOrNull()
-            val currency = match.groupValues.getOrNull(2) ?: ""
-            val card = match.groupValues.getOrNull(3)
-            val merchant = match.groupValues.getOrNull(4)
-            val timestamp = match.groupValues.getOrNull(5)
-            val balance = match.groupValues.getOrNull(6)?.toDoubleOrNull()
+            val timestamp = when {
+                dateStr != null && timeStr != null -> "$dateStr $timeStr"
+                dateStr != null -> dateStr
+                else -> null
+            }
 
             if (amount != null) {
                 return Payment(
@@ -106,17 +114,18 @@ class PaymentProcessor(
             val pattern = rule.regexPattern
             val match = pattern.find(message) ?: continue
 
-            // Income rules also expect 6 groups like payment rules
-            if (match.groupValues.size < 7) {
-                Log.w(TAG, "Income rule has insufficient groups (${match.groupValues.size - 1}), need 6")
-                continue
-            }
+            val amount = match.namedGroup(Constants.RegexGroups.AMOUNT)?.toDoubleOrNull()
+            val currency = match.namedGroup(Constants.RegexGroups.CURRENCY) ?: ""
+            val source = match.namedGroup(Constants.RegexGroups.MERCHANT)
+            val dateStr = match.namedGroup(Constants.RegexGroups.DATE)
+            val timeStr = match.namedGroup(Constants.RegexGroups.TIME)
+            val balance = match.namedGroup(Constants.RegexGroups.BALANCE)?.toDoubleOrNull()
 
-            val amount = match.groupValues.getOrNull(1)?.toDoubleOrNull()
-            val currency = match.groupValues.getOrNull(2) ?: ""
-            val source = match.groupValues.getOrNull(4) // source in place of merchant
-            val timestamp = match.groupValues.getOrNull(5)
-            val balance = match.groupValues.getOrNull(6)?.toDoubleOrNull()
+            val timestamp = when {
+                dateStr != null && timeStr != null -> "$dateStr $timeStr"
+                dateStr != null -> dateStr
+                else -> null
+            }
 
             if (amount != null) {
                 return Income(

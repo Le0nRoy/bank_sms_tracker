@@ -15,6 +15,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ScrollView
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -55,8 +56,16 @@ class RegexBuilderActivity : BaseActivity() {
     private lateinit var btnPresetCurrency: Button
     private lateinit var btnPresetCard: Button
     private lateinit var btnPresetMerchant: Button
-    private lateinit var btnPresetTimestamp: Button
+    private lateinit var btnPresetDate: Button
+    private lateinit var btnPresetTime: Button
     private lateinit var btnPresetBalance: Button
+
+    // Clear buttons
+    private lateinit var btnClearSampleSms: Button
+    private lateinit var btnClearRegexPattern: Button
+
+    // Scroll container
+    private lateinit var scrollView: ScrollView
 
     private var senders: List<Sender> = emptyList()
     private var smsMessages: List<SmsMessage> = emptyList()
@@ -69,28 +78,14 @@ class RegexBuilderActivity : BaseActivity() {
 
     data class SmsMessage(val address: String, val body: String, val date: Long = 0)
 
-    /**
-     * Regex presets for common pattern components.
-     * These are extracted from the default TBC Bank rule pattern.
-     */
     class RegexPresets {
-        // Amount: captures decimal numbers like "123.45"
-        val amount = "(\\d+(?:[.]\\d{2}))"
-
-        // Currency: captures 3-letter currency codes like "GEL", "USD"
-        val currency = "([A-Z]{3})"
-
-        // Card: captures card number/identifier (non-greedy any characters)
-        val card = "(.+?)"
-
-        // Merchant: captures merchant name (any characters until next field)
-        val merchant = "(.+?)"
-
-        // Timestamp: captures date-time in format "DD/MM/YYYY HH:MM:SS"
-        val timestamp = "(\\d{2}/\\d{2}/\\d{4}\\s+\\d{2}:\\d{2}:\\d{2})"
-
-        // Balance: captures decimal numbers (same as amount)
-        val balance = "(\\d+(?:[.]\\d{2}))"
+        val amount = "(?<amount>\\d+(?:[.]\\d{2}))"
+        val currency = "(?<currency>[A-Z]{3})"
+        val card = "(?<card>.+?)"
+        val merchant = "(?<merchant>.+?)"
+        val date = "(?<date>\\d{2}/\\d{2}/\\d{4})"
+        val time = "(?<time>\\d{2}:\\d{2}:\\d{2})"
+        val balance = "(?<balance>\\d+(?:[.]\\d{2}))"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,8 +118,16 @@ class RegexBuilderActivity : BaseActivity() {
         btnPresetCurrency = findViewById(R.id.btnPresetCurrency)
         btnPresetCard = findViewById(R.id.btnPresetCard)
         btnPresetMerchant = findViewById(R.id.btnPresetMerchant)
-        btnPresetTimestamp = findViewById(R.id.btnPresetTimestamp)
+        btnPresetDate = findViewById(R.id.btnPresetDate)
+        btnPresetTime = findViewById(R.id.btnPresetTime)
         btnPresetBalance = findViewById(R.id.btnPresetBalance)
+
+        // Initialize clear buttons
+        btnClearSampleSms = findViewById(R.id.btnClearSampleSms)
+        btnClearRegexPattern = findViewById(R.id.btnClearRegexPattern)
+
+        // Initialize scroll container for auto-scroll on focus
+        scrollView = findViewById(R.id.scrollViewRegexBuilder)
 
         // Setup rule type spinner
         val ruleTypes = listOf(
@@ -167,6 +170,18 @@ class RegexBuilderActivity : BaseActivity() {
             }
         }
 
+        // Clear buttons
+        btnClearSampleSms.setOnClickListener { etSampleSms.setText("") }
+        btnClearRegexPattern.setOnClickListener { etRegexPattern.setText("") }
+
+        // Auto-scroll focused fields to top
+        etSampleSms.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) scrollView.post { scrollView.smoothScrollTo(0, v.top) }
+        }
+        etRegexPattern.setOnFocusChangeListener { v, hasFocus ->
+            if (hasFocus) scrollView.post { scrollView.smoothScrollTo(0, v.top) }
+        }
+
         // Setup preset button listeners
         setupPresetListeners()
     }
@@ -176,7 +191,8 @@ class RegexBuilderActivity : BaseActivity() {
         btnPresetCurrency.setOnClickListener { insertPresetAtCursor(regexPresets.currency) }
         btnPresetCard.setOnClickListener { insertPresetAtCursor(regexPresets.card) }
         btnPresetMerchant.setOnClickListener { insertPresetAtCursor(regexPresets.merchant) }
-        btnPresetTimestamp.setOnClickListener { insertPresetAtCursor(regexPresets.timestamp) }
+        btnPresetDate.setOnClickListener { insertPresetAtCursor(regexPresets.date) }
+        btnPresetTime.setOnClickListener { insertPresetAtCursor(regexPresets.time) }
         btnPresetBalance.setOnClickListener { insertPresetAtCursor(regexPresets.balance) }
     }
 
@@ -483,7 +499,7 @@ class RegexBuilderActivity : BaseActivity() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position > 0 && position <= rules.size) {
                     val selectedRule = rules[position - 1]
-                    etRegexPattern.setText(selectedRule.pattern)
+                    etRegexPattern.setText(decodePattern(selectedRule.pattern))
                 }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -498,8 +514,14 @@ class RegexBuilderActivity : BaseActivity() {
         }
     }
 
+    private fun encodePattern(raw: String): String = raw.replace(" ", "\\s")
+
+    private fun decodePattern(stored: String): String = stored.replace("\\s", " ")
+
     private fun saveRegexToSender() {
-        val regexPattern = etRegexPattern.text.toString().trim()
+        val regexPattern = encodePattern(
+            etRegexPattern.text.toString().trim().replace("\n", "").replace("\r", "")
+        )
 
         if (regexPattern.isBlank()) {
             Toast.makeText(this, R.string.error_empty_pattern, Toast.LENGTH_SHORT).show()
@@ -624,23 +646,42 @@ class RegexBuilderActivity : BaseActivity() {
                 result.append("Full match:\n")
                 result.append("  \"${match.value}\"\n\n")
 
-                if (match.groupValues.size > 1) {
+                val namedGroups = listOf(
+                    Constants.RegexGroups.AMOUNT,
+                    Constants.RegexGroups.CURRENCY,
+                    Constants.RegexGroups.CARD,
+                    Constants.RegexGroups.MERCHANT,
+                    Constants.RegexGroups.DATE,
+                    Constants.RegexGroups.TIME,
+                    Constants.RegexGroups.BALANCE,
+                )
+                val capturedNamed = namedGroups.mapNotNull { name ->
+                    namedGroup(match, name)?.let { name to it }
+                }
+
+                if (capturedNamed.isNotEmpty()) {
                     result.append("Captured groups:\n")
-                    for (i in 1 until match.groupValues.size) {
-                        val groupValue = match.groupValues[i]
-                        val groupName = getGroupName(i)
-                        result.append("  Group $i ($groupName):\n")
-                        result.append("    \"$groupValue\"\n")
+                    for ((name, value) in capturedNamed) {
+                        result.append("  ($name):\n")
+                        result.append("    \"$value\"\n")
                     }
                     result.append("\n")
 
                     result.append("Payment preview:\n")
                     result.append("-".repeat(40))
                     result.append("\n")
-                    result.append(buildPaymentPreview(match.groupValues))
+                    result.append(buildPaymentPreview(match))
+                } else if (match.groupValues.size > 1) {
+                    result.append("Captured groups (positional):\n")
+                    for (i in 1 until match.groupValues.size) {
+                        result.append("  Group $i:\n")
+                        result.append("    \"${match.groupValues[i]}\"\n")
+                    }
+                    result.append("\n")
+                    result.append("Tip: Use named groups like (?<amount>...) for payment preview.\n")
                 } else {
                     result.append("No captured groups.\n")
-                    result.append("Use parentheses () to capture groups.\n")
+                    result.append("Use named groups like (?<amount>...) to capture fields.\n")
                 }
             } else {
                 result.append("NO MATCH\n")
@@ -671,18 +712,28 @@ class RegexBuilderActivity : BaseActivity() {
         }
     }
 
-    private fun getGroupName(index: Int): String =
-        Constants.RegexGroups.getGroupName(index)
+    private fun namedGroup(match: MatchResult, name: String): String? = try {
+        match.groups[name]?.value
+    } catch (e: IllegalArgumentException) {
+        null
+    }
 
-    private fun buildPaymentPreview(groupValues: List<String>): String {
+    private fun buildPaymentPreview(match: MatchResult): String {
         val preview = StringBuilder()
 
-        val amount = groupValues.getOrNull(1)?.toDoubleOrNull()
-        val currency = groupValues.getOrNull(2) ?: ""
-        val card = groupValues.getOrNull(3) ?: ""
-        val merchant = groupValues.getOrNull(4) ?: ""
-        val timestamp = groupValues.getOrNull(5) ?: ""
-        val balance = groupValues.getOrNull(6)?.toDoubleOrNull()
+        val amount = namedGroup(match, Constants.RegexGroups.AMOUNT)?.toDoubleOrNull()
+        val currency = namedGroup(match, Constants.RegexGroups.CURRENCY) ?: ""
+        val card = namedGroup(match, Constants.RegexGroups.CARD) ?: ""
+        val merchant = namedGroup(match, Constants.RegexGroups.MERCHANT) ?: ""
+        val dateStr = namedGroup(match, Constants.RegexGroups.DATE) ?: ""
+        val timeStr = namedGroup(match, Constants.RegexGroups.TIME) ?: ""
+        val balance = namedGroup(match, Constants.RegexGroups.BALANCE)?.toDoubleOrNull()
+
+        val timestamp = when {
+            dateStr.isNotBlank() && timeStr.isNotBlank() -> "$dateStr $timeStr"
+            dateStr.isNotBlank() -> dateStr
+            else -> ""
+        }
 
         if (amount != null) {
             preview.append("  Amount:    ${"%.2f".format(amount)} $currency\n")

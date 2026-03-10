@@ -5,6 +5,7 @@
     android:orientation="vertical">
 
     <ScrollView
+        android:id="@+id/scrollViewRegexBuilder"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -81,6 +82,15 @@
                 android:textColorHint="@color/text_hint" />
 
             <Button
+                android:id="@+id/btnClearSampleSms"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/clear"
+                android:layout_marginTop="4dp"
+                android:textSize="12sp"
+                style="?android:attr/buttonBarButtonStyle" />
+
+            <Button
                 android:id="@+id/btnSelectSms"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -119,15 +129,25 @@
                 android:id="@+id/etRegexPattern"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minLines="2"
-                android:maxLines="4"
+                android:minLines="3"
+                android:maxLines="6"
                 android:gravity="top|start"
                 android:hint="@string/regex_pattern_hint"
                 android:inputType="textMultiLine"
+                android:scrollbars="vertical"
                 android:fontFamily="monospace"
                 android:background="@drawable/edit_text_themed"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_hint" />
+
+            <Button
+                android:id="@+id/btnClearRegexPattern"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/clear"
+                android:layout_marginTop="4dp"
+                android:textSize="12sp"
+                style="?android:attr/buttonBarButtonStyle" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -195,10 +215,19 @@
                         style="?android:attr/buttonBarButtonStyle" />
 
                     <Button
-                        android:id="@+id/btnPresetTimestamp"
+                        android:id="@+id/btnPresetDate"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/preset_timestamp"
+                        android:text="@string/preset_date"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp"
+                        style="?android:attr/buttonBarButtonStyle" />
+
+                    <Button
+                        android:id="@+id/btnPresetTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/preset_time"
                         android:textSize="12sp"
                         android:layout_marginEnd="8dp"
                         style="?android:attr/buttonBarButtonStyle" />

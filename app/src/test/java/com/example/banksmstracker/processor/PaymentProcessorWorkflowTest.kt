@@ -28,12 +28,12 @@ class PaymentProcessorWorkflowTest {
     private lateinit var mockRepository: TestPaymentRepository
     private val testAddress = "TestBank"
 
-    // Simple regex that captures: (amount)(currency)(card)(merchant)(timestamp)(balance)
-    private val paymentRegex = """(\d+\.\d+) (\w+) card:(\d+) at:(\w+) time:(\S+) bal:(\d+\.\d+)"""
+    // Simple regex that captures named groups: amount, currency, card, merchant, date, balance
+    private val paymentRegex = """(?<amount>\d+\.\d+) (?<currency>\w+) card:(?<card>\d+) at:(?<merchant>\w+) time:(?<date>\S+) bal:(?<balance>\d+\.\d+)"""
     private val paymentMessage = "100.50 USD card:1234 at:Amazon time:2024-01-15 bal:500.00"
 
-    // Income regex (same format as payment for testing)
-    private val incomeRegex = """INCOME: (\d+\.\d+) (\w+) from:(\w+) via:(\w+) time:(\S+) bal:(\d+\.\d+)"""
+    // Income regex with named groups
+    private val incomeRegex = """INCOME: (?<amount>\d+\.\d+) (?<currency>\w+) from:(?<card>\w+) via:(?<merchant>\w+) time:(?<date>\S+) bal:(?<balance>\d+\.\d+)"""
     private val incomeMessage = "INCOME: 1000.00 USD from:1234 via:Employer time:2024-01-15 bal:1500.00"
 
     // Ignore regex - simple patterns without capture groups

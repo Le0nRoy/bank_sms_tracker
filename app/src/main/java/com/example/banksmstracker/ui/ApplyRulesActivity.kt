@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.banksmstracker.R
 import com.example.banksmstracker.database.BankSmsDatabase
+import com.example.banksmstracker.processor.MessageIgnoredException
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
 import com.example.banksmstracker.util.Constants
@@ -248,6 +249,7 @@ class ApplyRulesActivity : BaseActivity() {
 
                 var parsedCount = 0
                 var failedCount = 0
+                var ignoredCount = 0
 
                 for ((sender, messages) in smsMessages) {
                     addSectionHeader("$sender (${messages.size} messages)")
@@ -259,6 +261,9 @@ class ApplyRulesActivity : BaseActivity() {
                             }
                             parsedCount++
                             addSuccessItem(payment)
+                        } catch (e: MessageIgnoredException) {
+                            ignoredCount++
+                            addIgnoredItem(sender, message, e.ruleName)
                         } catch (e: Exception) {
                             failedCount++
                             addErrorItem(sender, message, e.message ?: getString(R.string.unknown_error))
@@ -269,7 +274,7 @@ class ApplyRulesActivity : BaseActivity() {
                 // Add summary at the top
                 val summaryView = LayoutInflater.from(this@ApplyRulesActivity)
                     .inflate(android.R.layout.simple_list_item_1, resultsContainer, false) as TextView
-                summaryView.text = getString(R.string.summary_processed, parsedCount, failedCount)
+                summaryView.text = getString(R.string.summary_processed, parsedCount, failedCount, ignoredCount)
                 summaryView.setTextColor(getColor(R.color.text_primary))
                 resultsContainer.addView(summaryView, 0)
             } catch (e: Exception) {
@@ -317,6 +322,31 @@ class ApplyRulesActivity : BaseActivity() {
         resultsContainer.addView(view)
     }
 
+    private fun addIgnoredItem(sender: String, message: String, ruleName: String?) {
+        val view = LayoutInflater.from(this)
+            .inflate(R.layout.item_apply_rules_error, resultsContainer, false)
+
+        val titleView = view.findViewById<TextView>(R.id.tvErrorTitle)
+        titleView.text = getString(R.string.message_ignored)
+        titleView.setTextColor(0xFFFF8F00.toInt())
+
+        view.findViewById<TextView>(R.id.tvErrorMessage).text = buildString {
+            append(getString(R.string.from_sender, sender))
+            if (!ruleName.isNullOrBlank()) {
+                append("\n")
+                append(ruleName)
+            }
+            append("\n\n")
+            append(message)
+        }
+
+        view.findViewById<Button>(R.id.btnOpenRegexBuilder).setOnClickListener {
+            openRegexBuilder(message)
+        }
+
+        resultsContainer.addView(view)
+    }
+
     private fun addErrorItem(sender: String, message: String, error: String) {
         val view = LayoutInflater.from(this)
             .inflate(R.layout.item_apply_rules_error, resultsContainer, false)
@@ -325,7 +355,7 @@ class ApplyRulesActivity : BaseActivity() {
         view.findViewById<TextView>(R.id.tvErrorMessage).text = buildString {
             append(getString(R.string.from_sender, sender))
             append("\n\n")
-            append("$error:\n$message")
+            append(message)
         }
 
         view.findViewById<Button>(R.id.btnOpenRegexBuilder).setOnClickListener {

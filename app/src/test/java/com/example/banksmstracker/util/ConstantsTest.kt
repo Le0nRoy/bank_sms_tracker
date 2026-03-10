@@ -1,6 +1,7 @@
 package com.example.banksmstracker.util
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -13,31 +14,33 @@ class ConstantsTest {
     inner class RegexGroupsTest {
 
         @Test
-        @DisplayName("getGroupName returns correct names for known indices")
-        fun `getGroupName returns correct names for known indices`() {
-            assertEquals("amount", Constants.RegexGroups.getGroupName(1))
-            assertEquals("currency", Constants.RegexGroups.getGroupName(2))
-            assertEquals("card", Constants.RegexGroups.getGroupName(3))
-            assertEquals("merchant", Constants.RegexGroups.getGroupName(4))
-            assertEquals("timestamp", Constants.RegexGroups.getGroupName(5))
-            assertEquals("balance", Constants.RegexGroups.getGroupName(6))
+        @DisplayName("Named group constants have correct values")
+        fun `named group constants have correct values`() {
+            assertEquals("amount", Constants.RegexGroups.AMOUNT)
+            assertEquals("currency", Constants.RegexGroups.CURRENCY)
+            assertEquals("card", Constants.RegexGroups.CARD)
+            assertEquals("merchant", Constants.RegexGroups.MERCHANT)
+            assertEquals("date", Constants.RegexGroups.DATE)
+            assertEquals("time", Constants.RegexGroups.TIME)
+            assertEquals("balance", Constants.RegexGroups.BALANCE)
         }
 
         @Test
-        @DisplayName("getGroupName returns 'extra' for unknown indices")
-        fun `getGroupName returns extra for unknown indices`() {
-            assertEquals("extra", Constants.RegexGroups.getGroupName(0))
-            assertEquals("extra", Constants.RegexGroups.getGroupName(7))
-            assertEquals("extra", Constants.RegexGroups.getGroupName(100))
-            assertEquals("extra", Constants.RegexGroups.getGroupName(-1))
-        }
-
-        @Test
-        @DisplayName("GROUP_NAMES map contains all expected entries")
-        fun `GROUP_NAMES map contains all expected entries`() {
-            assertEquals(6, Constants.RegexGroups.GROUP_NAMES.size)
-            assertEquals("amount", Constants.RegexGroups.GROUP_NAMES[1])
-            assertEquals("balance", Constants.RegexGroups.GROUP_NAMES[6])
+        @DisplayName("Named groups work with Java regex API")
+        fun `named groups work with java regex api`() {
+            val pattern = Regex("(?<amount>\\d+\\.\\d{2})\\s+(?<currency>[A-Z]{3})")
+            val match = pattern.find("123.45 USD")
+            assertNotNull(match)
+            assertEquals("123.45", match!!.groups[Constants.RegexGroups.AMOUNT]?.value)
+            assertEquals("USD", match.groups[Constants.RegexGroups.CURRENCY]?.value)
+            // Accessing non-existent group throws IllegalArgumentException
+            var threwException = false
+            try {
+                match.groups[Constants.RegexGroups.TIME]
+            } catch (e: IllegalArgumentException) {
+                threwException = true
+            }
+            assertEquals(true, threwException)
         }
     }
 

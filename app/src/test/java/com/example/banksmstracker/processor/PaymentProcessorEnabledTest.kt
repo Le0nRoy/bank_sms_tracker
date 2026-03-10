@@ -17,8 +17,8 @@ class PaymentProcessorEnabledTest {
     private lateinit var mockRepository: TestPaymentRepository
     private val testAddress = "TestBank"
 
-    // Simple regex that captures: (amount)(currency)(card)(merchant)(timestamp)(balance)
-    private val testRegex = """(\d+\.\d+) (\w+) card:(\d+) at:(\w+) time:(\S+) bal:(\d+\.\d+)"""
+    // Simple regex that captures named groups: amount, currency, card, merchant, date, balance
+    private val testRegex = """(?<amount>\d+\.\d+) (?<currency>\w+) card:(?<card>\d+) at:(?<merchant>\w+) time:(?<date>\S+) bal:(?<balance>\d+\.\d+)"""
 
     private val testMessage = "100.50 USD card:1234 at:Amazon time:2024-01-15 bal:500.00"
 
@@ -160,7 +160,7 @@ class PaymentProcessorEnabledTest {
 
     @Test
     fun `multiple rules with only one enabled should match correct one`() {
-        val nonMatchingRegex = """NOMATCH (\d+)"""
+        val nonMatchingRegex = """NOMATCH (?<amount>\d+)"""
         val senders = listOf(
             Sender(
                 id = 1,
