@@ -113,7 +113,8 @@
     <!-- Main menu groups -->
     <string name="menu_group_data">Data Management</string>
     <string name="menu_group_tools">Tools</string>
-    <string name="menu_group_settings">Settings &amp; Help</string>
+    <string name="menu_group_data_reports">Data &amp; Reports</string>
+    <string name="menu_group_settings">Settings</string>
 
     <!-- Spending report -->
     <string name="spending_report">Spending Report</string>
@@ -254,6 +255,11 @@
     <string name="sms_permission_denied_apply">SMS permission denied. Cannot apply rules.</string>
     <string name="sms_permission_denied_check">SMS permission denied. Cannot check senders.</string>
     <string name="no_sms_in_range">No SMS messages found from configured senders in selected date range.</string>
+
+    <!-- Bug Report checkboxes -->
+    <string name="include_filter_state">Include active payments filter</string>
+    <string name="filter_state_header">\n\nPAYMENTS FILTER STATE:</string>
+    <string name="attach_payments_data">Attach payments data (JSON)</string>
 
     <!-- Bug Report strings -->
     <string name="report_header">BANK SMS TRACKER - BUG REPORT</string>

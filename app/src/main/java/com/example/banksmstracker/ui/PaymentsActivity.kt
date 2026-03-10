@@ -2,6 +2,7 @@ package com.example.banksmstracker.ui
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -293,6 +294,17 @@ class PaymentsActivity : BaseActivity() {
 
         adapter.submitList(filteredPayments)
         updateUI()
+        saveFilterState()
+    }
+
+    private fun saveFilterState() {
+        val prefs = getSharedPreferences(PREFS_FILTER_STATE, Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString(KEY_FILTER_CATEGORY, selectedCategory)
+            .putString(KEY_FILTER_SENDER, selectedSender)
+            .putLong(KEY_FILTER_START_DATE, startDate ?: -1L)
+            .putLong(KEY_FILTER_END_DATE, endDate ?: -1L)
+            .apply()
     }
 
     private fun updateUI() {
@@ -643,5 +655,10 @@ class PaymentsActivity : BaseActivity() {
     companion object {
         private const val KEY_START_DATE = "key_start_date"
         private const val KEY_END_DATE = "key_end_date"
+        const val PREFS_FILTER_STATE = "payments_filter_state"
+        const val KEY_FILTER_CATEGORY = "filter_category"
+        const val KEY_FILTER_SENDER = "filter_sender"
+        const val KEY_FILTER_START_DATE = "filter_start_date"
+        const val KEY_FILTER_END_DATE = "filter_end_date"
     }
 }

@@ -341,7 +341,7 @@ class ApplyRulesActivity : BaseActivity() {
         }
 
         view.findViewById<Button>(R.id.btnOpenRegexBuilder).setOnClickListener {
-            openRegexBuilder(message)
+            openRegexBuilder(sender, message)
         }
 
         resultsContainer.addView(view)
@@ -359,15 +359,16 @@ class ApplyRulesActivity : BaseActivity() {
         }
 
         view.findViewById<Button>(R.id.btnOpenRegexBuilder).setOnClickListener {
-            openRegexBuilder(message)
+            openRegexBuilder(sender, message)
         }
 
         resultsContainer.addView(view)
     }
 
-    private fun openRegexBuilder(message: String) {
+    private fun openRegexBuilder(sender: String, message: String) {
         val intent = Intent(this, RegexBuilderActivity::class.java)
         intent.putExtra(EXTRA_SAMPLE_SMS, message)
+        intent.putExtra(EXTRA_SENDER_ADDRESS, sender)
         startActivity(intent)
     }
 
@@ -424,6 +425,7 @@ class ApplyRulesActivity : BaseActivity() {
 
     companion object {
         const val EXTRA_SAMPLE_SMS = "extra_sample_sms"
+        const val EXTRA_SENDER_ADDRESS = "extra_sender_address"
         private const val KEY_START_DATE = "key_start_date"
         private const val KEY_END_DATE = "key_end_date"
     }

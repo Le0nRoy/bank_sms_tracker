@@ -622,6 +622,7 @@ abstract class AppiumBaseTest {
 
     /**
      * Check if element exists, scrolling if needed.
+     * Falls back to a plain existence check if no scrollable container is found.
      */
     protected fun elementExistsWithScroll(resourceId: String): Boolean {
         return try {
@@ -630,8 +631,16 @@ abstract class AppiumBaseTest {
             driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
             true
         } catch (e: Exception) {
-            driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
-            false
+            // scrollIntoView failed (e.g., no scrollable container when content fits screen).
+            // Fall back to a plain existence check.
+            try {
+                val elements = driver.findElements(AppiumBy.id("$APP_PACKAGE:id/$resourceId"))
+                driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+                elements.isNotEmpty()
+            } catch (e2: Exception) {
+                driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+                false
+            }
         }
     }
 

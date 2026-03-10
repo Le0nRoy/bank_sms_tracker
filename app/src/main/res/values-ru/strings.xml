@@ -113,7 +113,8 @@
     <!-- Main menu groups -->
     <string name="menu_group_data">Управление данными</string>
     <string name="menu_group_tools">Инструменты</string>
-    <string name="menu_group_settings">Настройки и помощь</string>
+    <string name="menu_group_data_reports">Данные и отчёты</string>
+    <string name="menu_group_settings">Настройки</string>
 
     <!-- Spending report -->
     <string name="spending_report">Отчёт о расходах</string>
@@ -254,6 +255,11 @@
     <string name="sms_permission_denied_apply">Нет разрешения на SMS. Невозможно применить правила.</string>
     <string name="sms_permission_denied_check">Нет разрешения на SMS. Невозможно проверить отправителей.</string>
     <string name="no_sms_in_range">SMS от настроенных отправителей в выбранном периоде не найдены.</string>
+
+    <!-- Bug Report checkboxes -->
+    <string name="include_filter_state">Добавить активный фильтр платежей</string>
+    <string name="filter_state_header">\n\nФИЛЬТР ПЛАТЕЖЕЙ:</string>
+    <string name="attach_payments_data">Прикрепить данные платежей (JSON)</string>
 
     <!-- Bug Report strings -->
     <string name="report_header">ТРЕКЕР БАНКОВСКИХ SMS - ОТЧЁТ ОБ ОШИБКЕ</string>

@@ -195,8 +195,8 @@ class SenderManagementAppiumTest : AppiumBaseTest() {
         clickButton("btnSenders")
         mediumWait()
 
-        // Find the Add Rule button
-        val addRuleButton = findAllById("btnAddRule").first()
+        // Find the Add Rule button (may be below fold after MaterialCardView rules)
+        val addRuleButton = scrollToElementById("btnAddRule")
 
         // Get initial count of rule fields
         val rulesContainer = findById("rulesContainer")

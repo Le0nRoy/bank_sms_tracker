@@ -57,6 +57,20 @@
                 android:text="@string/include_payment_stats"
                 android:checked="true" />
 
+            <CheckBox
+                android:id="@+id/cbIncludeFilterState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/include_filter_state"
+                android:checked="false" />
+
+            <CheckBox
+                android:id="@+id/cbAttachPaymentsData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/attach_payments_data"
+                android:checked="false" />
+
             <Button
                 android:id="@+id/btnPreviewReport"
                 android:layout_width="match_parent"

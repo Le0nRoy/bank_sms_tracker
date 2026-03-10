@@ -48,6 +48,8 @@ class BugReportAppiumTest : AppiumBaseTest() {
         assertTrue(elementExists("cbIncludeConfig"), "Should have config checkbox")
         assertTrue(elementExists("cbIncludeDeviceInfo"), "Should have device info checkbox")
         assertTrue(elementExists("cbIncludePaymentStats"), "Should have payment stats checkbox")
+        assertTrue(elementExistsWithScroll("cbIncludeFilterState"), "Should have filter state checkbox")
+        assertTrue(elementExistsWithScroll("cbAttachPaymentsData"), "Should have attach payments data checkbox")
         assertTrue(elementExists("btnPreviewReport"), "Should have Preview button")
         assertTrue(elementExists("btnSendReport"), "Should have Send button")
 
@@ -153,6 +155,54 @@ class BugReportAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(6)
+    @DisplayName("Toggle include filter state checkbox")
+    fun toggleIncludeFilterStateCheckbox() {
+        findById("btnBugReport").click()
+        mediumWait()
+
+        val filterStateCheckbox = scrollToElementById("cbIncludeFilterState")
+        val initialState = filterStateCheckbox.getAttribute("checked")
+
+        // Default is unchecked — toggle on
+        filterStateCheckbox.click()
+        shortWait()
+
+        val newState = filterStateCheckbox.getAttribute("checked")
+        assertNotEquals(initialState, newState, "Checkbox state should have changed")
+
+        // Toggle back off
+        filterStateCheckbox.click()
+        shortWait()
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("Toggle attach payments data checkbox")
+    fun toggleAttachPaymentsDataCheckbox() {
+        findById("btnBugReport").click()
+        mediumWait()
+
+        val attachCheckbox = scrollToElementById("cbAttachPaymentsData")
+        val initialState = attachCheckbox.getAttribute("checked")
+
+        // Default is unchecked — toggle on
+        attachCheckbox.click()
+        shortWait()
+
+        val newState = attachCheckbox.getAttribute("checked")
+        assertNotEquals(initialState, newState, "Checkbox state should have changed")
+
+        // Toggle back off
+        attachCheckbox.click()
+        shortWait()
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(8)
     @DisplayName("Preview report with all options enabled")
     fun previewReportWithAllOptions() {
         findById("btnBugReport").click()
@@ -200,7 +250,7 @@ class BugReportAppiumTest : AppiumBaseTest() {
     }
 
     @Test
-    @Order(7)
+    @Order(9)
     @DisplayName("Preview report with no options enabled")
     fun previewReportWithNoOptions() {
         findById("btnBugReport").click()
@@ -243,7 +293,7 @@ class BugReportAppiumTest : AppiumBaseTest() {
     }
 
     @Test
-    @Order(8)
+    @Order(10)
     @DisplayName("Preview changes based on checkbox selection")
     fun previewChangesBasedOnCheckboxSelection() {
         findById("btnBugReport").click()
@@ -291,7 +341,7 @@ class BugReportAppiumTest : AppiumBaseTest() {
     }
 
     @Test
-    @Order(9)
+    @Order(11)
     @DisplayName("Send report button triggers share dialog")
     fun sendReportTriggersShareDialog() {
         findById("btnBugReport").click()
@@ -321,7 +371,7 @@ class BugReportAppiumTest : AppiumBaseTest() {
     }
 
     @Test
-    @Order(10)
+    @Order(12)
     @DisplayName("Send report without preview shows message")
     fun sendReportWithoutPreviewShowsMessage() {
         findById("btnBugReport").click()
@@ -345,7 +395,7 @@ class BugReportAppiumTest : AppiumBaseTest() {
     }
 
     @Test
-    @Order(11)
+    @Order(13)
     @DisplayName("Bug description supports multiline text")
     fun bugDescriptionSupportsMultilineText() {
         findById("btnBugReport").click()
@@ -377,7 +427,7 @@ class BugReportAppiumTest : AppiumBaseTest() {
     }
 
     @Test
-    @Order(12)
+    @Order(14)
     @DisplayName("Preview area displays monospace font")
     fun previewAreaDisplaysMonospaceFont() {
         findById("btnBugReport").click()

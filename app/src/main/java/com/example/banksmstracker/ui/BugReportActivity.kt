@@ -8,15 +8,22 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.banksmstracker.BuildConfig
 import com.example.banksmstracker.R
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class BugReportActivity : BaseActivity() {
 
@@ -24,6 +31,8 @@ class BugReportActivity : BaseActivity() {
     private lateinit var cbIncludeConfig: CheckBox
     private lateinit var cbIncludeDeviceInfo: CheckBox
     private lateinit var cbIncludePaymentStats: CheckBox
+    private lateinit var cbIncludeFilterState: CheckBox
+    private lateinit var cbAttachPaymentsData: CheckBox
     private lateinit var btnPreviewReport: Button
     private lateinit var tvReportPreview: TextView
     private lateinit var btnSendReport: Button
@@ -43,6 +52,8 @@ class BugReportActivity : BaseActivity() {
         cbIncludeConfig = findViewById(R.id.cbIncludeConfig)
         cbIncludeDeviceInfo = findViewById(R.id.cbIncludeDeviceInfo)
         cbIncludePaymentStats = findViewById(R.id.cbIncludePaymentStats)
+        cbIncludeFilterState = findViewById(R.id.cbIncludeFilterState)
+        cbAttachPaymentsData = findViewById(R.id.cbAttachPaymentsData)
         btnPreviewReport = findViewById(R.id.btnPreviewReport)
         tvReportPreview = findViewById(R.id.tvReportPreview)
         btnSendReport = findViewById(R.id.btnSendReport)
@@ -183,6 +194,34 @@ class BugReportActivity : BaseActivity() {
             report.append("\n")
         }
 
+        // Filter state
+        if (cbIncludeFilterState.isChecked) {
+            report.append(getString(R.string.filter_state_header).trimStart())
+            report.append("\n")
+            report.append("-".repeat(30))
+            report.append("\n")
+            try {
+                val prefs = getSharedPreferences(
+                    PaymentsActivity.PREFS_FILTER_STATE,
+                    android.content.Context.MODE_PRIVATE
+                )
+                val category = prefs.getString(PaymentsActivity.KEY_FILTER_CATEGORY, null)
+                val sender = prefs.getString(PaymentsActivity.KEY_FILTER_SENDER, null)
+                val startDate = prefs.getLong(PaymentsActivity.KEY_FILTER_START_DATE, -1L).takeIf { it >= 0 }
+                val endDate = prefs.getLong(PaymentsActivity.KEY_FILTER_END_DATE, -1L).takeIf { it >= 0 }
+                val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+                report.append("  Category: ${category ?: "(all)"}\n")
+                report.append("  Sender: ${sender ?: "(all)"}\n")
+                report.append("  Start: ${startDate?.let { dateFmt.format(Date(it)) } ?: "(none)"}\n")
+                report.append("  End: ${endDate?.let { dateFmt.format(Date(it)) } ?: "(none)"}\n")
+            } catch (e: Exception) {
+                report.append(getString(R.string.error_with_message, e.message ?: ""))
+                report.append("\n")
+            }
+            report.append("\n")
+        }
+
         report.append("=".repeat(50))
         report.append(getString(R.string.end_of_report))
         report.append("\n")
@@ -199,12 +238,49 @@ class BugReportActivity : BaseActivity() {
 
         val subject = "Bug Report - Bank SMS Tracker v${BuildConfig.VERSION_NAME}"
 
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-            putExtra(Intent.EXTRA_TEXT, currentReport)
+        if (cbAttachPaymentsData.isChecked) {
+            lifecycleScope.launch {
+                val paymentsUri = generatePaymentsFile()
+                val shareIntent = if (paymentsUri != null) {
+                    Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, subject)
+                        putExtra(Intent.EXTRA_TEXT, currentReport)
+                        putParcelableArrayListExtra(
+                            Intent.EXTRA_STREAM,
+                            arrayListOf(paymentsUri)
+                        )
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    }
+                } else {
+                    Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_SUBJECT, subject)
+                        putExtra(Intent.EXTRA_TEXT, currentReport)
+                    }
+                }
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_report_title)))
+            }
+        } else {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_SUBJECT, subject)
+                putExtra(Intent.EXTRA_TEXT, currentReport)
+            }
+            startActivity(Intent.createChooser(shareIntent, getString(R.string.share_report_title)))
         }
+    }
 
-        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_report_title)))
+    private suspend fun generatePaymentsFile(): android.net.Uri? = withContext(Dispatchers.IO) {
+        try {
+            val db = BankSmsDatabase.getInstance(this@BugReportActivity)
+            val payments = RoomPaymentRepository(db.paymentDao()).getAllPayments()
+            val json = Json.encodeToString(payments)
+            val file = File(cacheDir, "payments_export.json")
+            file.writeText(json)
+            FileProvider.getUriForFile(this@BugReportActivity, "$packageName.fileprovider", file)
+        } catch (e: Exception) {
+            null
+        }
     }
 }

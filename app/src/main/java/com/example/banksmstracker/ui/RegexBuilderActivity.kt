@@ -72,6 +72,7 @@ class RegexBuilderActivity : BaseActivity() {
     private var selectedSenderForFilter: Sender? = null
     private var selectedRuleType: RuleType = RuleType.PAYMENT
     private var lastSelectedSmsAddress: String? = null
+    private var pendingAutoSelectAddress: String? = null
 
     // Regex presets extracted from default rules
     private val regexPresets = RegexPresets()
@@ -94,12 +95,16 @@ class RegexBuilderActivity : BaseActivity() {
 
         initViews()
         setupListeners()
-        loadSenders()
 
         // Handle incoming sample SMS from ApplyRulesActivity
         intent.getStringExtra(ApplyRulesActivity.EXTRA_SAMPLE_SMS)?.let { sampleSms ->
             etSampleSms.setText(sampleSms)
         }
+
+        // Store sender address for auto-selection after senders load
+        pendingAutoSelectAddress = intent.getStringExtra(ApplyRulesActivity.EXTRA_SENDER_ADDRESS)
+
+        loadSenders()
     }
 
     private fun initViews() {
@@ -468,6 +473,31 @@ class RegexBuilderActivity : BaseActivity() {
                 }
 
                 setupExistingPatternsSpinner(emptyList())
+
+                // Auto-select sender if requested from ApplyRulesActivity
+                val autoAddress = pendingAutoSelectAddress
+                if (autoAddress != null) {
+                    pendingAutoSelectAddress = null
+                    val index = senders.indexOfFirst { sender ->
+                        sender.addresses.any { it.equals(autoAddress, ignoreCase = true) }
+                    }
+                    if (index >= 0) {
+                        spinnerSenders.setSelection(index + 1)
+                    } else {
+                        AlertDialog.Builder(this@RegexBuilderActivity)
+                            .setTitle(R.string.unregistered_sender_title)
+                            .setMessage(getString(R.string.unregistered_sender_message, autoAddress))
+                            .setPositiveButton(R.string.register_sender) { _, _ ->
+                                val intent = android.content.Intent(
+                                    this@RegexBuilderActivity,
+                                    SendersActivity::class.java
+                                )
+                                startActivity(intent)
+                            }
+                            .setNegativeButton(R.string.cancel, null)
+                            .show()
+                    }
+                }
             }
         }
     }

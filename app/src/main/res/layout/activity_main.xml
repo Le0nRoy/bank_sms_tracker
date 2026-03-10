@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
+            android:layout_marginBottom="16dp">
 
             <Button
                 android:id="@+id/btnCategories"
@@ -43,13 +43,6 @@
                 android:layout_marginStart="4dp" />
 
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btnPayments"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/payments"
-            android:layout_marginBottom="16dp" />
 
         <!-- Tools Group -->
         <TextView
@@ -91,9 +84,51 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/process_sms"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Data & Reports Group -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/menu_group_data_reports"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="4dp" />
+
+        <Button
+            android:id="@+id/btnPayments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/payments"
             android:layout_marginBottom="8dp" />
 
-        <!-- Settings & Help Group -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/btnSmsExport"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/sms_export"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btnBugReport"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/bug_report"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <!-- Settings Group -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -124,30 +159,6 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/import_config"
-                android:layout_marginStart="4dp" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="8dp">
-
-            <Button
-                android:id="@+id/btnSmsExport"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/sms_export"
-                android:layout_marginEnd="4dp" />
-
-            <Button
-                android:id="@+id/btnBugReport"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/bug_report"
                 android:layout_marginStart="4dp" />
 
         </LinearLayout>

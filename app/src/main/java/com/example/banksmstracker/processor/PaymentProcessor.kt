@@ -175,11 +175,12 @@ class PaymentProcessor(
         return when (result) {
             is MessageProcessResult.PaymentResult -> {
                 val categorizedPayment = assignCategory(result.payment)
-                val inserted = paymentRepository.savePayment(categorizedPayment, message, address)
+                val datedPayment = approximateDate(categorizedPayment)
+                val inserted = paymentRepository.savePayment(datedPayment, message, address)
                 if (!inserted) {
                     Log.d(TAG, "Duplicate payment skipped for sender $address")
                 }
-                categorizedPayment
+                datedPayment
             }
             is MessageProcessResult.IncomeResult -> {
                 Log.d(TAG, "Income detected from $address: ${result.income}")
@@ -204,11 +205,12 @@ class PaymentProcessor(
         return when (result) {
             is MessageProcessResult.PaymentResult -> {
                 val categorizedPayment = assignCategory(result.payment)
-                val inserted = paymentRepository.savePayment(categorizedPayment, message, address)
+                val datedPayment = approximateDate(categorizedPayment)
+                val inserted = paymentRepository.savePayment(datedPayment, message, address)
                 if (!inserted) {
                     Log.d(TAG, "Duplicate payment skipped for sender $address")
                 }
-                MessageProcessResult.PaymentResult(categorizedPayment)
+                MessageProcessResult.PaymentResult(datedPayment)
             }
             is MessageProcessResult.IncomeResult -> {
                 Log.d(TAG, "Income detected from $address: ${result.income}")
@@ -219,6 +221,21 @@ class PaymentProcessor(
                 Log.d(TAG, "Message ignored by rule: ${result.ruleName}")
                 result
             }
+        }
+    }
+
+    private suspend fun approximateDate(payment: Payment): Payment {
+        if (payment.timestamp != null) return payment
+        val allPayments = paymentRepository.getAllPayments()
+        val now = System.currentTimeMillis()
+        val neighbor = allPayments
+            .filter { it.timestamp != null && it.receivedAt != null }
+            .minByOrNull { Math.abs((it.receivedAt ?: 0L) - now) }
+        return if (neighbor?.timestamp != null) {
+            val approxDate = neighbor.timestamp!!.substringBefore(" ").ifEmpty { neighbor.timestamp!! }
+            payment.copy(timestamp = approxDate)
+        } else {
+            payment
         }
     }
 

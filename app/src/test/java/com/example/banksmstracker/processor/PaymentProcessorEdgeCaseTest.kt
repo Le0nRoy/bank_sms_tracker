@@ -1,6 +1,7 @@
 package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.InMemoryPaymentRepository
@@ -466,6 +467,88 @@ class PaymentProcessorEdgeCaseTest {
             // Should match the enabled sender
             val payment = processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "BANK")
             assertNotNull(payment)
+        }
+    }
+
+    @Nested
+    @DisplayName("Date Approximation")
+    inner class DateApproximation {
+
+        private val dateOnlyRegex = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)"
+        private val withDateRegex = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<date>\\d{2}/\\d{2}/\\d{4})"
+
+        @Test
+        @DisplayName("Payment with no date gets date from neighbor")
+        fun `payment with no date gets date from neighbor`() = runBlocking {
+            val sender = Sender(
+                name = "Test Bank",
+                addresses = mutableListOf("TESTBANK"),
+                rules = mutableListOf(Rule(pattern = dateOnlyRegex))
+            )
+            val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
+
+            // Insert a neighbor with a timestamp
+            repository.savePayment(
+                Payment(amount = 50.0, currency = "USD", card = null, merchant = null, timestamp = "01/01/2024", balance = null),
+                "50.00 USD neighbor", "TESTBANK"
+            )
+
+            val result = processor.processMessage("100.00 USD", "TESTBANK")
+            assertEquals("01/01/2024", result.timestamp)
+        }
+
+        @Test
+        @DisplayName("Payment that already has timestamp is not changed")
+        fun `payment that already has timestamp is not changed`() = runBlocking {
+            val sender = Sender(
+                name = "Test Bank",
+                addresses = mutableListOf("TESTBANK"),
+                rules = mutableListOf(Rule(pattern = withDateRegex))
+            )
+            val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
+
+            // Insert a neighbor with a different date
+            repository.savePayment(
+                Payment(amount = 50.0, currency = "USD", card = null, merchant = null, timestamp = "02/02/2024", balance = null),
+                "50.00 USD neighbor", "TESTBANK"
+            )
+
+            val result = processor.processMessage("100.00 USD 01/01/2024", "TESTBANK")
+            assertEquals("01/01/2024", result.timestamp)
+        }
+
+        @Test
+        @DisplayName("Payment with no date and no neighbors has null timestamp")
+        fun `payment with no date and no neighbors has null timestamp`() = runBlocking {
+            val sender = Sender(
+                name = "Test Bank",
+                addresses = mutableListOf("TESTBANK"),
+                rules = mutableListOf(Rule(pattern = dateOnlyRegex))
+            )
+            val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
+
+            val result = processor.processMessage("100.00 USD", "TESTBANK")
+            assertNull(result.timestamp)
+        }
+
+        @Test
+        @DisplayName("Neighbor with date-time timestamp provides only the date part")
+        fun `neighbor with date-time timestamp provides only the date part`() = runBlocking {
+            val sender = Sender(
+                name = "Test Bank",
+                addresses = mutableListOf("TESTBANK"),
+                rules = mutableListOf(Rule(pattern = dateOnlyRegex))
+            )
+            val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
+
+            // Insert neighbor with date+time
+            repository.savePayment(
+                Payment(amount = 50.0, currency = "USD", card = null, merchant = null, timestamp = "01/01/2024 12:30:00", balance = null),
+                "50.00 USD neighbor", "TESTBANK"
+            )
+
+            val result = processor.processMessage("100.00 USD", "TESTBANK")
+            assertEquals("01/01/2024", result.timestamp)
         }
     }
 
