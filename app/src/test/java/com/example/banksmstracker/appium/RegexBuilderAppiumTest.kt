@@ -566,7 +566,10 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // Scroll to date preset button (inside HorizontalScrollView — needs two-step scroll)
-        scrollToPresetButton("btnPresetDate").click()
+        // Click by ID after scroll to avoid tap-coordinate drift from UiScrollable.scrollIntoView.
+        scrollToPresetButton("btnPresetDate")
+        shortWait()
+        findById("btnPresetDate").click()
         shortWait()
 
         // Verify that the preset inserted the ⟨date⟩ placeholder
@@ -592,8 +595,12 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // Scroll to time preset button (inside HorizontalScrollView — needs two-step scroll)
-        scrollToPresetButton("btnPresetTime").click()
+        // scrollToPresetButton scrolls it into view; then click by ID to avoid tap-coordinate
+        // drift that occurs when tapping the element returned by UiScrollable.scrollIntoView.
+        scrollToPresetButton("btnPresetTime")
         shortWait()
+        findById("btnPresetTime").click()
+        mediumWait()
 
         // Verify that the preset inserted the ⟨time⟩ placeholder
         val patternText = findById("etRegexPattern").text
