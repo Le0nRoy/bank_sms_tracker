@@ -335,4 +335,11 @@
     <string name="balance_label">Balance:</string>
     <string name="not_captured">(not captured)</string>
     <string name="invalid_or_missing">(invalid or missing)</string>
+
+    <!-- Personal Data Agreement -->
+    <string name="terms_title">Personal Data Notice</string>
+    <string name="terms_message">This app processes your bank SMS messages to extract and store payment records locally on your device.\n\nAll data stays on your device and is never transmitted to external servers or third parties.\n\nBy tapping \"I Understand\", you acknowledge that SMS messages are read and parsed locally to detect payments.</string>
+    <string name="terms_agree">I Understand</string>
+    <string name="terms_section_title">Privacy</string>
+    <string name="view_privacy_notice">View Privacy Notice</string>
 </resources>

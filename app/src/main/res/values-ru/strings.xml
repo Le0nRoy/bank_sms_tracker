@@ -335,4 +335,11 @@
     <string name="balance_label">Баланс:</string>
     <string name="not_captured">(не захвачено)</string>
     <string name="invalid_or_missing">(неверно или отсутствует)</string>
+
+    <!-- Personal Data Agreement -->
+    <string name="terms_title">Уведомление о личных данных</string>
+    <string name="terms_message">Это приложение обрабатывает ваши банковские SMS для извлечения и хранения записей о платежах локально на вашем устройстве.\n\nВсе данные остаются на устройстве и никогда не передаются на внешние серверы или третьим лицам.\n\nНажимая «Понятно», вы подтверждаете, что SMS читаются и обрабатываются локально для обнаружения платежей.</string>
+    <string name="terms_agree">Понятно</string>
+    <string name="terms_section_title">Конфиденциальность</string>
+    <string name="view_privacy_notice">Просмотреть уведомление</string>
 </resources>

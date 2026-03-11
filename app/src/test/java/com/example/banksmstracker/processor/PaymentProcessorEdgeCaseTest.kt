@@ -21,7 +21,9 @@ class PaymentProcessorEdgeCaseTest {
     private lateinit var repository: InMemoryPaymentRepository
 
     // Valid regex with named capture groups for testing
-    private val validRegex = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD|EUR|GEL)\\s*(?<card>\\*\\d+)?\\s*(?<merchant>.+?)\\s*(?<date>\\d{2}/\\d{2}/\\d{4})?\\s*(?<balance>\\d+\\.\\d+)?"
+    private val validRegex =
+        "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD|EUR|GEL)\\s*(?<card>\\*\\d+)?" +
+            "\\s*(?<merchant>.+?)\\s*(?<date>\\d{2}/\\d{2}/\\d{4})?\\s*(?<balance>\\d+\\.\\d+)?"
 
     @BeforeEach
     fun setUp() {
@@ -126,7 +128,9 @@ class PaymentProcessorEdgeCaseTest {
         @Test
         @DisplayName("Regex with named groups and extra non-named groups works correctly")
         fun `regex with named groups and extra groups works correctly`() {
-            val extraGroupsRegex = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD|EUR)\\s*(?<card>\\*\\d+)?\\s*(?<merchant>.+?)\\s*(?<date>\\d{2}/\\d{2}/\\d{4})?\\s*(?<balance>\\d+\\.\\d+)?\\s*(extra)?"
+            val extraGroupsRegex =
+                "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD|EUR)\\s*(?<card>\\*\\d+)?" +
+                    "\\s*(?<merchant>.+?)\\s*(?<date>\\d{2}/\\d{2}/\\d{4})?\\s*(?<balance>\\d+\\.\\d+)?\\s*(extra)?"
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -144,7 +148,9 @@ class PaymentProcessorEdgeCaseTest {
         fun `empty amount group results in skipped rule`() {
             // Regex where amount group captures empty string
             val emptyAmountRegex = "(?<amount>)?(?<currency>)(?<card>)(?<merchant>)(?<balance>)?"
-            val validRegex2 = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\*\\d+)?\\s*(?<merchant>\\w+)\\s*(?<date>\\d{2}/\\d{2})?\\s*(?<balance>\\d+)?"
+            val validRegex2 =
+                "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\*\\d+)?" +
+                    "\\s*(?<merchant>\\w+)\\s*(?<date>\\d{2}/\\d{2})?\\s*(?<balance>\\d+)?"
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -239,7 +245,8 @@ class PaymentProcessorEdgeCaseTest {
         @DisplayName("Payment with null merchant stays uncategorized")
         fun `payment with null merchant stays uncategorized`() = runBlocking {
             // Regex where merchant group can be empty
-            val optionalMerchantRegex = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>)?(?<merchant>)?(?<balance>)?"
+            val optionalMerchantRegex =
+                "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>)?(?<merchant>)?(?<balance>)?"
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -321,7 +328,9 @@ class PaymentProcessorEdgeCaseTest {
         @DisplayName("Long merchant name is preserved")
         fun `long merchant name is preserved`() {
             // Use a regex with greedy matching for merchant (no optional groups after)
-            val greedyRegex = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD|EUR|GEL)\\s*(?<card>\\*\\d+)\\s+(?<merchant>.+)\\s+(?<date>\\d{2}/\\d{2}/\\d{4})\\s*(?<balance>\\d+\\.\\d+)?"
+            val greedyRegex =
+                "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD|EUR|GEL)\\s*(?<card>\\*\\d+)\\s+" +
+                    "(?<merchant>.+)\\s+(?<date>\\d{2}/\\d{2}/\\d{4})\\s*(?<balance>\\d+\\.\\d+)?"
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -343,7 +352,9 @@ class PaymentProcessorEdgeCaseTest {
         @Test
         @DisplayName("Regex with digit class works")
         fun `regex with digit class works`() {
-            val digitRegex = "(?<amount>\\d+\\.\\d{2})\\s+(?<currency>\\w+)\\s+(?<card>\\d{4})\\s+(?<merchant>\\w+)\\s+(?<date>\\d{2}/\\d{2})\\s+(?<balance>\\d+)?"
+            val digitRegex =
+                "(?<amount>\\d+\\.\\d{2})\\s+(?<currency>\\w+)\\s+(?<card>\\d{4})" +
+                    "\\s+(?<merchant>\\w+)\\s+(?<date>\\d{2}/\\d{2})\\s+(?<balance>\\d+)?"
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -360,7 +371,9 @@ class PaymentProcessorEdgeCaseTest {
         @Test
         @DisplayName("Regex with quantifiers works")
         fun `regex with quantifiers works`() {
-            val quantifierRegex = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>\\w{2,5})\\s*(?<card>\\*?\\d*)\\s*(?<merchant>.*)\\s*(?<balance>)?"
+            val quantifierRegex =
+                "(?<amount>\\d+\\.\\d+)\\s*(?<currency>\\w{2,5})\\s*(?<card>\\*?\\d*)" +
+                    "\\s*(?<merchant>.*)\\s*(?<balance>)?"
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -376,7 +389,9 @@ class PaymentProcessorEdgeCaseTest {
         @DisplayName("Regex with anchors works for full match")
         fun `regex with start anchor works`() {
             // Using ^ anchor
-            val anchoredRegex = "^(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\d*)\\s*(?<merchant>.*)\\s*(?<balance>)?"
+            val anchoredRegex =
+                "^(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\d*)" +
+                    "\\s*(?<merchant>.*)\\s*(?<balance>)?"
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -417,7 +432,7 @@ class PaymentProcessorEdgeCaseTest {
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
                 rules = mutableListOf(
-                    Rule(pattern = validRegex, enabled = false),
+                    Rule(pattern = validRegex, enabled = false)
                 )
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
@@ -489,8 +504,16 @@ class PaymentProcessorEdgeCaseTest {
 
             // Insert a neighbor with a timestamp
             repository.savePayment(
-                Payment(amount = 50.0, currency = "USD", card = null, merchant = null, timestamp = "01/01/2024", balance = null),
-                "50.00 USD neighbor", "TESTBANK"
+                Payment(
+                    amount = 50.0,
+                    currency = "USD",
+                    card = null,
+                    merchant = null,
+                    timestamp = "01/01/2024",
+                    balance = null
+                ),
+                "50.00 USD neighbor",
+                "TESTBANK"
             )
 
             val result = processor.processMessage("100.00 USD", "TESTBANK")
@@ -509,8 +532,16 @@ class PaymentProcessorEdgeCaseTest {
 
             // Insert a neighbor with a different date
             repository.savePayment(
-                Payment(amount = 50.0, currency = "USD", card = null, merchant = null, timestamp = "02/02/2024", balance = null),
-                "50.00 USD neighbor", "TESTBANK"
+                Payment(
+                    amount = 50.0,
+                    currency = "USD",
+                    card = null,
+                    merchant = null,
+                    timestamp = "02/02/2024",
+                    balance = null
+                ),
+                "50.00 USD neighbor",
+                "TESTBANK"
             )
 
             val result = processor.processMessage("100.00 USD 01/01/2024", "TESTBANK")
@@ -543,8 +574,16 @@ class PaymentProcessorEdgeCaseTest {
 
             // Insert neighbor with date+time
             repository.savePayment(
-                Payment(amount = 50.0, currency = "USD", card = null, merchant = null, timestamp = "01/01/2024 12:30:00", balance = null),
-                "50.00 USD neighbor", "TESTBANK"
+                Payment(
+                    amount = 50.0,
+                    currency = "USD",
+                    card = null,
+                    merchant = null,
+                    timestamp = "01/01/2024 12:30:00",
+                    balance = null
+                ),
+                "50.00 USD neighbor",
+                "TESTBANK"
             )
 
             val result = processor.processMessage("100.00 USD", "TESTBANK")
@@ -559,8 +598,16 @@ class PaymentProcessorEdgeCaseTest {
         @Test
         @DisplayName("First matching rule is used")
         fun `first matching rule is used`() {
-            val rule1 = Rule(pattern = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\d*)\\s*(?<merchant>Store1)\\s*(?<balance>)?") // matches Store1
-            val rule2 = Rule(pattern = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\d*)\\s*(?<merchant>\\w+)\\s*(?<balance>)?") // matches any word
+            val rule1 =
+                Rule(
+                    pattern = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\d*)" +
+                        "\\s*(?<merchant>Store1)\\s*(?<balance>)?"
+                ) // matches Store1
+            val rule2 =
+                Rule(
+                    pattern = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\d*)" +
+                        "\\s*(?<merchant>\\w+)\\s*(?<balance>)?"
+                ) // matches any word
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -576,8 +623,16 @@ class PaymentProcessorEdgeCaseTest {
         @Test
         @DisplayName("Falls through to second rule when first does not match")
         fun `falls through to second rule when first does not match`() {
-            val rule1 = Rule(pattern = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>EUR)\\s*(?<card>\\d*)\\s*(?<merchant>\\w+)\\s*(?<balance>)?") // EUR only
-            val rule2 = Rule(pattern = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\d*)\\s*(?<merchant>\\w+)\\s*(?<balance>)?") // USD only
+            val rule1 =
+                Rule(
+                    pattern = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>EUR)\\s*(?<card>\\d*)" +
+                        "\\s*(?<merchant>\\w+)\\s*(?<balance>)?"
+                ) // EUR only
+            val rule2 =
+                Rule(
+                    pattern = "(?<amount>\\d+\\.\\d+)\\s*(?<currency>USD)\\s*(?<card>\\d*)" +
+                        "\\s*(?<merchant>\\w+)\\s*(?<balance>)?"
+                ) // USD only
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),

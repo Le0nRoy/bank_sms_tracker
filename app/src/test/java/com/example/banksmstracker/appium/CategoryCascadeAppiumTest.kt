@@ -1,5 +1,7 @@
 package com.example.banksmstracker.appium
 
+import io.qameta.allure.Epic
+import io.qameta.allure.Feature
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
@@ -22,6 +24,8 @@ import org.junit.jupiter.api.TestMethodOrder
  * Run with: make test-appium
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+@Epic("Bank SMS Tracker")
+@Feature("Category Cascade")
 @DisplayName("Category Cascade E2E Tests")
 class CategoryCascadeAppiumTest : AppiumBaseTest() {
 
@@ -35,8 +39,10 @@ class CategoryCascadeAppiumTest : AppiumBaseTest() {
 
         // Verify we're on Categories screen (FAB has fabAddCategory id)
         assertTrue(
-            elementExists("fabAddCategory") || elementExists("btnRecategorize") ||
-                textExists("Categories") || textExists("CATEGORIES"),
+            elementExists("fabAddCategory") ||
+                elementExists("btnRecategorize") ||
+                textExists("Categories") ||
+                textExists("CATEGORIES"),
             "Should be on Categories screen"
         )
 

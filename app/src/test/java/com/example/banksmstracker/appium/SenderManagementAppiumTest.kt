@@ -1,11 +1,12 @@
 package com.example.banksmstracker.appium
 
 import io.appium.java_client.AppiumBy
+import io.qameta.allure.Epic
+import io.qameta.allure.Feature
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -34,6 +35,8 @@ import org.junit.jupiter.api.TestMethodOrder
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 // @Disabled("Requires Appium server and Android emulator. Run with: make test-appium")
+@Epic("Bank SMS Tracker")
+@Feature("Sender Management")
 @DisplayName("Sender Management E2E Tests")
 class SenderManagementAppiumTest : AppiumBaseTest() {
 
@@ -275,7 +278,10 @@ class SenderManagementAppiumTest : AppiumBaseTest() {
 
         // Verify new sender was added
         val finalSenderNames = countTotalSenderItems()
-        assertTrue(finalSenderNames > initialSenderNames, "Should have more senders (had $initialSenderNames, now $finalSenderNames)")
+        assertTrue(
+            finalSenderNames > initialSenderNames,
+            "Should have more senders (had $initialSenderNames, now $finalSenderNames)"
+        )
 
         // Configure the new sender if it was added
         if (finalSenderNames > initialSenderNames) {

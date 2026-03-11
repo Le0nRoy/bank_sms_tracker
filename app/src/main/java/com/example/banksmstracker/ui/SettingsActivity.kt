@@ -1,6 +1,8 @@
 package com.example.banksmstracker.ui
 
+import android.app.AlertDialog
 import android.os.Bundle
+import android.widget.Button
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import androidx.appcompat.app.AppCompatDelegate
@@ -22,6 +24,7 @@ class SettingsActivity : BaseActivity() {
 
         setupThemeSelection()
         setupLanguageSelection()
+        setupPrivacySection()
     }
 
     private fun setupThemeSelection() {
@@ -29,7 +32,8 @@ class SettingsActivity : BaseActivity() {
         val currentMode = prefs.getInt(BankSmsTrackerApp.KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
 
         when (currentMode) {
-            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> findViewById<RadioButton>(R.id.radioThemeSystem).isChecked = true
+            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM -> findViewById<RadioButton>(R.id.radioThemeSystem).isChecked =
+                true
             AppCompatDelegate.MODE_NIGHT_NO -> findViewById<RadioButton>(R.id.radioThemeLight).isChecked = true
             AppCompatDelegate.MODE_NIGHT_YES -> findViewById<RadioButton>(R.id.radioThemeDark).isChecked = true
         }
@@ -66,6 +70,20 @@ class SettingsActivity : BaseActivity() {
             prefs.edit().putString(BankSmsTrackerApp.KEY_LANGUAGE, newLanguage).apply()
             applyLanguage(newLanguage)
         }
+    }
+
+    private fun setupPrivacySection() {
+        findViewById<Button>(R.id.btnViewTerms).setOnClickListener {
+            showTermsDialog()
+        }
+    }
+
+    private fun showTermsDialog() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.terms_title)
+            .setMessage(R.string.terms_message)
+            .setPositiveButton(R.string.terms_agree, null)
+            .show()
     }
 
     private fun applyLanguage(languageCode: String) {

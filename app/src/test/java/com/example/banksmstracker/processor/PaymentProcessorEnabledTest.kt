@@ -18,7 +18,9 @@ class PaymentProcessorEnabledTest {
     private val testAddress = "TestBank"
 
     // Simple regex that captures named groups: amount, currency, card, merchant, date, balance
-    private val testRegex = """(?<amount>\d+\.\d+) (?<currency>\w+) card:(?<card>\d+) at:(?<merchant>\w+) time:(?<date>\S+) bal:(?<balance>\d+\.\d+)"""
+    private val testRegex =
+        """(?<amount>\d+\.\d+) (?<currency>\w+) card:(?<card>\d+)""" +
+            """ at:(?<merchant>\w+) time:(?<date>\S+) bal:(?<balance>\d+\.\d+)"""
 
     private val testMessage = "100.50 USD card:1234 at:Amazon time:2024-01-15 bal:500.00"
 
@@ -200,11 +202,10 @@ class PaymentProcessorEnabledTest {
         override suspend fun getPaymentsBySender(senderAddress: String): List<Payment> =
             payments.filter { it.senderAddress == senderAddress }
 
-        override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> =
-            payments.filter {
-                val receivedAt = it.receivedAt ?: return@filter false
-                receivedAt in startTime..endTime
-            }
+        override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> = payments.filter {
+            val receivedAt = it.receivedAt ?: return@filter false
+            receivedAt in startTime..endTime
+        }
 
         override suspend fun getDistinctSenderAddresses(): List<String> =
             payments.mapNotNull { it.senderAddress }.distinct().sorted()
@@ -216,8 +217,7 @@ class PaymentProcessorEnabledTest {
             }
         }
 
-        override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> =
-            payments.filter { it.ruleId == ruleId }
+        override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> = payments.filter { it.ruleId == ruleId }
 
         override suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?) {
             payments.replaceAll { payment ->

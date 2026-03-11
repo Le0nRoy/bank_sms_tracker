@@ -1,5 +1,7 @@
 package com.example.banksmstracker.appium
 
+import io.qameta.allure.Epic
+import io.qameta.allure.Feature
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
@@ -23,6 +25,8 @@ import org.junit.jupiter.api.TestMethodOrder
  * Run with: make test-appium
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+@Epic("Bank SMS Tracker")
+@Feature("Payments")
 @DisplayName("Payments Filter E2E Tests")
 class PaymentsFilterAppiumTest : AppiumBaseTest() {
 
@@ -107,8 +111,10 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
         mediumWait()
 
         // Date picker should show OK or Cancel button
-        val hasDatePicker = textExists("OK") || textExists("Cancel") ||
-            textExists("Date") || textExists("DATE")
+        val hasDatePicker = textExists("OK") ||
+            textExists("Cancel") ||
+            textExists("Date") ||
+            textExists("DATE")
 
         assertTrue(hasDatePicker, "Should show date picker dialog")
 
@@ -135,8 +141,10 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
         mediumWait()
 
         // Date picker should show OK or Cancel button
-        val hasDatePicker = textExists("OK") || textExists("Cancel") ||
-            textExists("Date") || textExists("DATE")
+        val hasDatePicker = textExists("OK") ||
+            textExists("Cancel") ||
+            textExists("Date") ||
+            textExists("DATE")
 
         assertTrue(hasDatePicker, "Should show date picker dialog")
 

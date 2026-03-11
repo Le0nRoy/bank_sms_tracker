@@ -1,5 +1,7 @@
 package com.example.banksmstracker.appium
 
+import io.qameta.allure.Epic
+import io.qameta.allure.Feature
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -22,6 +24,8 @@ import org.junit.jupiter.api.TestMethodOrder
  * 2. Android emulator running with the app installed
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+@Epic("Bank SMS Tracker")
+@Feature("Settings")
 @DisplayName("Settings E2E Tests")
 class SettingsAppiumTest : AppiumBaseTest() {
 
@@ -102,7 +106,8 @@ class SettingsAppiumTest : AppiumBaseTest() {
 
         // Verify it's selected
         assertTrue(
-            findById("radioLanguageEnglish").isSelected || findById("radioLanguageEnglish").getAttribute("checked") == "true",
+            findById("radioLanguageEnglish").isSelected ||
+                findById("radioLanguageEnglish").getAttribute("checked") == "true",
             "English language should be selected"
         )
 
@@ -117,7 +122,7 @@ class SettingsAppiumTest : AppiumBaseTest() {
     fun selectingRussianLanguageChangesUI() {
         // Select Russian
         findById("radioLanguageRussian").click()
-        longWait()  // Allow time for locale change and potential activity recreation
+        longWait() // Allow time for locale change and potential activity recreation
 
         // After language change, we may need to re-navigate to settings
         // as the activity might be recreated
@@ -186,7 +191,8 @@ class SettingsAppiumTest : AppiumBaseTest() {
 
         // Verify English is still selected
         assertTrue(
-            findById("radioLanguageEnglish").isSelected || findById("radioLanguageEnglish").getAttribute("checked") == "true",
+            findById("radioLanguageEnglish").isSelected ||
+                findById("radioLanguageEnglish").getAttribute("checked") == "true",
             "English language should still be selected after navigation"
         )
 
@@ -211,7 +217,8 @@ class SettingsAppiumTest : AppiumBaseTest() {
             "Dark theme should be selected"
         )
         assertTrue(
-            findById("radioLanguageEnglish").isSelected || findById("radioLanguageEnglish").getAttribute("checked") == "true",
+            findById("radioLanguageEnglish").isSelected ||
+                findById("radioLanguageEnglish").getAttribute("checked") == "true",
             "English language should be selected"
         )
 
@@ -224,7 +231,8 @@ class SettingsAppiumTest : AppiumBaseTest() {
             "Light theme should be selected"
         )
         assertTrue(
-            findById("radioLanguageEnglish").isSelected || findById("radioLanguageEnglish").getAttribute("checked") == "true",
+            findById("radioLanguageEnglish").isSelected ||
+                findById("radioLanguageEnglish").getAttribute("checked") == "true",
             "English language should still be selected after theme change"
         )
 

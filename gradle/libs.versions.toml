@@ -32,6 +32,9 @@ mockito = "5.11.0"
 # Appium
 appium-java-client = "9.3.0"
 
+# Allure
+allure = "2.27.0"
+
 [libraries]
 # --- JUnit 5 ---
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit5" }
@@ -73,6 +76,9 @@ mockito-junit-jupiter = { group = "org.mockito", name = "mockito-junit-jupiter",
 
 # --- Appium ---
 appium-java-client = { group = "io.appium", name = "java-client", version.ref = "appium-java-client" }
+
+# --- Allure ---
+allure-junit5 = { group = "io.qameta.allure", name = "allure-junit5", version.ref = "allure" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,6 +1,5 @@
 package com.example.banksmstracker.processor
 
-import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
@@ -29,11 +28,15 @@ class PaymentProcessorWorkflowTest {
     private val testAddress = "TestBank"
 
     // Simple regex that captures named groups: amount, currency, card, merchant, date, balance
-    private val paymentRegex = """(?<amount>\d+\.\d+) (?<currency>\w+) card:(?<card>\d+) at:(?<merchant>\w+) time:(?<date>\S+) bal:(?<balance>\d+\.\d+)"""
+    private val paymentRegex =
+        """(?<amount>\d+\.\d+) (?<currency>\w+) card:(?<card>\d+)""" +
+            """ at:(?<merchant>\w+) time:(?<date>\S+) bal:(?<balance>\d+\.\d+)"""
     private val paymentMessage = "100.50 USD card:1234 at:Amazon time:2024-01-15 bal:500.00"
 
     // Income regex with named groups
-    private val incomeRegex = """INCOME: (?<amount>\d+\.\d+) (?<currency>\w+) from:(?<card>\w+) via:(?<merchant>\w+) time:(?<date>\S+) bal:(?<balance>\d+\.\d+)"""
+    private val incomeRegex =
+        """INCOME: (?<amount>\d+\.\d+) (?<currency>\w+) from:(?<card>\w+)""" +
+            """ via:(?<merchant>\w+) time:(?<date>\S+) bal:(?<balance>\d+\.\d+)"""
     private val incomeMessage = "INCOME: 1000.00 USD from:1234 via:Employer time:2024-01-15 bal:1500.00"
 
     // Ignore regex - simple patterns without capture groups
@@ -481,11 +484,10 @@ class PaymentProcessorWorkflowTest {
         override suspend fun getPaymentsBySender(senderAddress: String): List<Payment> =
             payments.filter { it.senderAddress == senderAddress }
 
-        override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> =
-            payments.filter {
-                val receivedAt = it.receivedAt ?: return@filter false
-                receivedAt in startTime..endTime
-            }
+        override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> = payments.filter {
+            val receivedAt = it.receivedAt ?: return@filter false
+            receivedAt in startTime..endTime
+        }
 
         override suspend fun getDistinctSenderAddresses(): List<String> =
             payments.mapNotNull { it.senderAddress }.distinct().sorted()
@@ -497,8 +499,7 @@ class PaymentProcessorWorkflowTest {
             }
         }
 
-        override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> =
-            payments.filter { it.ruleId == ruleId }
+        override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> = payments.filter { it.ruleId == ruleId }
 
         override suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?) {
             payments.replaceAll { payment ->

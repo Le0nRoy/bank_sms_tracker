@@ -3,6 +3,7 @@ package com.example.banksmstracker.ui
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -54,6 +55,9 @@ class BugReportActivity : BaseActivity() {
         cbIncludePaymentStats = findViewById(R.id.cbIncludePaymentStats)
         cbIncludeFilterState = findViewById(R.id.cbIncludeFilterState)
         cbAttachPaymentsData = findViewById(R.id.cbAttachPaymentsData)
+        if (!BuildConfig.DEBUG) {
+            cbAttachPaymentsData.visibility = View.GONE
+        }
         btnPreviewReport = findViewById(R.id.btnPreviewReport)
         tvReportPreview = findViewById(R.id.tvReportPreview)
         btnSendReport = findViewById(R.id.btnSendReport)
@@ -133,7 +137,13 @@ class BugReportActivity : BaseActivity() {
                 report.append(getString(R.string.senders_count_label, senders.size))
                 report.append("\n")
                 senders.forEach { sender ->
-                    val status = if (sender.enabled) getString(R.string.enabled_status) else getString(R.string.disabled_status)
+                    val status = if (sender.enabled) {
+                        getString(
+                            R.string.enabled_status
+                        )
+                    } else {
+                        getString(R.string.disabled_status)
+                    }
                     report.append("  - ${sender.name} ($status)\n")
                     report.append("    ${getString(R.string.addresses_count, sender.addresses.size)}\n")
                     report.append("    ${getString(R.string.rules_count, sender.rules.size)}\n")
@@ -143,7 +153,13 @@ class BugReportActivity : BaseActivity() {
                 report.append(getString(R.string.categories_count_label, categories.size))
                 report.append("\n")
                 categories.forEach { category ->
-                    val status = if (category.enabled) getString(R.string.enabled_status) else getString(R.string.disabled_status)
+                    val status = if (category.enabled) {
+                        getString(
+                            R.string.enabled_status
+                        )
+                    } else {
+                        getString(R.string.disabled_status)
+                    }
                     report.append("  - ${category.name} ($status)\n")
                     report.append("    ${getString(R.string.merchants_count, category.merchants.size)}\n")
                 }

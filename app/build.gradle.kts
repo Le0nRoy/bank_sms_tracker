@@ -84,6 +84,7 @@ dependencies {
     testImplementation(libs.mockito.junit.jupiter)
     testImplementation(kotlin("test"))
     testImplementation(libs.appium.java.client)
+    testImplementation(libs.allure.junit5)
 
     // --- Android instrumented tests ---
     androidTestImplementation(libs.junit.jupiter.api)
@@ -96,6 +97,14 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+}
+
+// Allure results directory for JVM tests (unit + Appium)
+tasks.withType<Test> {
+    systemProperty(
+        "allure.results.directory",
+        layout.buildDirectory.dir("allure-results").get().asFile.absolutePath
+    )
 }
 
 // JaCoCo Configuration

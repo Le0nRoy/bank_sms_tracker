@@ -1,8 +1,9 @@
 package com.example.banksmstracker.appium
 
+import io.qameta.allure.Epic
+import io.qameta.allure.Feature
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -31,6 +32,8 @@ import org.junit.jupiter.api.TestMethodOrder
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 // @Disabled("Requires Appium server and Android emulator. Run with: make test-appium")
+@Epic("Bank SMS Tracker")
+@Feature("Regex Builder")
 @DisplayName("Regex Builder E2E Tests")
 class RegexBuilderAppiumTest : AppiumBaseTest() {
 
@@ -112,7 +115,9 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         mediumWait()
 
         // Scroll to results area (may be below fold on small screens)
-        try { scrollToElementById("tvResults") } catch (e: Exception) { /* already visible */ }
+        try {
+            scrollToElementById("tvResults")
+        } catch (e: Exception) { /* already visible */ }
         val resultsArea = findById("tvResults")
         val resultsText = resultsArea.text
 
@@ -149,7 +154,9 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         mediumWait()
 
         // Scroll to results area (may be below fold on small screens)
-        try { scrollToElementById("tvResults") } catch (e: Exception) { /* already visible */ }
+        try {
+            scrollToElementById("tvResults")
+        } catch (e: Exception) { /* already visible */ }
         val resultsArea = findById("tvResults")
         assertTrue(resultsArea.isDisplayed, "Results area should be visible")
 
@@ -182,7 +189,9 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         mediumWait()
 
         // Scroll to results area (may be below fold on small screens)
-        try { scrollToElementById("tvResults") } catch (e: Exception) { /* already visible */ }
+        try {
+            scrollToElementById("tvResults")
+        } catch (e: Exception) { /* already visible */ }
         val resultsArea = findById("tvResults")
         val resultsText = resultsArea.text
 
@@ -515,7 +524,12 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         clickButton("btnRegexBuilder")
         mediumWait()
 
-        val hasButton = try { scrollToPresetButton("btnPresetDate"); true } catch (e: Exception) { false }
+        val hasButton = try {
+            scrollToPresetButton("btnPresetDate")
+            true
+        } catch (e: Exception) {
+            false
+        }
         assertTrue(hasButton, "Should have preset date button")
 
         navigateToMain()
@@ -528,7 +542,12 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         clickButton("btnRegexBuilder")
         mediumWait()
 
-        val hasButton = try { scrollToPresetButton("btnPresetTime"); true } catch (e: Exception) { false }
+        val hasButton = try {
+            scrollToPresetButton("btnPresetTime")
+            true
+        } catch (e: Exception) {
+            false
+        }
         assertTrue(hasButton, "Should have preset time button")
 
         navigateToMain()

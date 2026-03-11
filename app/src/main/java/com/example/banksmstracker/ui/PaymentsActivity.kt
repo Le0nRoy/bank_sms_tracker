@@ -19,6 +19,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.banksmstracker.BuildConfig
 import com.example.banksmstracker.R
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Payment
@@ -100,8 +101,12 @@ class PaymentsActivity : BaseActivity() {
         btnEndDate = findViewById(R.id.btnEndDate)
         btnClearDates = findViewById(R.id.btnClearDates)
 
-        btnExportCsv.setOnClickListener {
-            exportToCsv()
+        if (!BuildConfig.DEBUG) {
+            btnExportCsv.visibility = View.GONE
+        } else {
+            btnExportCsv.setOnClickListener {
+                exportToCsv()
+            }
         }
 
         btnSpendingReport = findViewById(R.id.btnSpendingReport)
@@ -176,9 +181,11 @@ class PaymentsActivity : BaseActivity() {
     }
 
     private fun loadData(preserveScroll: Boolean = false) {
-        val savedScrollState = if (preserveScroll)
+        val savedScrollState = if (preserveScroll) {
             (recyclerPayments.layoutManager as? LinearLayoutManager)?.onSaveInstanceState()
-        else null
+        } else {
+            null
+        }
 
         lifecycleScope.launch {
             // Initialize repository from ConfigRepository's database
@@ -323,7 +330,8 @@ class PaymentsActivity : BaseActivity() {
 
         val total = filteredPayments.sumOf { it.amount }
         val currency = filteredPayments.firstOrNull()?.currency ?: ""
-        tvPaymentCount.text = getString(R.string.payments_summary, filteredPayments.size, "%.2f".format(total), currency)
+        tvPaymentCount.text =
+            getString(R.string.payments_summary, filteredPayments.size, "%.2f".format(total), currency)
     }
 
     private fun exportToCsv() {
@@ -462,10 +470,12 @@ class PaymentsActivity : BaseActivity() {
 
         dialogView.findViewById<TextView>(R.id.tvMerchant).text = payment.merchant ?: getString(R.string.unknown)
         dialogView.findViewById<TextView>(R.id.tvAmount).text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
-        dialogView.findViewById<TextView>(R.id.tvCategory).text = payment.categoryId ?: getString(R.string.uncategorized)
+        dialogView.findViewById<TextView>(R.id.tvCategory).text =
+            payment.categoryId ?: getString(R.string.uncategorized)
         dialogView.findViewById<TextView>(R.id.tvCard).text = payment.card?.let { "****$it" } ?: "-"
         dialogView.findViewById<TextView>(R.id.tvTimestamp).text = payment.timestamp ?: "-"
-        dialogView.findViewById<TextView>(R.id.tvBalance).text = payment.balance?.let { "${"%.2f".format(it)} ${payment.currency}" } ?: "-"
+        dialogView.findViewById<TextView>(R.id.tvBalance).text =
+            payment.balance?.let { "${"%.2f".format(it)} ${payment.currency}" } ?: "-"
         dialogView.findViewById<TextView>(R.id.tvSender).text = payment.senderAddress ?: "-"
 
         val spinnerCategories = dialogView.findViewById<Spinner>(R.id.spinnerCategories)
@@ -533,7 +543,11 @@ class PaymentsActivity : BaseActivity() {
                     loadData(preserveScroll = true)
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.error_with_message, e.message ?: ""),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -583,7 +597,11 @@ class PaymentsActivity : BaseActivity() {
                 parentDialog.dismiss()
                 loadData(preserveScroll = true)
             } catch (e: Exception) {
-                Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.error_with_message, e.message ?: ""),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }

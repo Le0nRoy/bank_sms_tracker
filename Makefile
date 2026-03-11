@@ -3,7 +3,8 @@
 
 .PHONY: help build clean lint test test-unit test-android test-appium test-smoke test-all \
         coverage install run appium-start appium-stop appium-docker-start appium-docker-stop \
-        cluster-start cluster-stop cluster-status
+        cluster-start cluster-stop cluster-status \
+        allure-install allure-report allure-serve
 
 # Default target
 .DEFAULT_GOAL := help
@@ -37,8 +38,11 @@ help: ## Show this help message
 	@echo "$(GREEN)Cluster (Docker):$(NC)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E 'cluster' | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
 	@echo ""
+	@echo "$(GREEN)Allure:$(NC)"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -E 'allure' | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
+	@echo ""
 	@echo "$(GREEN)Other:$(NC)"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -vE '(build|clean|install|lint|test|coverage|appium)' | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -vE '(build|clean|install|lint|test|coverage|appium|allure)' | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-20s$(NC) %s\n", $$1, $$2}'
 
 #------------------------------------------------------------------------------
 # Build targets
@@ -198,6 +202,27 @@ ci: lint test-unit coverage ## Run CI pipeline (lint + unit tests + coverage)
 
 ci-full: lint test-unit coverage test-android ## Run full CI pipeline (includes instrumented tests)
 	@echo "$(GREEN)Full CI pipeline completed!$(NC)"
+
+#------------------------------------------------------------------------------
+# Allure reporting targets
+#------------------------------------------------------------------------------
+
+allure-install: ## Install Allure CLI into project-local .venv (no global install)
+	@echo "$(BLUE)Installing Allure CLI into .venv ...$(NC)"
+	@python3 -m venv .venv
+	@.venv/bin/pip install --quiet --upgrade pip
+	@.venv/bin/pip install --quiet allure-pytest
+	@echo "$(GREEN)Allure installed: $$(. .venv/bin/activate && allure --version)$(NC)"
+	@echo "$(YELLOW)Note: .venv/ is project-local and listed in .gitignore$(NC)"
+
+allure-report: ## Generate static Allure HTML report from last test run
+	@echo "$(BLUE)Generating Allure report...$(NC)"
+	@.venv/bin/allure generate app/build/allure-results -o app/build/reports/allure-report --clean
+	@echo "$(GREEN)Report generated at: app/build/reports/allure-report/index.html$(NC)"
+
+allure-serve: ## Open Allure report in browser (serves locally, no upload)
+	@echo "$(BLUE)Opening Allure report in browser...$(NC)"
+	@.venv/bin/allure serve app/build/allure-results
 
 #------------------------------------------------------------------------------
 # Quick shortcuts

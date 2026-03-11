@@ -1,8 +1,9 @@
 package com.example.banksmstracker.appium
 
 import io.appium.java_client.AppiumBy
+import io.qameta.allure.Epic
+import io.qameta.allure.Feature
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -30,6 +31,8 @@ import org.junit.jupiter.api.TestMethodOrder
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 // @Disabled("Requires Appium server and Android emulator. Run with: make test-appium")
+@Epic("Bank SMS Tracker")
+@Feature("SMS Processing")
 @DisplayName("SMS to Payment Flow E2E Tests")
 class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
 
