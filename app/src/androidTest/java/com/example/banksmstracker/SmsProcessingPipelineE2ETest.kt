@@ -1,7 +1,6 @@
 package com.example.banksmstracker
 
 import android.content.Intent
-import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Rule
@@ -9,12 +8,12 @@ import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.parser.SmsReceiver
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.InMemoryPaymentRepository
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -44,12 +43,8 @@ class SmsProcessingPipelineE2ETest {
             putExtra(SmsReceiver.EXTRA_TEST_BODY, body)
         }
 
-    private fun createProcessor(
-        senders: List<Sender>,
-        categories: List<Category>
-    ): PaymentProcessor {
-        return PaymentProcessor(senders, categories, repository)
-    }
+    private fun createProcessor(senders: List<Sender>, categories: List<Category>): PaymentProcessor =
+        PaymentProcessor(senders, categories, repository)
 
     @BeforeEach
     fun setUp() {
@@ -100,9 +95,18 @@ class SmsProcessingPipelineE2ETest {
             val processor = createProcessor(listOf(senderA, senderB), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("BANKA", "Payment 100.00 USD card 1234 StoreA at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("BANKB", "Payment 200.00 USD card 5678 StoreB at 20230901 bal 2000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("BANKA", "Payment 300.00 USD card 1234 StoreC at 20230901 bal 700.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANKA", "Payment 100.00 USD card 1234 StoreA at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANKB", "Payment 200.00 USD card 5678 StoreB at 20230901 bal 2000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANKA", "Payment 300.00 USD card 1234 StoreC at 20230901 bal 700.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(3, payments.size)
@@ -124,15 +128,27 @@ class SmsProcessingPipelineE2ETest {
             smsReceiver.setPaymentProcessorForTest(processor)
 
             // Valid
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00")
+            )
             // Invalid format
             smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Your OTP is 123456"))
             // Valid
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00")
+            )
             // Invalid - unknown sender
-            smsReceiver.onReceive(context, buildSmsIntent("UNKNOWN", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("UNKNOWN", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00")
+            )
             // Valid
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 400.00 USD card 1234 Store4 at 20230901 bal 400.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 400.00 USD card 1234 Store4 at 20230901 bal 400.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(3, payments.size)
@@ -159,9 +175,18 @@ class SmsProcessingPipelineE2ETest {
             val processor = createProcessor(listOf(sender), categories)
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Amazon at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 50.00 USD card 1234 KFC at 20230901 bal 950.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 75.00 USD card 1234 UnknownStore at 20230901 bal 875.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Amazon at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 50.00 USD card 1234 KFC at 20230901 bal 950.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 75.00 USD card 1234 UnknownStore at 20230901 bal 875.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(3, payments.size)
@@ -190,9 +215,18 @@ class SmsProcessingPipelineE2ETest {
             smsReceiver.setPaymentProcessorForTest(processor)
 
             // Different case variations
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 AMAZON at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 amazon at 20230901 bal 900.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 AmAzOn at 20230901 bal 800.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 AMAZON at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 amazon at 20230901 bal 900.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 AmAzOn at 20230901 bal 800.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(3, payments.size)
@@ -236,8 +270,14 @@ class SmsProcessingPipelineE2ETest {
             smsReceiver.setPaymentProcessorForTest(processor)
 
             // Same amount, different merchants (different messages)
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store2 at 20230901 bal 900.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store2 at 20230901 bal 900.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(2, payments.size)
@@ -246,8 +286,18 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Same message from different senders is saved")
         fun sameMessageFromDifferentSendersIsSaved() {
-            val senderA = Sender(name = "BankA", addresses = mutableListOf("BANKA"), rules = mutableListOf(Rule(pattern = standardRegex)))
-            val senderB = Sender(name = "BankB", addresses = mutableListOf("BANKB"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val senderA =
+                Sender(
+                    name = "BankA",
+                    addresses = mutableListOf("BANKA"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
+            val senderB =
+                Sender(
+                    name = "BankB",
+                    addresses = mutableListOf("BANKB"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val processor = createProcessor(listOf(senderA, senderB), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
@@ -267,13 +317,31 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Disabled sender messages are ignored")
         fun disabledSenderMessagesAreIgnored() {
-            val enabledSender = Sender(name = "EnabledBank", addresses = mutableListOf("ENABLED"), rules = mutableListOf(Rule(pattern = standardRegex)), enabled = true)
-            val disabledSender = Sender(name = "DisabledBank", addresses = mutableListOf("DISABLED"), rules = mutableListOf(Rule(pattern = standardRegex)), enabled = false)
+            val enabledSender =
+                Sender(
+                    name = "EnabledBank",
+                    addresses = mutableListOf("ENABLED"),
+                    rules = mutableListOf(Rule(pattern = standardRegex)),
+                    enabled = true
+                )
+            val disabledSender =
+                Sender(
+                    name = "DisabledBank",
+                    addresses = mutableListOf("DISABLED"),
+                    rules = mutableListOf(Rule(pattern = standardRegex)),
+                    enabled = false
+                )
             val processor = createProcessor(listOf(enabledSender, disabledSender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("ENABLED", "Payment 100.00 USD card 1234 Store at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("DISABLED", "Payment 200.00 USD card 5678 Store at 20230901 bal 2000.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("ENABLED", "Payment 100.00 USD card 1234 Store at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("DISABLED", "Payment 200.00 USD card 5678 Store at 20230901 bal 2000.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(1, payments.size)
@@ -297,7 +365,10 @@ class SmsProcessingPipelineE2ETest {
             // This matches only the disabled rule
             smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Disabled: 100 USD 1234 Store 20230901 1000"))
             // This matches the enabled rule
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 200.00 USD card 5678 Store at 20230902 bal 800.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 200.00 USD card 5678 Store at 20230902 bal 800.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(1, payments.size)
@@ -307,7 +378,12 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Disabled category does not assign categoryId")
         fun disabledCategoryDoesNotAssignCategoryId() {
-            val sender = Sender(name = "TestBank", addresses = mutableListOf("TESTBANK"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val sender =
+                Sender(
+                    name = "TestBank",
+                    addresses = mutableListOf("TESTBANK"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val categories = listOf(
                 Category(name = "Shopping", merchants = mutableListOf("Amazon"), enabled = false),
                 Category(name = "Food", merchants = mutableListOf("KFC"), enabled = true)
@@ -315,8 +391,14 @@ class SmsProcessingPipelineE2ETest {
             val processor = createProcessor(listOf(sender), categories)
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Amazon at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 50.00 USD card 1234 KFC at 20230901 bal 950.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Amazon at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 50.00 USD card 1234 KFC at 20230901 bal 950.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(2, payments.size)
@@ -349,7 +431,10 @@ class SmsProcessingPipelineE2ETest {
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "GEL 100.00 GEL card 1234 Store at 20230901 bal 1000.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "GEL 100.00 GEL card 1234 Store at 20230901 bal 1000.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(1, payments.size)
@@ -372,7 +457,10 @@ class SmsProcessingPipelineE2ETest {
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store at 20230901 bal 1000.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store at 20230901 bal 1000.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(1, payments.size)
@@ -396,9 +484,18 @@ class SmsProcessingPipelineE2ETest {
             smsReceiver.setPaymentProcessorForTest(processor)
 
             // Different case variations of sender address
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("testbank", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TestBank", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("testbank", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TestBank", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(3, payments.size)
@@ -415,9 +512,18 @@ class SmsProcessingPipelineE2ETest {
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("BANK-SMS", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("BANK-NOTIFY", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("+1234567890", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANK-SMS", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANK-NOTIFY", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("+1234567890", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(3, payments.size)
@@ -440,7 +546,10 @@ class SmsProcessingPipelineE2ETest {
             val processor = createProcessor(listOf(sender), categories)
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 123.45 EUR card 9876 Amazon at 20231225 bal 5000.50"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 123.45 EUR card 9876 Amazon at 20231225 bal 5000.50")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(1, payments.size)
@@ -461,12 +570,20 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Payments are stored with receivedAt timestamp")
         fun paymentsAreStoredWithReceivedAtTimestamp() {
-            val sender = Sender(name = "TestBank", addresses = mutableListOf("TESTBANK"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val sender =
+                Sender(
+                    name = "TestBank",
+                    addresses = mutableListOf("TESTBANK"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
             val before = System.currentTimeMillis()
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store at 20230901 bal 1000.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store at 20230901 bal 1000.00")
+            )
             val after = System.currentTimeMillis()
 
             val payment = runBlocking { repository.getAllPayments() }[0]
@@ -478,14 +595,33 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Payments can be filtered by sender after storage")
         fun paymentsCanBeFilteredBySenderAfterStorage() {
-            val senderA = Sender(name = "BankA", addresses = mutableListOf("BANKA"), rules = mutableListOf(Rule(pattern = standardRegex)))
-            val senderB = Sender(name = "BankB", addresses = mutableListOf("BANKB"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val senderA =
+                Sender(
+                    name = "BankA",
+                    addresses = mutableListOf("BANKA"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
+            val senderB =
+                Sender(
+                    name = "BankB",
+                    addresses = mutableListOf("BANKB"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val processor = createProcessor(listOf(senderA, senderB), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("BANKA", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("BANKA", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("BANKB", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANKA", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANKA", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANKB", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00")
+            )
 
             val bankAPayments = runBlocking { repository.getPaymentsBySender("BANKA") }
             val bankBPayments = runBlocking { repository.getPaymentsBySender("BANKB") }
@@ -497,7 +633,12 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Payments can be filtered by category after storage")
         fun paymentsCanBeFilteredByCategoryAfterStorage() {
-            val sender = Sender(name = "TestBank", addresses = mutableListOf("TESTBANK"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val sender =
+                Sender(
+                    name = "TestBank",
+                    addresses = mutableListOf("TESTBANK"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val categories = listOf(
                 Category(name = "Shopping", merchants = mutableListOf("Amazon")),
                 Category(name = "Food", merchants = mutableListOf("KFC"))
@@ -505,9 +646,18 @@ class SmsProcessingPipelineE2ETest {
             val processor = createProcessor(listOf(sender), categories)
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Amazon at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 50.00 USD card 1234 KFC at 20230901 bal 950.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 75.00 USD card 1234 Unknown at 20230901 bal 875.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Amazon at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 50.00 USD card 1234 KFC at 20230901 bal 950.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 75.00 USD card 1234 Unknown at 20230901 bal 875.00")
+            )
 
             val shoppingPayments = runBlocking { repository.getPaymentsByCategory("Shopping") }
             val foodPayments = runBlocking { repository.getPaymentsByCategory("Food") }
@@ -526,7 +676,12 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Empty intent extras are handled gracefully")
         fun emptyIntentExtrasAreHandledGracefully() {
-            val sender = Sender(name = "TestBank", addresses = mutableListOf("TESTBANK"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val sender =
+                Sender(
+                    name = "TestBank",
+                    addresses = mutableListOf("TESTBANK"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
@@ -540,7 +695,12 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Null body is handled gracefully")
         fun nullBodyIsHandledGracefully() {
-            val sender = Sender(name = "TestBank", addresses = mutableListOf("TESTBANK"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val sender =
+                Sender(
+                    name = "TestBank",
+                    addresses = mutableListOf("TESTBANK"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
@@ -557,11 +717,19 @@ class SmsProcessingPipelineE2ETest {
         @DisplayName("Unicode in message is preserved")
         fun unicodeInMessageIsPreserved() {
             val unicodeRegex = "Payment (\\d+\\.\\d{2}) (\\w+) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
-            val sender = Sender(name = "TestBank", addresses = mutableListOf("TESTBANK"), rules = mutableListOf(Rule(pattern = unicodeRegex)))
+            val sender =
+                Sender(
+                    name = "TestBank",
+                    addresses = mutableListOf("TESTBANK"),
+                    rules = mutableListOf(Rule(pattern = unicodeRegex))
+                )
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 GEL card 1234 საქართველო at 20230901 bal 1000.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 GEL card 1234 საქართველო at 20230901 bal 1000.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(1, payments.size)
@@ -571,11 +739,19 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Special characters in merchant are preserved")
         fun specialCharactersInMerchantArePreserved() {
-            val sender = Sender(name = "TestBank", addresses = mutableListOf("TESTBANK"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val sender =
+                Sender(
+                    name = "TestBank",
+                    addresses = mutableListOf("TESTBANK"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store-Name_123 at 20230901 bal 1000.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store-Name_123 at 20230901 bal 1000.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(1, payments.size)
@@ -590,13 +766,27 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Payments are returned in descending order by ID")
         fun paymentsAreReturnedInDescendingOrderById() {
-            val sender = Sender(name = "TestBank", addresses = mutableListOf("TESTBANK"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val sender =
+                Sender(
+                    name = "TestBank",
+                    addresses = mutableListOf("TESTBANK"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 First at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 200.00 USD card 1234 Second at 20230902 bal 800.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("TESTBANK", "Payment 300.00 USD card 1234 Third at 20230903 bal 500.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 First at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 200.00 USD card 1234 Second at 20230902 bal 800.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("TESTBANK", "Payment 300.00 USD card 1234 Third at 20230903 bal 500.00")
+            )
 
             val payments = runBlocking { repository.getAllPayments() }
             assertEquals(3, payments.size)
@@ -609,15 +799,39 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Distinct senders are retrievable")
         fun distinctSendersAreRetrievable() {
-            val senderA = Sender(name = "BankA", addresses = mutableListOf("BANKA"), rules = mutableListOf(Rule(pattern = standardRegex)))
-            val senderB = Sender(name = "BankB", addresses = mutableListOf("BANKB"), rules = mutableListOf(Rule(pattern = standardRegex)))
-            val senderC = Sender(name = "BankC", addresses = mutableListOf("BANKC"), rules = mutableListOf(Rule(pattern = standardRegex)))
+            val senderA =
+                Sender(
+                    name = "BankA",
+                    addresses = mutableListOf("BANKA"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
+            val senderB =
+                Sender(
+                    name = "BankB",
+                    addresses = mutableListOf("BANKB"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
+            val senderC =
+                Sender(
+                    name = "BankC",
+                    addresses = mutableListOf("BANKC"),
+                    rules = mutableListOf(Rule(pattern = standardRegex))
+                )
             val processor = createProcessor(listOf(senderA, senderB, senderC), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            smsReceiver.onReceive(context, buildSmsIntent("BANKA", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("BANKC", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00"))
-            smsReceiver.onReceive(context, buildSmsIntent("BANKA", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00"))
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANKA", "Payment 100.00 USD card 1234 Store1 at 20230901 bal 1000.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANKC", "Payment 200.00 USD card 1234 Store2 at 20230901 bal 800.00")
+            )
+            smsReceiver.onReceive(
+                context,
+                buildSmsIntent("BANKA", "Payment 300.00 USD card 1234 Store3 at 20230901 bal 500.00")
+            )
 
             val senders = runBlocking { repository.getDistinctSenderAddresses() }
             assertEquals(2, senders.size)

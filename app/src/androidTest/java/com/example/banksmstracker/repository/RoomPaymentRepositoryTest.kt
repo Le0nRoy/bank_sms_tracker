@@ -6,8 +6,8 @@ import androidx.test.core.app.ApplicationProvider
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.PaymentDao
-import org.junit.jupiter.api.AfterEach
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue

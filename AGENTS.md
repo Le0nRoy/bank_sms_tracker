@@ -106,17 +106,45 @@ fun second() { }
 
 ## Testing Strategy (Token-Efficient)
 
+> Full details: [docs/testing-approaches.md](docs/testing-approaches.md)
+
+### Mandatory Layered Testing Order
+
+**Fix failures in each layer before proceeding to the next. Never skip a layer.**
+
+```
+Layer 1 — Static analysis      ./gradlew ktlintCheck
+Layer 2 — Unit tests            ./gradlew testDebugUnitTest --tests "<feature package>.*"
+Layer 3 — Instrumented tests    ./gradlew connectedAndroidTest --tests "<feature class>"
+Layer 4 — Appium feature tests  APPIUM_APK_PATH=... ./gradlew testDebugUnitTest --tests "*.appium.<FeatureTest>"
+Layer 5 — Smoke tests           make test-smoke
+Layer 6 — Full Appium suite     make test-appium  ← only on merge / explicit request
+```
+
+| Layer | Tool | When to run | Token cost |
+|-------|------|-------------|------------|
+| 1. Static analysis | `./gradlew ktlintCheck` | Every change | Very low |
+| 2. Unit tests | `./gradlew testDebugUnitTest` | Changed processor/data/util code | Low |
+| 3. Instrumented tests | `./gradlew connectedAndroidTest` | Changed DB/Room/Activity code | Medium |
+| 4. Appium (feature) | `--tests "*.appium.XxxTest"` | Changed UI for feature Xxx | High |
+| 5. Smoke tests | `make test-smoke` | After any feature change | High (~10 min) |
+| 6. Full Appium suite | `make test-appium` | Before merge / on request | Very high (~60 min) |
+
 ### Rule 1 — Run only affected tests during development
+
 **NEVER run the full suite when iterating on a feature or fixing a bug.**
 Only run the test class(es) directly related to the code changed:
+
 ```bash
 # Fix in RegexBuilderActivity → run only RegexBuilder tests
 APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest \
   --tests "*.appium.RegexBuilderAppiumTest" --no-daemon
 
-# Fix in CategoryManagement → run only Category tests
-APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest \
-  --tests "*.appium.CategoryManagementAppiumTest" --no-daemon
+# Fix in processor logic → run unit tests only (no device needed)
+./gradlew testDebugUnitTest --tests "com.example.banksmstracker.processor.*"
+
+# Fix in Room/DB layer → run instrumented tests only
+./gradlew connectedAndroidTest --tests "com.example.banksmstracker.repository.RoomPaymentRepositoryTest"
 
 # Fix failing tests by name (most efficient — runs only what failed)
 APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest \
@@ -125,6 +153,7 @@ APPIUM_APK_PATH=/apk/debug/app-debug.apk ./gradlew testDebugUnitTest \
 ```
 
 ### Rule 2 — Smoke tests
+
 Each feature has 1-2 smoke tests annotated with `@Tag("smoke")` that verify the feature works at a high level. Run smoke tests to quickly check that changes didn't break unrelated features.
 
 **Smoke tests per feature** (annotated `@Tag("smoke")` in each class):
@@ -145,24 +174,21 @@ make test-smoke   # Run all smoke tests (~18 tests, ~10 min vs ~60 min full suit
 ```
 
 ### Rule 3 — New feature testing
-When implementing a new feature, tests **must include both**:
-1. **Full feature test class** — comprehensive coverage of all new functionality
-2. **Smoke tests** — 1-2 `@Tag("smoke")` tests added to the new test class for future smoke runs
 
-### Rule 4 — Mandatory testing order
-Always follow this sequence when verifying any change:
+When implementing a new feature, tests **must include all applicable layers**:
+1. **Unit tests** — cover logic in processor/data/repository code
+2. **Instrumented tests** — cover DB writes/reads and Activity lifecycle (if applicable)
+3. **Full Appium feature test class** — comprehensive UI coverage
+4. **Smoke tests** — 1-2 `@Tag("smoke")` tests added to the new Appium test class
 
+### Rule 4 — Performance tests
+
+Performance tests live in `com.example.banksmstracker.performance` (unit test package).
+Run them as part of Layer 2 for performance-sensitive changes:
+```bash
+./gradlew testDebugUnitTest --tests "com.example.banksmstracker.performance.*"
 ```
-1. Static analysis  →  ./gradlew ktlintCheck (or review changed files)
-2. Feature tests    →  run only the test class(es) for changed code
-3. Smoke tests      →  make test-smoke  (verify no regressions in other features)
-4. Full suite       →  make test-appium  (only before merging / on explicit request)
-```
-
-**Step 4 (full suite) is only run when:**
-- Explicitly requested by the user
-- Preparing to merge a branch
-- After a broad refactoring that touches multiple features
+See [docs/testing-improvement-plan.md](docs/testing-improvement-plan.md) for the full performance test roadmap.
 
 ## Operational Notes
 

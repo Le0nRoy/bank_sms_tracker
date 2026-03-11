@@ -4,7 +4,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class DataClassesTest {
 
@@ -373,7 +372,8 @@ class DataClassesTest {
 
     @Test
     fun `MessageProcessResult types are distinguishable`() {
-        val payment = Payment(amount = 100.0, currency = "USD", card = null, merchant = null, timestamp = null, balance = null)
+        val payment =
+            Payment(amount = 100.0, currency = "USD", card = null, merchant = null, timestamp = null, balance = null)
         val income = Income(amount = 500.0, currency = "USD", source = null, timestamp = null, balance = null)
 
         val paymentResult: MessageProcessResult = MessageProcessResult.PaymentResult(payment)

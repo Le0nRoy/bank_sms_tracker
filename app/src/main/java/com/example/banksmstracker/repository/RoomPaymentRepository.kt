@@ -31,36 +31,35 @@ class RoomPaymentRepository(private val paymentDao: PaymentDao) : PaymentReposit
         }
     }
 
-    override suspend fun getAllPayments(): List<Payment> {
-        return paymentDao.getAllPayments().map { it.toDomain() }
+    override suspend fun getAllPayments(): List<Payment> = paymentDao.getAllPayments().map { it.toDomain() }
+
+    override suspend fun getPaymentsByCategory(categoryId: String): List<Payment> =
+        paymentDao.getPaymentsByCategory(categoryId).map {
+            it.toDomain()
+        }
+
+    override suspend fun getUncategorizedPayments(): List<Payment> = paymentDao.getUncategorizedPayments().map {
+        it.toDomain()
     }
 
-    override suspend fun getPaymentsByCategory(categoryId: String): List<Payment> {
-        return paymentDao.getPaymentsByCategory(categoryId).map { it.toDomain() }
-    }
+    override suspend fun getPaymentsBySender(senderAddress: String): List<Payment> =
+        paymentDao.getPaymentsBySender(senderAddress).map {
+            it.toDomain()
+        }
 
-    override suspend fun getUncategorizedPayments(): List<Payment> {
-        return paymentDao.getUncategorizedPayments().map { it.toDomain() }
-    }
+    override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> =
+        paymentDao.getPaymentsByDateRange(startTime, endTime).map {
+            it.toDomain()
+        }
 
-    override suspend fun getPaymentsBySender(senderAddress: String): List<Payment> {
-        return paymentDao.getPaymentsBySender(senderAddress).map { it.toDomain() }
-    }
-
-    override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> {
-        return paymentDao.getPaymentsByDateRange(startTime, endTime).map { it.toDomain() }
-    }
-
-    override suspend fun getDistinctSenderAddresses(): List<String> {
-        return paymentDao.getDistinctSenderAddresses()
-    }
+    override suspend fun getDistinctSenderAddresses(): List<String> = paymentDao.getDistinctSenderAddresses()
 
     override suspend fun updatePaymentCategory(paymentId: Long, categoryName: String?) {
         paymentDao.updatePaymentCategory(paymentId, categoryName)
     }
 
-    override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> {
-        return paymentDao.getPaymentsByRule(ruleId).map { it.toDomain() }
+    override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> = paymentDao.getPaymentsByRule(ruleId).map {
+        it.toDomain()
     }
 
     override suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?) {

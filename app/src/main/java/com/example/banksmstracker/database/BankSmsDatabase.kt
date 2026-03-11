@@ -17,10 +17,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         RuleEntity::class,
         PaymentEntity::class,
         IgnoreRuleEntity::class,
-        IncomeEntity::class,
+        IncomeEntity::class
     ],
     version = 8,
-    exportSchema = false,
+    exportSchema = false
 )
 abstract class BankSmsDatabase : RoomDatabase() {
 
@@ -196,7 +196,7 @@ abstract class BankSmsDatabase : RoomDatabase() {
                     MIGRATION_4_5,
                     MIGRATION_5_6,
                     MIGRATION_6_7,
-                    MIGRATION_7_8,
+                    MIGRATION_7_8
                 )
                 .build()
                 .also { INSTANCE = it }

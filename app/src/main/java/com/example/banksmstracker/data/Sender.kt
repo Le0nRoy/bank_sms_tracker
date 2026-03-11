@@ -8,5 +8,5 @@ data class Sender(
     var name: String,
     var addresses: MutableList<String>,
     var rules: MutableList<Rule>,
-    var enabled: Boolean = true,
+    var enabled: Boolean = true
 )

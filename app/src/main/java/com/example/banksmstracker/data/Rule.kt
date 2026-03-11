@@ -11,7 +11,7 @@ data class Rule(
     var pattern: String,
     var description: String? = null,
     var enabled: Boolean = true,
-    var ruleType: RuleType = RuleType.PAYMENT,
+    var ruleType: RuleType = RuleType.PAYMENT
 ) {
     @kotlinx.serialization.Transient
     private var cachedPattern: Regex? = null
@@ -38,7 +38,7 @@ data class Rule(
             pattern = rule.pattern,
             description = rule.description,
             enabled = rule.enabled,
-            ruleType = RuleType.IGNORE,
+            ruleType = RuleType.IGNORE
         )
     }
 }

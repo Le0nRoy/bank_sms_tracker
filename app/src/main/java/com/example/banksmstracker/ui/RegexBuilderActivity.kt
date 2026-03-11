@@ -79,13 +79,13 @@ class RegexBuilderActivity : BaseActivity() {
 
     private val placeholderToRegex: Map<String, String> by lazy {
         mapOf(
-            "amount"   to regexPresets.amount,
+            "amount" to regexPresets.amount,
             "currency" to regexPresets.currency,
-            "card"     to regexPresets.card,
+            "card" to regexPresets.card,
             "merchant" to regexPresets.merchant,
-            "date"     to regexPresets.date,
-            "time"     to regexPresets.time,
-            "balance"  to regexPresets.balance,
+            "date" to regexPresets.date,
+            "time" to regexPresets.time,
+            "balance" to regexPresets.balance
         )
     }
 
@@ -150,7 +150,7 @@ class RegexBuilderActivity : BaseActivity() {
         val ruleTypes = listOf(
             getString(R.string.rule_type_payment),
             getString(R.string.rule_type_ignore_short),
-            getString(R.string.rule_type_income),
+            getString(R.string.rule_type_income)
         )
         val ruleTypeAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, ruleTypes)
         ruleTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -203,7 +203,9 @@ class RegexBuilderActivity : BaseActivity() {
         etRegexPattern.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-            override fun afterTextChanged(s: android.text.Editable?) { s?.let { applyPlaceholderSpans(it) } }
+            override fun afterTextChanged(s: android.text.Editable?) {
+                s?.let { applyPlaceholderSpans(it) }
+            }
         })
 
         // Setup preset button listeners
@@ -211,13 +213,13 @@ class RegexBuilderActivity : BaseActivity() {
     }
 
     private fun setupPresetListeners() {
-        btnPresetAmount.setOnClickListener   { insertPresetAtCursor("⟨amount⟩") }
+        btnPresetAmount.setOnClickListener { insertPresetAtCursor("⟨amount⟩") }
         btnPresetCurrency.setOnClickListener { insertPresetAtCursor("⟨currency⟩") }
-        btnPresetCard.setOnClickListener     { insertPresetAtCursor("⟨card⟩") }
+        btnPresetCard.setOnClickListener { insertPresetAtCursor("⟨card⟩") }
         btnPresetMerchant.setOnClickListener { insertPresetAtCursor("⟨merchant⟩") }
-        btnPresetDate.setOnClickListener     { insertPresetAtCursor("⟨date⟩") }
-        btnPresetTime.setOnClickListener     { insertPresetAtCursor("⟨time⟩") }
-        btnPresetBalance.setOnClickListener  { insertPresetAtCursor("⟨balance⟩") }
+        btnPresetDate.setOnClickListener { insertPresetAtCursor("⟨date⟩") }
+        btnPresetTime.setOnClickListener { insertPresetAtCursor("⟨time⟩") }
+        btnPresetBalance.setOnClickListener { insertPresetAtCursor("⟨balance⟩") }
     }
 
     private fun insertPresetAtCursor(preset: String) {
@@ -411,7 +413,9 @@ class RegexBuilderActivity : BaseActivity() {
             holder.tvDate.text = if (sms.date > 0) {
                 java.text.SimpleDateFormat("MMM dd, HH:mm", java.util.Locale.getDefault())
                     .format(java.util.Date(sms.date))
-            } else ""
+            } else {
+                ""
+            }
             holder.itemView.setOnClickListener { onItemClick(sms) }
         }
 
@@ -427,7 +431,7 @@ class RegexBuilderActivity : BaseActivity() {
             arrayOf("address", "body", "date"),
             null,
             null,
-            "date DESC LIMIT 200",
+            "date DESC LIMIT 200"
         )
 
         cursor?.use {
@@ -463,7 +467,7 @@ class RegexBuilderActivity : BaseActivity() {
                 val adapter = ArrayAdapter(
                     this@RegexBuilderActivity,
                     android.R.layout.simple_spinner_item,
-                    listOf(getString(R.string.no_senders_available)),
+                    listOf(getString(R.string.no_senders_available))
                 )
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spinnerSenders.adapter = adapter
@@ -476,7 +480,7 @@ class RegexBuilderActivity : BaseActivity() {
                 val adapter = ArrayAdapter(
                     this@RegexBuilderActivity,
                     android.R.layout.simple_spinner_item,
-                    senderNames,
+                    senderNames
                 )
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spinnerSenders.adapter = adapter
@@ -539,7 +543,7 @@ class RegexBuilderActivity : BaseActivity() {
         val adapter = ArrayAdapter(
             this,
             android.R.layout.simple_spinner_item,
-            patternOptions,
+            patternOptions
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerExistingPatterns.adapter = adapter
@@ -555,12 +559,10 @@ class RegexBuilderActivity : BaseActivity() {
         }
     }
 
-    private fun truncatePattern(pattern: String): String {
-        return if (pattern.length > 40) {
-            pattern.take(37) + "..."
-        } else {
-            pattern
-        }
+    private fun truncatePattern(pattern: String): String = if (pattern.length > 40) {
+        pattern.take(37) + "..."
+    } else {
+        pattern
     }
 
     private fun encodePattern(raw: String): String = raw.replace(" ", "\\s")
@@ -584,7 +586,7 @@ class RegexBuilderActivity : BaseActivity() {
             Toast.makeText(
                 this,
                 getString(R.string.regex_save_failed, e.message),
-                Toast.LENGTH_LONG,
+                Toast.LENGTH_LONG
             ).show()
             return
         }
@@ -607,7 +609,7 @@ class RegexBuilderActivity : BaseActivity() {
             Toast.makeText(
                 this,
                 getString(R.string.regex_save_failed, "Pattern already exists"),
-                Toast.LENGTH_SHORT,
+                Toast.LENGTH_SHORT
             ).show()
             return
         }
@@ -636,7 +638,7 @@ class RegexBuilderActivity : BaseActivity() {
                         RuleEntity(
                             senderId = senderId,
                             pattern = regexPattern,
-                            ruleType = selectedRuleType.value,
+                            ruleType = selectedRuleType.value
                         )
                     )
                 }
@@ -644,7 +646,7 @@ class RegexBuilderActivity : BaseActivity() {
                 Toast.makeText(
                     this@RegexBuilderActivity,
                     getString(R.string.rule_saved, sender.name),
-                    Toast.LENGTH_SHORT,
+                    Toast.LENGTH_SHORT
                 ).show()
 
                 // Refresh senders list
@@ -653,7 +655,7 @@ class RegexBuilderActivity : BaseActivity() {
                 Toast.makeText(
                     this@RegexBuilderActivity,
                     getString(R.string.regex_save_failed, e.message),
-                    Toast.LENGTH_LONG,
+                    Toast.LENGTH_LONG
                 ).show()
             }
         }
@@ -672,15 +674,49 @@ class RegexBuilderActivity : BaseActivity() {
     }
 
     private fun applyPlaceholderSpans(editable: android.text.Editable) {
-        for (s in editable.getSpans(0, editable.length, android.text.style.BackgroundColorSpan::class.java)) editable.removeSpan(s)
-        for (s in editable.getSpans(0, editable.length, android.text.style.ForegroundColorSpan::class.java)) editable.removeSpan(s)
-        for (s in editable.getSpans(0, editable.length, android.text.style.StyleSpan::class.java)) editable.removeSpan(s)
+        for (s in editable.getSpans(
+            0,
+            editable.length,
+            android.text.style.BackgroundColorSpan::class.java
+        )) {
+            editable.removeSpan(s)
+        }
+        for (s in editable.getSpans(
+            0,
+            editable.length,
+            android.text.style.ForegroundColorSpan::class.java
+        )) {
+            editable.removeSpan(s)
+        }
+        for (s in editable.getSpans(
+            0,
+            editable.length,
+            android.text.style.StyleSpan::class.java
+        )) {
+            editable.removeSpan(s)
+        }
         val bgColor = androidx.core.content.ContextCompat.getColor(this, R.color.purple_500)
         Regex("⟨[^⟩]+⟩").findAll(editable.toString()).forEach { match ->
-            val start = match.range.first; val end = match.range.last + 1
-            editable.setSpan(android.text.style.BackgroundColorSpan(bgColor), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            editable.setSpan(android.text.style.ForegroundColorSpan(android.graphics.Color.WHITE), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            editable.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            val start = match.range.first
+            val end = match.range.last + 1
+            editable.setSpan(
+                android.text.style.BackgroundColorSpan(bgColor),
+                start,
+                end,
+                android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            editable.setSpan(
+                android.text.style.ForegroundColorSpan(android.graphics.Color.WHITE),
+                start,
+                end,
+                android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            editable.setSpan(
+                android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
+                start,
+                end,
+                android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
         }
     }
 
@@ -727,7 +763,7 @@ class RegexBuilderActivity : BaseActivity() {
                     Constants.RegexGroups.MERCHANT,
                     Constants.RegexGroups.DATE,
                     Constants.RegexGroups.TIME,
-                    Constants.RegexGroups.BALANCE,
+                    Constants.RegexGroups.BALANCE
                 )
                 val capturedNamed = namedGroups.mapNotNull { name ->
                     namedGroup(match, name)?.let { name to it }

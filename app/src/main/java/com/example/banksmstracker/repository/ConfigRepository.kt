@@ -6,8 +6,6 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.room.withTransaction
 import com.example.banksmstracker.data.Category
-import com.example.banksmstracker.data.Rule
-import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.data.SmsConfig
 import com.example.banksmstracker.database.BankSmsDatabase
@@ -20,7 +18,6 @@ import com.example.banksmstracker.database.SenderAddressEntity
 import com.example.banksmstracker.database.SenderEntity
 import com.example.banksmstracker.database.toDomainCategories
 import com.example.banksmstracker.database.toDomainSenders
-import com.example.banksmstracker.database.toEntity
 import com.example.banksmstracker.serializer.ConfigLoader
 import java.io.File
 import java.io.FileNotFoundException
@@ -76,7 +73,7 @@ object ConfigRepository {
         config.senders.map { sender ->
             sender.copy(
                 addresses = sender.addresses.toMutableList(),
-                rules = sender.rules.map { it.copy() }.toMutableList(),
+                rules = sender.rules.map { it.copy() }.toMutableList()
             )
         }
     }
@@ -146,7 +143,7 @@ object ConfigRepository {
                             pattern = rule.pattern.trim(),
                             description = rule.description,
                             enabled = rule.enabled,
-                            ruleType = rule.ruleType.value,
+                            ruleType = rule.ruleType.value
                         )
                     )
                 }
@@ -310,7 +307,7 @@ object ConfigRepository {
 
                     val mergedSender = existingSender.copy(
                         addresses = mergedAddresses,
-                        rules = mergedRules,
+                        rules = mergedRules
                     )
                     updateSenderInternal(mergedSender)
                     sendersMerged++
@@ -336,7 +333,7 @@ object ConfigRepository {
                                     pattern = rule.pattern.trim(),
                                     description = rule.description,
                                     enabled = rule.enabled,
-                                    ruleType = rule.ruleType.value,
+                                    ruleType = rule.ruleType.value
                                 )
                             )
                         }
@@ -413,7 +410,7 @@ object ConfigRepository {
                         pattern = rule.pattern.trim(),
                         description = rule.description,
                         enabled = rule.enabled,
-                        ruleType = rule.ruleType.value,
+                        ruleType = rule.ruleType.value
                     )
                 )
             }
@@ -502,7 +499,7 @@ object ConfigRepository {
                                 pattern = rule.pattern.trim(),
                                 description = rule.description,
                                 enabled = rule.enabled,
-                                ruleType = rule.ruleType.value,
+                                ruleType = rule.ruleType.value
                             )
                         )
                     }

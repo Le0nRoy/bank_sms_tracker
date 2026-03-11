@@ -17,7 +17,7 @@ class MessageIgnoredException(val ruleName: String?) : Exception("Message ignore
 class PaymentProcessor(
     private val senders: List<Sender>,
     private val categories: List<Category>,
-    val paymentRepository: PaymentRepository,
+    val paymentRepository: PaymentRepository
 ) {
     companion object {
         private const val TAG = "PaymentProcessor"
@@ -100,7 +100,7 @@ class PaymentProcessor(
                     timestamp = timestamp,
                     balance = balance,
                     categoryId = null,
-                    ruleId = rule.id,
+                    ruleId = rule.id
                 )
             }
         }
@@ -136,7 +136,7 @@ class PaymentProcessor(
                     balance = balance,
                     senderAddress = address,
                     receivedAt = System.currentTimeMillis(),
-                    ruleId = rule.id,
+                    ruleId = rule.id
                 )
             }
         }
@@ -161,13 +161,12 @@ class PaymentProcessor(
      * Legacy method for backward compatibility.
      * Use getMessageResult() for the full workflow.
      */
-    fun getPaymentFromMessage(message: String, address: String): Payment? {
-        return when (val result = getMessageResult(message, address)) {
+    fun getPaymentFromMessage(message: String, address: String): Payment? =
+        when (val result = getMessageResult(message, address)) {
             is MessageProcessResult.PaymentResult -> result.payment
             is MessageProcessResult.IncomeResult -> null
             is MessageProcessResult.Ignored -> throw MessageIgnoredException(result.ruleName)
         }
-    }
 
     suspend fun processMessage(message: String, address: String): Payment {
         val result = getMessageResult(message, address)

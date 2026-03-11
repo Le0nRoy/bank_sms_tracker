@@ -62,8 +62,7 @@ class InMemoryPaymentRepository : PaymentRepository {
         }
     }
 
-    override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> =
-        payments.filter { it.ruleId == ruleId }
+    override suspend fun getPaymentsByRule(ruleId: Long): List<Payment> = payments.filter { it.ruleId == ruleId }
 
     override suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?) {
         payments.replaceAll { payment ->

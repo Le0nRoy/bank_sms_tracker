@@ -311,8 +311,14 @@ class ConfigRepositoryRoomTest {
         val db = BankSmsDatabase.getInstance(context.applicationContext)
         val repo = RoomPaymentRepository(db.paymentDao())
         repo.savePayment(
-            Payment(amount = 10.0, currency = "USD", card = null, merchant = "Amazon",
-                timestamp = null, balance = null),
+            Payment(
+                amount = 10.0,
+                currency = "USD",
+                card = null,
+                merchant = "Amazon",
+                timestamp = null,
+                balance = null
+            ),
             rawMessage = "amazon-trigger-test",
             senderAddress = "BANK"
         )
@@ -325,7 +331,8 @@ class ConfigRepositoryRoomTest {
         val payments = repo.getAllPayments()
         assertEquals(1, payments.size)
         assertEquals(
-            "Shopping", payments[0].categoryId,
+            "Shopping",
+            payments[0].categoryId,
             "updateCategory() must recategorize existing payments with matching merchant"
         )
     }

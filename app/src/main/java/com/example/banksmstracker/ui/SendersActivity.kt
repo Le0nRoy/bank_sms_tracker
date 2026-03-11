@@ -314,7 +314,12 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
             spinnerRuleType.setSelection(ruleTypes.indexOf(rule.ruleType).coerceAtLeast(0))
 
             spinnerRuleType.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: android.view.View?, position: Int, id: Long) {
+                override fun onItemSelected(
+                    parent: android.widget.AdapterView<*>?,
+                    view: android.view.View?,
+                    position: Int,
+                    id: Long
+                ) {
                     if (index in sender.rules.indices && sender.rules[index].ruleType != ruleTypes[position]) {
                         sender.rules[index].ruleType = ruleTypes[position]
                         callbacks.onSenderUpdated(sender)
@@ -363,5 +368,5 @@ private fun Sender.clone(): Sender = Sender(
     name = name,
     addresses = addresses.toMutableList(),
     rules = rules.map { it.copy() }.toMutableList(),
-    enabled = enabled,
+    enabled = enabled
 )

@@ -69,8 +69,14 @@ class CategoryConcurrencyInstrumentedTest {
     fun rapidRecategorizeAssignsAllPaymentsOnRealStorage() = runBlocking {
         repeat(50) { i ->
             repository.savePayment(
-                Payment(amount = 1.0, currency = "USD", card = null, merchant = "Amazon",
-                    timestamp = null, balance = null),
+                Payment(
+                    amount = 1.0,
+                    currency = "USD",
+                    card = null,
+                    merchant = "Amazon",
+                    timestamp = null,
+                    balance = null
+                ),
                 rawMessage = "msg-$i",
                 senderAddress = "BANK"
             )
@@ -93,8 +99,14 @@ class CategoryConcurrencyInstrumentedTest {
     fun recategorizeIsIdempotentOnRealStorage() = runBlocking {
         repeat(20) { i ->
             repository.savePayment(
-                Payment(amount = 2.0, currency = "USD", card = null, merchant = "Supermarket",
-                    timestamp = null, balance = null),
+                Payment(
+                    amount = 2.0,
+                    currency = "USD",
+                    card = null,
+                    merchant = "Supermarket",
+                    timestamp = null,
+                    balance = null
+                ),
                 rawMessage = "msg-$i",
                 senderAddress = "BANK"
             )
@@ -118,8 +130,14 @@ class CategoryConcurrencyInstrumentedTest {
     fun unknownMerchantStaysUncategorizedOnRealStorage() = runBlocking {
         repeat(10) { i ->
             repository.savePayment(
-                Payment(amount = 5.0, currency = "USD", card = null, merchant = "UnknownShop",
-                    timestamp = null, balance = null),
+                Payment(
+                    amount = 5.0,
+                    currency = "USD",
+                    card = null,
+                    merchant = "UnknownShop",
+                    timestamp = null,
+                    balance = null
+                ),
                 rawMessage = "msg-$i",
                 senderAddress = "BANK"
             )
@@ -143,8 +161,14 @@ class CategoryConcurrencyInstrumentedTest {
             database.withTransaction {
                 repeat(1000) { i ->
                     repository.savePayment(
-                        Payment(amount = 1.0, currency = "USD", card = null, merchant = "Amazon",
-                            timestamp = null, balance = null),
+                        Payment(
+                            amount = 1.0,
+                            currency = "USD",
+                            card = null,
+                            merchant = "Amazon",
+                            timestamp = null,
+                            balance = null
+                        ),
                         rawMessage = "msg-$i",
                         senderAddress = "BANK"
                     )
@@ -158,7 +182,7 @@ class CategoryConcurrencyInstrumentedTest {
         withContext(Dispatchers.IO) { recategorizeAll(repository, categories) }
         val elapsed = System.currentTimeMillis() - start
 
-        assertTrue(elapsed < 10_000L, "Expected < 10 s, got ${elapsed} ms for 1000 payments")
+        assertTrue(elapsed < 10_000L, "Expected < 10 s, got $elapsed ms for 1000 payments")
         assertEquals(1000, repository.getAllPayments().count { it.categoryId == "Shopping" })
     }
 }

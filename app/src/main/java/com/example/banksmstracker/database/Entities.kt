@@ -86,7 +86,7 @@ data class SenderRuleEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val senderId: Long,
     val regex: String,
-    val enabled: Boolean = true,
+    val enabled: Boolean = true
 )
 
 @Entity(
@@ -108,7 +108,7 @@ data class RuleEntity(
     val pattern: String,
     val description: String? = null,
     val enabled: Boolean = true,
-    val ruleType: String = "payment",
+    val ruleType: String = "payment"
 )
 
 data class SenderWithDetails(
@@ -124,7 +124,7 @@ data class SenderWithDetails(
         entityColumn = "senderId",
         entity = RuleEntity::class
     )
-    val rules: List<RuleEntity>,
+    val rules: List<RuleEntity>
 )
 
 @Entity(

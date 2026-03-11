@@ -120,8 +120,8 @@ class HashUtilTest {
         @DisplayName("separator is included in hash computation")
         fun `separator is included in hash computation`() {
             // These should produce different hashes because the separator placement differs
-            val hash1 = HashUtil.computeMessageHash("A::B", "C")  // C::A::B
-            val hash2 = HashUtil.computeMessageHash("B", "C::A")  // C::A::B
+            val hash1 = HashUtil.computeMessageHash("A::B", "C") // C::A::B
+            val hash2 = HashUtil.computeMessageHash("B", "C::A") // C::A::B
             // Both result in same combined string, so hashes should be equal
             assertEquals(hash1, hash2)
         }

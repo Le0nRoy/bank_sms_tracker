@@ -2,9 +2,9 @@ package com.example.banksmstracker
 
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.database.BankSmsDatabase
-import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.parser.SmsReceiver
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.ConfigRepository

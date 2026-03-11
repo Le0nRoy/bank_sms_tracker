@@ -157,7 +157,7 @@ class SmsReceiver : BroadcastReceiver() {
             messageHash = messageHash,
             senderAddress = sender,
             receivedAt = System.currentTimeMillis(),
-            ruleId = income.ruleId,
+            ruleId = income.ruleId
         )
 
         val db = BankSmsDatabase.getInstance(context)

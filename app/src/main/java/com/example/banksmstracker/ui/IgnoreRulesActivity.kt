@@ -9,7 +9,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
@@ -201,7 +200,9 @@ class IgnoreRulesActivity : BaseActivity() {
                     }
 
                     if (isEdit) {
-                        updateIgnoreRule(rule!!.copy(senderId = selectedSenderId, pattern = pattern, description = description))
+                        updateIgnoreRule(
+                            rule!!.copy(senderId = selectedSenderId, pattern = pattern, description = description)
+                        )
                     } else {
                         addIgnoreRule(selectedSenderId, pattern, description)
                     }
@@ -257,9 +258,9 @@ class IgnoreRulesActivity : BaseActivity() {
             .show()
     }
 
-    private fun getSenderName(senderId: Long): String {
-        return senders.find { it.id == senderId }?.name ?: getString(R.string.unknown)
-    }
+    private fun getSenderName(senderId: Long): String = senders.find {
+        it.id == senderId
+    }?.name ?: getString(R.string.unknown)
 
     inner class IgnoreRuleAdapter : RecyclerView.Adapter<IgnoreRuleAdapter.ViewHolder>() {
 
@@ -293,7 +294,9 @@ class IgnoreRulesActivity : BaseActivity() {
                 // Show sender name in description if viewing all senders
                 val senderPrefix = if (selectedFilterSenderId == null) {
                     "[${getSenderName(rule.senderId)}] "
-                } else ""
+                } else {
+                    ""
+                }
                 val descText = senderPrefix + (rule.description ?: "")
                 tvDescription.text = descText
                 tvDescription.visibility = if (descText.isEmpty()) View.GONE else View.VISIBLE

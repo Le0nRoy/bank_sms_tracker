@@ -26,17 +26,16 @@ import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.util.Constants
 import com.example.banksmstracker.util.SmsAddressMatcher
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.zip.GZIPOutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 
 class SmsExportActivity : BaseActivity() {
 
@@ -59,12 +58,7 @@ class SmsExportActivity : BaseActivity() {
 
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
 
-    data class SmsMessage(
-        val address: String,
-        val body: String,
-        val date: Long,
-        val type: Int
-    )
+    data class SmsMessage(val address: String, val body: String, val date: Long, val type: Int)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -254,7 +248,7 @@ class SmsExportActivity : BaseActivity() {
             arrayOf("address", "body", "date", "type"),
             selection,
             null,
-            "date DESC LIMIT 5000",
+            "date DESC LIMIT 5000"
         )
 
         cursor?.use {

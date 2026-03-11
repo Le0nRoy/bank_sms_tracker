@@ -12,7 +12,7 @@ fun List<CategoryWithMerchants>.toDomainCategories(): List<Category> = map { cat
         merchants = categoryWithMerchants.merchants
             .map { it.name }
             .toMutableList(),
-        enabled = categoryWithMerchants.category.enabled,
+        enabled = categoryWithMerchants.category.enabled
     )
 }
 
@@ -26,7 +26,7 @@ fun List<SenderWithDetails>.toDomainSenders(): List<Sender> = map { senderWithDe
         rules = senderWithDetails.rules
             .map { it.toDomainRule() }
             .toMutableList(),
-        enabled = senderWithDetails.sender.enabled,
+        enabled = senderWithDetails.sender.enabled
     )
 }
 
@@ -36,7 +36,7 @@ fun RuleEntity.toDomainRule(): Rule = Rule(
     pattern = pattern,
     description = description,
     enabled = enabled,
-    ruleType = RuleType.fromValue(ruleType),
+    ruleType = RuleType.fromValue(ruleType)
 )
 
 fun Rule.toEntity(): RuleEntity = RuleEntity(
@@ -45,5 +45,5 @@ fun Rule.toEntity(): RuleEntity = RuleEntity(
     pattern = pattern,
     description = description,
     enabled = enabled,
-    ruleType = ruleType.value,
+    ruleType = ruleType.value
 )

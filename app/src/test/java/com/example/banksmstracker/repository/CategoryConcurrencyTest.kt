@@ -45,7 +45,14 @@ class CategoryConcurrencyTest {
         // Insert 50 payments with merchant "Amazon"
         repeat(50) { i ->
             repository.savePayment(
-                Payment(amount = 1.0, currency = "USD", card = null, merchant = "Amazon", timestamp = null, balance = null),
+                Payment(
+                    amount = 1.0,
+                    currency = "USD",
+                    card = null,
+                    merchant = "Amazon",
+                    timestamp = null,
+                    balance = null
+                ),
                 rawMessage = "msg-$i",
                 senderAddress = "BANK"
             )
@@ -69,7 +76,14 @@ class CategoryConcurrencyTest {
     fun `recategorizeIsIdempotent`() = runBlocking {
         repeat(20) { i ->
             repository.savePayment(
-                Payment(amount = 2.0, currency = "USD", card = null, merchant = "Supermarket", timestamp = null, balance = null),
+                Payment(
+                    amount = 2.0,
+                    currency = "USD",
+                    card = null,
+                    merchant = "Supermarket",
+                    timestamp = null,
+                    balance = null
+                ),
                 rawMessage = "msg-$i",
                 senderAddress = "BANK"
             )
@@ -95,7 +109,14 @@ class CategoryConcurrencyTest {
     fun `unknownMerchantStaysUncategorized`() = runBlocking {
         repeat(10) { i ->
             repository.savePayment(
-                Payment(amount = 5.0, currency = "USD", card = null, merchant = "UnknownShop", timestamp = null, balance = null),
+                Payment(
+                    amount = 5.0,
+                    currency = "USD",
+                    card = null,
+                    merchant = "UnknownShop",
+                    timestamp = null,
+                    balance = null
+                ),
                 rawMessage = "msg-$i",
                 senderAddress = "BANK"
             )

@@ -9,7 +9,6 @@ enum class RuleType(val value: String) {
     INCOME("income");
 
     companion object {
-        fun fromValue(value: String): RuleType =
-            entries.find { it.value == value } ?: PAYMENT
+        fun fromValue(value: String): RuleType = entries.find { it.value == value } ?: PAYMENT
     }
 }

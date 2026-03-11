@@ -144,8 +144,22 @@ class MappersTest {
                 SenderAddressEntity(id = 2, senderId = 1, address = "VM-HDFC")
             )
             val rules = listOf(
-                RuleEntity(id = 1, senderId = 1, pattern = ".*debit.*", description = "Debit", enabled = true, ruleType = "payment"),
-                RuleEntity(id = 2, senderId = 1, pattern = ".*credit.*", description = "Credit", enabled = false, ruleType = "income")
+                RuleEntity(
+                    id = 1,
+                    senderId = 1,
+                    pattern = ".*debit.*",
+                    description = "Debit",
+                    enabled = true,
+                    ruleType = "payment"
+                ),
+                RuleEntity(
+                    id = 2,
+                    senderId = 1,
+                    pattern = ".*credit.*",
+                    description = "Credit",
+                    enabled = false,
+                    ruleType = "income"
+                )
             )
             val senderWithDetails = SenderWithDetails(
                 sender = senderEntity,
@@ -177,7 +191,16 @@ class MappersTest {
             val sender2 = SenderWithDetails(
                 sender = SenderEntity(id = 2, name = "Bank B", enabled = false),
                 addresses = emptyList(),
-                rules = listOf(RuleEntity(id = 1, senderId = 2, pattern = ".*", description = null, enabled = true, ruleType = "payment"))
+                rules = listOf(
+                    RuleEntity(
+                        id = 1,
+                        senderId = 2,
+                        pattern = ".*",
+                        description = null,
+                        enabled = true,
+                        ruleType = "payment"
+                    )
+                )
             )
             val result = listOf(sender1, sender2).toDomainSenders()
 
