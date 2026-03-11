@@ -1,8 +1,11 @@
 package com.example.banksmstracker.repository
 
+import android.app.Application
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
+import com.example.banksmstracker.database.BankSmsDatabase
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -297,5 +300,33 @@ class ConfigRepositoryRoomTest {
         assertEquals("Category 2", categories[1].name)
         assertEquals("Sender 1", senders[0].name)
         assertEquals("Sender 2", senders[1].name)
+    }
+
+    @Test
+    @DisplayName("updateCategory_triggersRecategorizeAllPayments")
+    fun updateCategoryTriggersRecategorizeAllPayments() = runBlocking {
+        ConfigRepository.load(context.applicationContext as Application)
+
+        // Save a payment with merchant "Amazon" via the shared Room database
+        val db = BankSmsDatabase.getInstance(context.applicationContext)
+        val repo = RoomPaymentRepository(db.paymentDao())
+        repo.savePayment(
+            Payment(amount = 10.0, currency = "USD", card = null, merchant = "Amazon",
+                timestamp = null, balance = null),
+            rawMessage = "amazon-trigger-test",
+            senderAddress = "BANK"
+        )
+
+        // Create a category that maps "Amazon" and call updateCategory
+        val cat = ConfigRepository.addCategory()
+        ConfigRepository.updateCategory(cat.copy(name = "Shopping", merchants = mutableListOf("Amazon")))
+
+        // updateCategory() must have called recategorizeAllPayments() — verify the payment is categorized
+        val payments = repo.getAllPayments()
+        assertEquals(1, payments.size)
+        assertEquals(
+            "Shopping", payments[0].categoryId,
+            "updateCategory() must recategorize existing payments with matching merchant"
+        )
     }
 }

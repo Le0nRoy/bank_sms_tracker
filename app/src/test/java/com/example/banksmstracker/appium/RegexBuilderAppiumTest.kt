@@ -550,11 +550,11 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         scrollToPresetButton("btnPresetDate").click()
         shortWait()
 
-        // Verify that clicking the preset appended something to the pattern field
+        // Verify that the preset inserted the ⟨date⟩ placeholder
         val patternText = findById("etRegexPattern").text
         assertTrue(
-            patternText.isNotEmpty(),
-            "Date preset button should append a date pattern to the regex field"
+            patternText.contains("⟨date⟩"),
+            "Date preset should insert ⟨date⟩ placeholder, got: $patternText"
         )
 
         navigateToMain()
@@ -576,11 +576,35 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
         scrollToPresetButton("btnPresetTime").click()
         shortWait()
 
-        // Verify that clicking the preset appended something to the pattern field
+        // Verify that the preset inserted the ⟨time⟩ placeholder
         val patternText = findById("etRegexPattern").text
         assertTrue(
-            patternText.isNotEmpty(),
-            "Time preset button should append a time pattern to the regex field"
+            patternText.contains("⟨time⟩"),
+            "Time preset should insert ⟨time⟩ placeholder, got: $patternText"
+        )
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(26)
+    @Tag("smoke")
+    @DisplayName("Preset amount button inserts amount placeholder chip, not raw regex")
+    fun presetAmountInsertPlaceholder() {
+        clickButton("btnRegexBuilder")
+        mediumWait()
+
+        val regexInput = findById("etRegexPattern")
+        regexInput.clear()
+        shortWait()
+
+        scrollToPresetButton("btnPresetAmount").click()
+        shortWait()
+
+        val patternText = findById("etRegexPattern").text
+        assertTrue(
+            patternText.contains("⟨amount⟩"),
+            "Amount preset should insert ⟨amount⟩ placeholder, got: $patternText"
         )
 
         navigateToMain()

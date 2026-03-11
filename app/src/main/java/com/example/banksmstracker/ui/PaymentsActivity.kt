@@ -175,7 +175,11 @@ class PaymentsActivity : BaseActivity() {
         recyclerPayments.adapter = adapter
     }
 
-    private fun loadData() {
+    private fun loadData(preserveScroll: Boolean = false) {
+        val savedScrollState = if (preserveScroll)
+            (recyclerPayments.layoutManager as? LinearLayoutManager)?.onSaveInstanceState()
+        else null
+
         lifecycleScope.launch {
             // Initialize repository from ConfigRepository's database
             ConfigRepository.load(application)
@@ -206,6 +210,7 @@ class PaymentsActivity : BaseActivity() {
             setupCategorySpinner()
             setupSenderSpinner()
             applyFilter()
+            savedScrollState?.let { recyclerPayments.layoutManager?.onRestoreInstanceState(it) }
         }
     }
 
@@ -518,16 +523,6 @@ class PaymentsActivity : BaseActivity() {
                         ConfigRepository.updateCategory(updatedCategory)
                     }
 
-                    // Re-categorize this payment
-                    val payment = filteredPayments.find { it.merchant == merchant }
-                    if (payment != null) {
-                        payment.id?.let { paymentId ->
-                            withContext(Dispatchers.IO) {
-                                paymentRepository.updatePaymentCategory(paymentId, category.name)
-                            }
-                        }
-                    }
-
                     Toast.makeText(
                         this@PaymentsActivity,
                         getString(R.string.merchant_added_to_category, merchant, category.name),
@@ -535,7 +530,7 @@ class PaymentsActivity : BaseActivity() {
                     ).show()
 
                     parentDialog.dismiss()
-                    loadData() // Refresh the list
+                    loadData(preserveScroll = true)
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
@@ -579,16 +574,6 @@ class PaymentsActivity : BaseActivity() {
                     ConfigRepository.updateCategory(updatedCategory)
                 }
 
-                // Re-categorize the payment
-                val payment = filteredPayments.find { it.merchant == merchant }
-                if (payment != null) {
-                    payment.id?.let { paymentId ->
-                        withContext(Dispatchers.IO) {
-                            paymentRepository.updatePaymentCategory(paymentId, categoryName)
-                        }
-                    }
-                }
-
                 Toast.makeText(
                     this@PaymentsActivity,
                     getString(R.string.category_created, categoryName),
@@ -596,7 +581,7 @@ class PaymentsActivity : BaseActivity() {
                 ).show()
 
                 parentDialog.dismiss()
-                loadData() // Refresh the list
+                loadData(preserveScroll = true)
             } catch (e: Exception) {
                 Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }

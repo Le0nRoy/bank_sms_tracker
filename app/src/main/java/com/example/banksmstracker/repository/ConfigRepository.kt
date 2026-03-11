@@ -104,6 +104,7 @@ object ConfigRepository {
                 }
         }
         refreshConfigInternal()
+        recategorizeAllPayments()
     }
 
     suspend fun deleteCategory(categoryId: Long) = withContext(Dispatchers.IO) {

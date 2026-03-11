@@ -91,6 +91,7 @@ test-smoke: ## Run smoke tests only — 1-2 tests per feature (requires Appium s
 		--tests "*.appium.MainNavigationAppiumTest.mainScreenHasAllNavigationButtons" \
 		--tests "*.appium.RegexBuilderAppiumTest.navigateToRegexBuilder" \
 		--tests "*.appium.RegexBuilderAppiumTest.testRegexPatternMatching" \
+		--tests "*.appium.RegexBuilderAppiumTest.presetAmountInsertPlaceholder" \
 		--tests "*.appium.CategoryManagementAppiumTest.navigateToCategoriesScreen" \
 		--tests "*.appium.CategoryManagementAppiumTest.addNewCategoryWithName" \
 		--tests "*.appium.SenderManagementAppiumTest.navigateToSendersScreen" \

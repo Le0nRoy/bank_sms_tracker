@@ -77,6 +77,18 @@ class RegexBuilderActivity : BaseActivity() {
     // Regex presets extracted from default rules
     private val regexPresets = RegexPresets()
 
+    private val placeholderToRegex: Map<String, String> by lazy {
+        mapOf(
+            "amount"   to regexPresets.amount,
+            "currency" to regexPresets.currency,
+            "card"     to regexPresets.card,
+            "merchant" to regexPresets.merchant,
+            "date"     to regexPresets.date,
+            "time"     to regexPresets.time,
+            "balance"  to regexPresets.balance,
+        )
+    }
+
     data class SmsMessage(val address: String, val body: String, val date: Long = 0)
 
     class RegexPresets {
@@ -187,18 +199,25 @@ class RegexBuilderActivity : BaseActivity() {
             if (hasFocus) scrollView.post { scrollView.smoothScrollTo(0, v.top) }
         }
 
+        // Render placeholder chips as colored spans
+        etRegexPattern.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) { s?.let { applyPlaceholderSpans(it) } }
+        })
+
         // Setup preset button listeners
         setupPresetListeners()
     }
 
     private fun setupPresetListeners() {
-        btnPresetAmount.setOnClickListener { insertPresetAtCursor(regexPresets.amount) }
-        btnPresetCurrency.setOnClickListener { insertPresetAtCursor(regexPresets.currency) }
-        btnPresetCard.setOnClickListener { insertPresetAtCursor(regexPresets.card) }
-        btnPresetMerchant.setOnClickListener { insertPresetAtCursor(regexPresets.merchant) }
-        btnPresetDate.setOnClickListener { insertPresetAtCursor(regexPresets.date) }
-        btnPresetTime.setOnClickListener { insertPresetAtCursor(regexPresets.time) }
-        btnPresetBalance.setOnClickListener { insertPresetAtCursor(regexPresets.balance) }
+        btnPresetAmount.setOnClickListener   { insertPresetAtCursor("⟨amount⟩") }
+        btnPresetCurrency.setOnClickListener { insertPresetAtCursor("⟨currency⟩") }
+        btnPresetCard.setOnClickListener     { insertPresetAtCursor("⟨card⟩") }
+        btnPresetMerchant.setOnClickListener { insertPresetAtCursor("⟨merchant⟩") }
+        btnPresetDate.setOnClickListener     { insertPresetAtCursor("⟨date⟩") }
+        btnPresetTime.setOnClickListener     { insertPresetAtCursor("⟨time⟩") }
+        btnPresetBalance.setOnClickListener  { insertPresetAtCursor("⟨balance⟩") }
     }
 
     private fun insertPresetAtCursor(preset: String) {
@@ -529,7 +548,7 @@ class RegexBuilderActivity : BaseActivity() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position > 0 && position <= rules.size) {
                     val selectedRule = rules[position - 1]
-                    etRegexPattern.setText(decodePattern(selectedRule.pattern))
+                    etRegexPattern.setText(regexToTemplate(decodePattern(selectedRule.pattern)))
                 }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -550,7 +569,7 @@ class RegexBuilderActivity : BaseActivity() {
 
     private fun saveRegexToSender() {
         val regexPattern = encodePattern(
-            etRegexPattern.text.toString().trim().replace("\n", "").replace("\r", "")
+            templateToRegex(etRegexPattern.text.toString().trim().replace("\n", "").replace("\r", ""))
         )
 
         if (regexPattern.isBlank()) {
@@ -637,6 +656,31 @@ class RegexBuilderActivity : BaseActivity() {
                     Toast.LENGTH_LONG,
                 ).show()
             }
+        }
+    }
+
+    private fun templateToRegex(template: String): String {
+        var result = template
+        placeholderToRegex.forEach { (name, regex) -> result = result.replace("⟨$name⟩", regex) }
+        return result
+    }
+
+    private fun regexToTemplate(regex: String): String {
+        var result = regex
+        placeholderToRegex.forEach { (name, pattern) -> result = result.replace(pattern, "⟨$name⟩") }
+        return result
+    }
+
+    private fun applyPlaceholderSpans(editable: android.text.Editable) {
+        for (s in editable.getSpans(0, editable.length, android.text.style.BackgroundColorSpan::class.java)) editable.removeSpan(s)
+        for (s in editable.getSpans(0, editable.length, android.text.style.ForegroundColorSpan::class.java)) editable.removeSpan(s)
+        for (s in editable.getSpans(0, editable.length, android.text.style.StyleSpan::class.java)) editable.removeSpan(s)
+        val bgColor = androidx.core.content.ContextCompat.getColor(this, R.color.purple_500)
+        Regex("⟨[^⟩]+⟩").findAll(editable.toString()).forEach { match ->
+            val start = match.range.first; val end = match.range.last + 1
+            editable.setSpan(android.text.style.BackgroundColorSpan(bgColor), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            editable.setSpan(android.text.style.ForegroundColorSpan(android.graphics.Color.WHITE), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            editable.setSpan(android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, end, android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
     }
 
