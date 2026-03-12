@@ -97,9 +97,24 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
         }
         shortWait()
 
-        // Add rule
+        // Add rule — keyboard may still be up after address entry, shrinking the viewport.
+        // Dismiss keyboard and scroll to end so the new sender's btnAddRule is visible.
+        try { driver.hideKeyboard() } catch (e: Exception) { /* keyboard not visible */ }
+        shortWait()
+        try {
+            driver.findElement(
+                AppiumBy.androidUIAutomator(
+                    "new UiScrollable(new UiSelector().scrollable(true)).scrollToEnd(5)"
+                )
+            )
+        } catch (e: Exception) { /* already at end or not scrollable */ }
+        shortWait()
         val addRuleButtons = findAllById("btnAddRule")
-        addRuleButtons.last().click()
+        if (addRuleButtons.isNotEmpty()) {
+            addRuleButtons.last().click()
+        } else {
+            scrollToElementById("btnAddRule").click()
+        }
         shortWait()
 
         val rulesContainers = findAllById("rulesContainer")

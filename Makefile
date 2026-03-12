@@ -2,7 +2,7 @@
 # Run `make help` to see all available targets
 
 .PHONY: help build clean lint test test-unit test-android test-appium test-smoke test-all \
-        coverage install run appium-start appium-stop appium-docker-start appium-docker-stop \
+        coverage install install-fresh run appium-start appium-stop appium-docker-start appium-docker-stop \
         cluster-start cluster-stop cluster-status \
         allure-install allure-report allure-serve
 
@@ -58,6 +58,10 @@ clean: ## Clean build artifacts
 	./gradlew clean --no-daemon
 
 install: ## Install debug APK on connected device/emulator
+	./gradlew installDebug --no-daemon
+
+install-fresh: build ## Uninstall (wipe data) then install current debug build
+	adb uninstall com.example.banksmstracker || true
 	./gradlew installDebug --no-daemon
 
 #------------------------------------------------------------------------------

@@ -116,11 +116,9 @@ class SenderManagementAppiumTest : AppiumBaseTest() {
         clickButton("btnSenders")
         mediumWait()
 
-        // Find the Add Rule button
-        val addRuleButtons = findAllById("btnAddRule")
-        assertTrue(addRuleButtons.isNotEmpty(), "Should have Add Rule button")
-
-        addRuleButtons.first().click()
+        // Find the Add Rule button (may be below fold under existing rule cards)
+        val addRuleButton = scrollToElementById("btnAddRule")
+        addRuleButton.click()
         shortWait()
 
         // Find rules container and the new EditText
@@ -209,12 +207,13 @@ class SenderManagementAppiumTest : AppiumBaseTest() {
         addRuleButton.click()
         shortWait()
 
-        // Verify count increased
-        val newCount = rulesContainer.findElements(AppiumBy.className("android.widget.EditText")).size
+        // Re-find rulesContainer after click to avoid stale element reference
+        val updatedRulesContainer = findById("rulesContainer")
+        val newCount = updatedRulesContainer.findElements(AppiumBy.className("android.widget.EditText")).size
         assertTrue(newCount > initialCount, "Should have more rule fields")
 
         // Enter a different pattern
-        val editTexts = rulesContainer.findElements(AppiumBy.className("android.widget.EditText"))
+        val editTexts = updatedRulesContainer.findElements(AppiumBy.className("android.widget.EditText"))
         val lastRuleField = editTexts.last()
         lastRuleField.sendKeys("Transfer (\\d+) from (.+)")
         shortWait()
