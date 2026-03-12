@@ -11,23 +11,23 @@
 | # | Task | Complexity | Phase | Status |
 |---|------|-----------|-------|--------|
 | 1 | Named regex groups in builder | M | 1 | ✅ Done |
-| 2.1–2.4 | Block-based pattern editor (presets as chips) | XL | 3 | ⬜ Pending |
+| 2.1–2.4 | Block-based pattern editor (presets as chips) | XL | 3 | ✅ Done (commit 6f42259) |
 | 2.5 | Clear buttons for Sample SMS and Regex Pattern | S | 1 | ✅ Done |
 | 2.6 | Multiline Regex Pattern + trim newlines on save | S | 1 | ✅ Done |
 | 2.7/2.8 | Space ↔ `\s` conversion | S | 1 | ✅ Done |
 | 2.9 | Named groups for arbitrary group order | M | 2 | ✅ Done (folded into task 1) |
 | 2.10 | Split Timestamp → Date + Time presets | S | 1 | ✅ Done |
-| 2.11 | Optional fields (partial matches still valid) | M | 2 | ⬜ Pending |
+| 2.11 | Optional fields (partial matches still valid) | M | 2 | ✅ Done (commit 803bbdc) |
 | 2.12 | Auto-scroll focused text field to top | S | 1 | ✅ Done |
 | 2.13 | Ignored messages shown with different color | S | 1 | ✅ Done |
-| 3–3.2 | Perf test for rapid category assignment | M | 3 | ⬜ Pending |
-| 4–4.1 | Re-categorize all payments; preserve filter/scroll | M | 3 | ⬜ Pending |
-| 5.2–5.4 | Bug Report improvements + main menu group | M | 2 | ⬜ Pending |
+| 3–3.2 | Perf test for rapid category assignment | M | 3 | ✅ Done (commit 6f42259) |
+| 4–4.1 | Re-categorize all payments; preserve filter/scroll | M | 3 | ✅ Done (commit 6f42259) |
+| 5.2–5.4 | Bug Report improvements + main menu group | M | 2 | ✅ Done (commit 803bbdc) |
 | 6 | Remove "Cannot parse message:" prefix | XS | 1 | ✅ Done |
-| 7–7.1 | Auto-fill sender in RegexBuilder from ProcessSMS | S | 2 | ⬜ Pending |
-| 8 | Rules in separate card boxes in SendersActivity | S | 2 | ⬜ Pending |
-| 9–9.3 | Personal data agreement + debug/prod split | L | 4 | ⬜ Pending |
-| 10–10.3 | Allure reporting for tests | L | 4 | ⬜ Pending |
+| 7–7.1 | Auto-fill sender in RegexBuilder from ProcessSMS | S | 2 | ✅ Done (commit 803bbdc) |
+| 8 | Rules in separate card boxes in SendersActivity | S | 2 | ✅ Done (commit 803bbdc) |
+| 9–9.3 | Personal data agreement + debug/prod split | L | 4 | ✅ Done (commit da0aeb4) |
+| 10–10.3 | Allure reporting for tests | L | 4 | ✅ Done (commit da0aeb4) |
 
 ---
 
@@ -91,7 +91,7 @@
 
 ---
 
-## Phase 2: Medium Changes
+## Phase 2: Medium Changes ✅ COMPLETE (commit 803bbdc)
 
 ### Task 2.11: Optional Fields in Partial Matches
 **Goal:** A regex can match without all named groups present. TBC transfer example lacks merchant, time, balance — should still produce a valid payment.
@@ -136,7 +136,7 @@
 
 ---
 
-## Phase 3: Block-Based Pattern Editor (2.1–2.4) + Perf Test + Re-Categorize
+## Phase 3: Block-Based Pattern Editor (2.1–2.4) + Perf Test + Re-Categorize ✅ COMPLETE (commit 6f42259)
 
 ### Task 2.1–2.4: Block-Based Pattern Editor (Simpler First Pass)
 **Implement the simpler SpannableString placeholder approach. A full token-editor is deferred to a separate plan.**
@@ -188,7 +188,7 @@
 
 ---
 
-## Phase 4: Personal Data + Allure
+## Phase 4: Personal Data + Allure ✅ COMPLETE (commit da0aeb4)
 
 ### Task 9–9.3: Personal Data Processing Agreement
 **9.1:** Features that involve sending or exporting raw personal data are **hidden** (not just disabled) in production builds:

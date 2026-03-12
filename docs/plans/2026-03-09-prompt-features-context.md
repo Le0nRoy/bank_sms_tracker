@@ -90,25 +90,40 @@ make cluster-stop && make cluster-start
 
 ---
 
-## Phase 2 — Pending
+## Phase 2 — ✅ COMPLETE (commit 803bbdc)
 
 Tasks: 2.11, 5.2–5.4, 7–7.1, 8
 
-Key files to touch:
-- `PaymentProcessor.kt` — optional field handling + date approximation
-- `BugReportActivity.kt` — filter state section + payment attachment
-- `MainActivity.kt` — menu reorganization ("Data & Reports" group)
-- `ApplyRulesActivity.kt` — "Open in RegexBuilder" button with sender pre-fill
-- `SendersActivity.kt` + adapter layout — `MaterialCardView` per rule
+Implemented:
+- `PaymentProcessor.approximateDate()` — fills missing timestamp from nearest neighbor
+- `BugReportActivity` — filter state section + payments JSON attachment via `cbAttachPaymentsData`
+- `MainActivity` — "Data & Reports" group (`btnPayments`, `btnSmsExport`, `btnBugReport`)
+- `ApplyRulesActivity.EXTRA_SENDER_ADDRESS` — pre-selects sender in `RegexBuilderActivity`
+- `view_rule_with_toggle.xml` — `MaterialCardView` wrapping per rule
 
 ---
 
-## Phase 3 — Pending
+## Phase 3 — ✅ COMPLETE (commit 6f42259)
 
 Tasks: 2.1–2.4 (block editor), 3–3.2 (perf test), 4–4.1 (re-categorize)
 
+Implemented:
+- Block-based placeholder chip approach: `⟨amount⟩` markers rendered as colored spans in regex EditText
+- `templateToRegex()` / `regexToTemplate()` conversion functions in `RegexBuilderActivity`
+- `CategoryConcurrencyTest.kt` — rapid category assignment perf test
+- Re-categorize on save: adding merchant to category triggers full payment re-categorization
+- Filter/scroll state preserved via `layoutManager.onSaveInstanceState()` in `PaymentsActivity`
+
 ---
 
-## Phase 4 — Pending
+## Phase 4 — ✅ COMPLETE (commit da0aeb4)
 
 Tasks: 9–9.3 (personal data agreement, debug/prod split), 10–10.3 (Allure reporting + Makefile recipes)
+
+Implemented:
+- `btnSmsExport`, `btnExportCsv`, `cbAttachPaymentsData` hidden (`View.GONE`) when `!BuildConfig.DEBUG`
+- First-launch non-cancelable agreement dialog; prefs: `"app_terms"` / `"user_agreed_to_terms"`
+- `DebugProdVisibilityTest` instrumented test
+- `docs/debug-vs-prod.md` created
+- `allure-junit5:2.27.0`; `@Epic`/`@Feature` on all Appium classes; `@Step` + screenshot `@AfterEach`
+- Makefile: `make allure-install`, `make allure-report`, `make allure-serve`

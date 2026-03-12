@@ -1,7 +1,9 @@
 # Testing Improvement Plan
 
 > This document tracks planned improvements to the BankSMSTracker test suite.
-> For current testing approaches, see [testing-approaches.md](testing-approaches.md).
+> For current testing approaches, see [testing-approaches.md](../design/testing-approaches.md).
+>
+> **Last updated:** 2026-03-13 — marked completed items based on commits 803bbdc, 6f42259, da0aeb4
 
 ---
 
@@ -21,21 +23,21 @@
 
 ### 1.2 Instrumented Test Gaps
 
-| Area | Gap | Priority |
-|------|-----|----------|
-| `DebugProdVisibilityTest` | Needs full release-build variant test (currently debug only) | High |
-| `LocaleE2ETest` | Language switch + restart persistence | Medium |
-| `ApplyRulesActivity` | Sender auto-select from address | Medium |
-| `RegexBuilderActivity` | Auto-fill sender spinner via EXTRA_SENDER_ADDRESS | Low |
+| Area | Gap | Priority | Status |
+|------|-----|----------|--------|
+| `DebugProdVisibilityTest` | Needs full release-build variant test (currently debug only) | High | ✅ Done (commit da0aeb4) |
+| `LocaleE2ETest` | Language switch + restart persistence | Medium | ✅ Done (commit 4395f76) |
+| `ApplyRulesActivity` | Sender auto-select from address | Medium | ✅ Done (commit 803bbdc) |
+| `RegexBuilderActivity` | Auto-fill sender spinner via EXTRA_SENDER_ADDRESS | Low | ✅ Done (commit 803bbdc) |
 
 ### 1.3 Appium Test Gaps
 
-| Area | Gap | Priority |
-|------|-----|----------|
-| Terms dialog | First-launch dialog appears; agree button works | High |
-| Payments screen | Export CSV in debug build; hidden in release | Medium |
-| SmsExport screen | Export flow, share intent | Low |
-| ApplyRules screen | End-to-end rule application on existing payments | Low |
+| Area | Gap | Priority | Status |
+|------|-----|----------|--------|
+| Terms dialog | First-launch dialog appears; agree button works | High | ✅ Done (commit da0aeb4) |
+| Payments screen | Export CSV in debug build; hidden in release | Medium | ✅ Done (commit da0aeb4) |
+| SmsExport screen | Export flow, share intent | Low | ⬜ Pending |
+| ApplyRules screen | End-to-end rule application on existing payments | Low | ⬜ Pending |
 
 ---
 
@@ -128,8 +130,8 @@ For production CI performance regression detection. Runs on a fleet of real devi
 
 #### Immediate (Unit test layer — no structural changes needed)
 
-- [ ] Add `app/src/test/java/com/example/banksmstracker/performance/` package
-- [ ] Extend `PaymentProcessorPerformanceTest` with batch-size and timing assertions
+- [x] Add `app/src/test/java/com/example/banksmstracker/performance/` package (commit 6f42259)
+- [x] Extend `PaymentProcessorPerformanceTest` with batch-size and timing assertions (commit 6f42259)
 - [ ] Add `CategoryAssignmentPerformanceTest` for category matching with 50+ categories
 - [ ] Parametrize batch sizes: 100, 1 000, 10 000 messages
 
@@ -196,7 +198,7 @@ When a performance test fails:
 
 ### 4.1 Current State
 
-Tests run locally via Makefile and Gradle. No CI pipeline exists yet.
+CI pipeline exists (`.github/workflows/ci.yml`): runs ktlintCheck + unit tests on push/PR.
 
 ### 4.2 Proposed Pipeline (GitHub Actions)
 
@@ -215,7 +217,7 @@ On merge to main:
 
 ### 4.3 Required Changes for CI
 
-- [ ] Add `.github/workflows/ci.yml`
+- [x] Add `.github/workflows/ci.yml` (done)
 - [ ] Configure Android emulator in GitHub Actions (using `reactivecircus/android-emulator-runner`)
 - [ ] Configure Appium in Docker within the CI runner
 - [ ] Store Allure history in a `gh-pages` branch for trend tracking
@@ -225,13 +227,13 @@ On merge to main:
 
 ## 5. Priority Roadmap
 
-| Priority | Item | Effort |
-|----------|------|--------|
-| P0 | Fix remaining instrumented test coverage gaps (see §1.2) | 1 day |
-| P0 | Extend `PaymentProcessorPerformanceTest` with batch/timing tests | 0.5 day |
-| P1 | Add `RoomPerformanceTest` instrumented benchmarks | 1 day |
-| P1 | Add `@Story` + `@Severity` Allure annotations | 0.5 day |
-| P2 | Add Macrobenchmark `:benchmark` module | 2 days |
-| P2 | Set up GitHub Actions CI pipeline | 1 day |
-| P3 | Appium tests for Terms dialog, Export CSV, SmsExport flow | 1 day |
-| P3 | Firebase Test Lab integration | 3 days |
+| Priority | Item | Effort | Status |
+|----------|------|--------|--------|
+| P0 | Fix remaining instrumented test coverage gaps (see §1.2) | 1 day | ✅ Done |
+| P0 | Extend `PaymentProcessorPerformanceTest` with batch/timing tests | 0.5 day | ✅ Done (commit 6f42259) |
+| P1 | Add `RoomPerformanceTest` instrumented benchmarks | 1 day | ⬜ Pending |
+| P1 | Add `@Story` + `@Severity` Allure annotations | 0.5 day | ⬜ Pending |
+| P2 | Add Macrobenchmark `:benchmark` module | 2 days | ⬜ Pending |
+| P2 | Set up GitHub Actions CI pipeline | 1 day | ✅ Done |
+| P3 | Appium tests for Terms dialog, Export CSV, SmsExport flow | 1 day | ✅ Partial (Terms + CSV done; SmsExport pending) |
+| P3 | Firebase Test Lab integration | 3 days | ⬜ Pending |

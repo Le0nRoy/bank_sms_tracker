@@ -13,38 +13,25 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- Running all tests and fixing failures
+- Doc reorganization (moved design docs → docs/design/, plans → docs/plans/, ISSUES.md → docs/, AI_REVIEWER_PROMPT.md → docs/ai-rules/)
 
 ### Completed This Session
-- **Phase 5.12: Localization & Settings Activity**
-  - Created SettingsActivity with theme and language options
-  - Implemented per-app language switching using AppCompatDelegate.setApplicationLocales()
-  - Added Russian language support (331 translated strings)
-  - Extracted 90+ hardcoded strings to resources
-  - Settings Activity replaces theme popup dialog
-- **Test Enhancements**
-  - Created BankSmsTrackerAppTest (unit tests for preference constants)
-  - Created SettingsAppiumTest (12 tests for settings UI)
-  - Enhanced LocaleE2ETest (11 instrumented tests for locale functionality)
-  - Updated MainNavigationAppiumTest for Settings screen
-- **Documentation Updates**
-  - Updated AGENTS.md with localization section
-  - Updated TODO.md with Phase 5.12 tasks
-  - Updated CHANGELOG.md with localization features
-  - Updated docs/TESTING.md with new test counts
+- All PROMPT.md plan tasks (Phases 1–4) confirmed done; plan files updated
+- Docs reorganized: design docs → docs/design/, testing-improvement-plan.md → docs/plans/
+- ISSUES.md → docs/, AI_REVIEWER_PROMPT.md → docs/ai-rules/
 
 ### Previous Sessions
 - Phase 5.3-5.7: Regex Builder, Spending Reports, Apply Rules, Payment Details, Ignore Rules
 - Phase 5.9-5.11: SMS Export, Income Tracking, Theme Toggle
-- Achieved 96.6% code coverage (target was 80%)
-- Fixed bugs: BUG-001 through BUG-006
-- Database migrations v1→v8 (unified rules table)
-- All Appium E2E tests created (10 test classes, 116 tests)
+- Phase 5.12: Localization & Settings Activity (Russian + English, SettingsActivity)
+- Phase 2–4 of PROMPT.md plan: CardView rules, menu reorg, auto-fill sender, block editor, perf tests, personal data agreement, Allure reporting
+- Achieved 96.6% code coverage; fixed BUG-001–006; DB migrations v1→v8
+- All Appium E2E tests: 10 test classes, 116+ tests
 
 ### Next Steps
-- Run unit tests and fix failures
-- Run Appium tests with Docker and fix failures
-- Run instrumented tests and fix failures
+- Implement remaining open items: SmsExport Appium test, RoomPerformanceTest, @Story/@Severity Allure annotations
+- Income UI screen (Phase 5.10)
+- Background Service / notification system (Phase 8)
 
 ---
 
@@ -260,17 +247,16 @@ All bugs are documented in the `bugs/` directory with detailed reports:
 - [x] UI for managing ignore rules (IgnoreRulesActivity)
 - [x] Toggle enabled/disabled state for ignore rules
 
-### 5.8 Simplified Rules Creation
+### 5.8 Simplified Rules Creation ✅ Implemented (commit 6f42259)
 **Goal: More user-friendly regex creation**
 
-Proposed solutions to investigate:
-1. **Line-based regex builder** - Write one pattern per line, auto-combine into full regex
-2. **Template-based patterns** - Pre-built templates for common bank formats with placeholders
-3. **Visual regex builder** - Click on message parts to generate regex automatically
-   - User highlights "amount", "merchant", etc. in sample message
-   - System generates regex from highlighted portions
+Implemented (placeholder chip approach):
+- Preset buttons insert `⟨amount⟩`, `⟨currency⟩`, etc. (Unicode angle-bracket markers)
+- `TextWatcher` renders placeholders as colored bold spans (chips) in the regex EditText
+- `templateToRegex()` / `regexToTemplate()` convert between chip view and stored regex
+- Named groups (`(?<amount>...)`) used throughout; positional groups removed
 
-Implementation decision pending user feedback.
+Full custom token-view approach (drag-and-drop, separate token model) remains a future option.
 
 ### 5.9 SMS History Export
 - [x] SmsExportActivity with date range filtering
