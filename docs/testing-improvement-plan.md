@@ -16,6 +16,8 @@
 | `ConfigRepository` migration paths | DB version upgrades | Medium |
 | `BugReportActivity` attachment logic | JSON serialization correctness | Medium |
 | `SmsExportActivity` export format | CSV/JSON output structure | Low |
+| `ConfigRepository.load()` | Race condition: concurrent calls from multiple threads | High |
+| `PaymentProcessor` | ReDoS guard: pathological regex patterns | Medium |
 
 ### 1.2 Instrumented Test Gaps
 

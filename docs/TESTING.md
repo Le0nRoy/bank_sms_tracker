@@ -146,10 +146,10 @@ make test-appium
 **Docker Setup:**
 ```bash
 # Start Appium in Docker
-docker-compose -f docker-compose.appium.yml up -d
+docker compose up -d appium
 
-# Stop Appium
-docker-compose -f docker-compose.appium.yml down
+# Stop all services
+docker compose down
 ```
 
 **Test Isolation:**

@@ -191,13 +191,13 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | Feature | Status | Description |
 |---------|--------|-------------|
 | SMS Reception | ✅ | Listen to incoming SMS via BroadcastReceiver |
-| Regex Parsing | ✅ | Extract payment data using configurable regex |
+| Regex Parsing | ✅ | Extract payment data using configurable regex (named capture groups) |
 | Category Assignment | ✅ | Auto-assign category based on merchant name |
-| Payment Deduplication | ✅ | Prevent duplicate payments via message hash |
+| Payment Deduplication | ✅ | Prevent duplicate payments via SHA-256 message hash |
 | Config Export | ✅ | Export configuration as JSON via share intent |
 | UI: Categories | ✅ | Add/edit/delete categories and merchants |
-| UI: Senders | ✅ | Add/edit senders, addresses, and rules |
-| Room Persistence | ✅ | SQLite database for all data |
+| UI: Senders | ✅ | Add/edit senders, addresses, and unified rules |
+| Room Persistence | ✅ | SQLite database v8 for all data |
 
 ### 6.2 Extended Features (Implemented)
 
@@ -210,15 +210,28 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | Payments List UI | ✅ | View payments with filter by category |
 | Filter by Sender | ✅ | Filter payments by sender address |
 | Filter by Date Range | ✅ | Filter payments by date range with date picker UI |
-| Category Cascade | ✅ | Re-categorize all payments based on current merchant mappings |
-| CSV Export | ✅ | Export payments to CSV file |
-| Bug Report | ✅ | Send bug reports via built-in email |
+| Category Cascade | ✅ | Re-categorize all payments on rule save or manual trigger |
+| CSV Export | ✅ | Export payments to CSV file (debug builds only) |
+| Bug Report | ✅ | Send bug reports via share intent with optional payment data attachment |
+| Income Tracking | ✅ | Separate INCOME rule type; parsed incomes stored in `incomes` table |
+| Ignore Rules | ✅ | IGNORE rule type suppresses matched SMS from processing |
+| Settings Screen | ✅ | Theme (light/dark/system) and language selection |
+| SMS Export | ✅ | Export raw SMS messages to JSON/CSV (debug builds only) |
+| Personal Data Agreement | ✅ | Non-cancelable first-launch consent dialog |
+| Debug/Prod Split | ✅ | Export/SMS features hidden in release builds |
+| Allure Reporting | ✅ | `@Epic`/`@Feature`/`@Step` on Appium tests |
+| Date Approximation | ✅ | Fill missing payment timestamp from nearest neighbor |
 
-### 6.3 Planned Features (TODO)
+### 6.3 Planned Features
 
 | Feature | Priority | Description |
 |---------|----------|-------------|
-| Default Configs | Low | Build-time email config, runtime sender/category defaults |
+| Background Service | High | Foreground service for permanent background SMS monitoring |
+| Notification System | High | Notify when no applicable regex found for known sender |
+| Onboarding Screen | Medium | First-time user flow explaining permissions |
+| Data Retention | Medium | Automatic deletion of old payments (GDPR compliance) |
+| Database Encryption | Low | SQLCipher integration for data at rest |
+| Bank API Integration | Low | Research Open Banking / PSD2 APIs |
 
 ### 6.4 Feature Details
 
@@ -289,13 +302,13 @@ Build system should sync these files automatically via Gradle task.
 
 ```
         ┌─────────┐
-        │  E2E    │  ← Appium (84 tests)
+        │  E2E    │  ← Appium (116+ tests, 10 classes)
         │  Tests  │     Full user flows
        ─┼─────────┼─
-       │Integration│  ← AndroidJUnit (66 tests)
+       │Integration│  ← AndroidJUnit (77 tests)
        │   Tests   │     Room DB, Repositories
       ─┼───────────┼─
-      │   Unit     │  ← JUnit 5 (30+ tests)
+      │   Unit     │  ← JUnit 5 (195+ tests)
       │   Tests    │     Processors, Parsers, Logic
       ─┴───────────┴─
 ```
@@ -311,19 +324,23 @@ Build system should sync these files automatically via Gradle task.
 ### 8.3 Appium UI Tests
 
 Docker-based Appium setup for UI automation:
-- **84 tests** across 8 test classes
+- **116+ tests** across 10 test classes
 - Run with: `make test-appium` or `./gradlew testDebugUnitTest --tests "*.appium.*"`
+- Smoke subset (~18 tests): `make test-smoke`
+- Allure reporting: `make allure-report` / `make allure-serve`
 
 | Test Class | Tests | Coverage |
 |------------|-------|----------|
-| MainNavigationAppiumTest | 14 | Main screen navigation |
+| MainNavigationAppiumTest | 16 | Main screen navigation + SMS Export + Settings |
 | CategoryManagementAppiumTest | 11 | Category CRUD operations |
 | SenderManagementAppiumTest | 11 | Sender CRUD operations |
 | SmsToPaymentFlowAppiumTest | 10 | End-to-end payment flow |
 | BugReportAppiumTest | 12 | Bug report feature |
-| RegexBuilderAppiumTest | 13 | Regex builder feature + save-to-sender |
-| PaymentsFilterAppiumTest | 8 | Payment filtering by sender/date range |
+| RegexBuilderAppiumTest | 17 | Regex builder + preset buttons + save-to-sender |
+| PaymentsFilterAppiumTest | 12 | Payment filtering + date range |
 | CategoryCascadeAppiumTest | 5 | Re-categorize all payments feature |
+| IgnoreRulesAppiumTest | 10 | Ignore rules CRUD operations |
+| SettingsAppiumTest | 12 | Theme / language selection |
 
 ### 8.4 Test Data Management
 - Shared test fixtures in `src/test/resources/`
@@ -347,7 +364,11 @@ Docker-based Appium setup for UI automation:
 │ • Payments     │──────▶ PaymentsActivity
 │ • Regex Builder│──────▶ RegexBuilderActivity
 │ • Bug Report   │──────▶ BugReportActivity
+│ • SMS Export   │──────▶ SmsExportActivity (debug only)
+│ • Settings     │──────▶ SettingsActivity
 └────────────────┘
+    │
+    └── CategoriesActivity ──▶ IgnoreRulesActivity (per-sender ignore rules)
 ```
 
 ### 9.2 Screen Descriptions
@@ -356,12 +377,15 @@ Docker-based Appium setup for UI automation:
 |--------|---------|
 | **MainActivity** | Navigation hub with buttons for all features |
 | **CategoriesActivity** | List and edit spending categories with merchants |
-| **SendersActivity** | List and edit senders with addresses and rules |
-| **CheckSendersActivity** | Test regex patterns against sample messages |
-| **ApplyRulesActivity** | Manually trigger rule application on SMS inbox |
-| **PaymentsActivity** | View parsed payments with filters (category, sender, date range) |
-| **RegexBuilderActivity** | Visual regex testing tool with save-to-sender feature |
-| **BugReportActivity** | Bug report form with device info collection |
+| **SendersActivity** | List and edit senders with addresses and unified rules (PAYMENT/INCOME/IGNORE) |
+| **CheckSendersActivity** | Show which SMS senders in inbox match configured senders |
+| **ApplyRulesActivity** | Manually process historical SMS inbox against current rules |
+| **PaymentsActivity** | View parsed payments with filters (category, sender, date range); spending report |
+| **RegexBuilderActivity** | Visual regex testing tool; save-to-sender; select from SMS inbox |
+| **BugReportActivity** | Bug report form with device info collection and optional payment data attachment |
+| **SmsExportActivity** | Export raw SMS messages to JSON/CSV (debug builds only) |
+| **SettingsActivity** | Theme (light/dark/system) and language selection; view privacy notice |
+| **IgnoreRulesActivity** | Manage ignore rules per sender (legacy; rules now unified in SendersActivity) |
 
 ## 10. Security Considerations
 
@@ -370,9 +394,12 @@ Docker-based Appium setup for UI automation:
 - `READ_SMS` - Required for retrospective parsing (optional)
 
 ### 10.2 Data Privacy
-- All data stored locally in encrypted Room database
-- No network communication (except optional bug report)
-- Config export uses secure FileProvider
+- All data stored locally in Room database (SQLite, **not encrypted** at rest)
+- No network communication (except optional bug report via share intent)
+- Config export uses secure FileProvider (app-private cache dir)
+- `android:allowBackup="true"` — financial data may be included in Android cloud backup;
+  backup_rules.xml should be configured to exclude the database if this is a concern
+- SMS bodies are logged to Logcat in debug builds (amounts, card last-4, merchants)
 
 ## 11. Future Enhancements
 
@@ -401,28 +428,41 @@ app/src/main/java/com/example/banksmstracker/
 ├── BankSmsTrackerApp.kt          # Application class
 ├── data/                          # Domain models
 │   ├── Category.kt
+│   ├── IgnoreRule.kt
+│   ├── Income.kt
+│   ├── MessageProcessResult.kt
 │   ├── Payment.kt
-│   ├── PaymentRegexRule.kt
+│   ├── Rule.kt
+│   ├── RuleType.kt               # PAYMENT / INCOME / IGNORE enum
 │   ├── Sender.kt
 │   └── SmsConfig.kt
-├── database/                      # Room database
-│   ├── BankSmsDatabase.kt
+├── database/                      # Room database (schema v8)
+│   ├── BankSmsDatabase.kt         # DB singleton + migrations 1-8
 │   ├── ConfigDao.kt
 │   ├── Entities.kt
+│   ├── IgnoreRuleDao.kt
+│   ├── IncomeDao.kt
 │   ├── Mappers.kt
-│   └── PaymentDao.kt
-├── parser/                        # SMS parsing
+│   ├── PaymentDao.kt
+│   └── RuleDao.kt
+├── parser/                        # SMS BroadcastReceiver
 │   └── SmsReceiver.kt
 ├── processor/                     # Business logic
 │   └── PaymentProcessor.kt
 ├── repository/                    # Data access
 │   ├── ConfigRepository.kt
+│   ├── ImportResult.kt
 │   ├── PaymentRepository.kt
 │   └── RoomPaymentRepository.kt
 ├── serializer/                    # JSON serialization
 │   └── ConfigLoader.kt
+├── util/                          # Utilities
+│   ├── Constants.kt
+│   ├── HashUtil.kt
+│   └── SmsAddressMatcher.kt
 └── ui/                           # Activities
     ├── BaseActivity.kt
+    ├── EditTextExtensions.kt
     ├── MainActivity.kt
     ├── CategoriesActivity.kt
     ├── SendersActivity.kt
@@ -430,23 +470,31 @@ app/src/main/java/com/example/banksmstracker/
     ├── ApplyRulesActivity.kt
     ├── PaymentsActivity.kt
     ├── RegexBuilderActivity.kt
-    └── BugReportActivity.kt
+    ├── BugReportActivity.kt
+    ├── IgnoreRulesActivity.kt
+    ├── SettingsActivity.kt
+    └── SmsExportActivity.kt       # Debug builds only
 
 app/src/test/java/com/example/banksmstracker/
-├── appium/                        # Appium UI tests
+├── appium/                        # Appium UI tests (116+ tests, 10 classes)
 │   ├── AppiumBaseTest.kt
-│   ├── MainNavigationAppiumTest.kt
-│   ├── CategoryManagementAppiumTest.kt
-│   ├── SenderManagementAppiumTest.kt
-│   ├── SmsToPaymentFlowAppiumTest.kt
 │   ├── BugReportAppiumTest.kt
-│   └── RegexBuilderAppiumTest.kt
-└── repository/                    # Unit tests
-    ├── ConfigRepositoryTest.kt
-    └── PaymentRepositoryTest.kt
+│   ├── CategoryCascadeAppiumTest.kt
+│   ├── CategoryManagementAppiumTest.kt
+│   ├── IgnoreRulesAppiumTest.kt
+│   ├── MainNavigationAppiumTest.kt
+│   ├── PaymentsFilterAppiumTest.kt
+│   ├── RegexBuilderAppiumTest.kt
+│   ├── SenderManagementAppiumTest.kt
+│   ├── SettingsAppiumTest.kt
+│   └── SmsToPaymentFlowAppiumTest.kt
+└── ...                            # Unit tests (195+ tests)
+
+app/src/androidTest/java/com/example/banksmstracker/
+└── ...                            # Instrumented tests (77 tests)
 
 # Project root
-├── docker-compose.appium.yml      # Appium Docker setup
+├── docker-compose.yml             # Appium + Gradle build cache
 ├── Makefile                       # Build automation
 ├── AGENTS.md                      # AI agent guidelines
 └── TODO.md                        # Project progress tracking

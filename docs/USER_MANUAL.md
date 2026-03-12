@@ -11,7 +11,8 @@
 7. [Testing Rules](#testing-rules)
 8. [Processing SMS History](#processing-sms-history)
 9. [Import/Export Configuration](#importexport-configuration)
-10. [Troubleshooting](#troubleshooting)
+10. [Settings](#settings)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -37,20 +38,23 @@ When you first open Bank SMS Tracker, you'll need to:
 
 The main screen is organized into three groups:
 
-### Data Management
+### Configuration
 - **Categories** - Manage spending categories and merchants
-- **Senders** - Configure bank sender addresses and parsing rules
+- **Senders** - Configure bank sender addresses and parsing rules (PAYMENT, INCOME, IGNORE)
+
+### Data & Reports
 - **Payments** - View and analyze your transaction history
+- **Bug Report** - Report issues with device information
 
 ### Tools
 - **Regex Builder** - Create and test regex patterns visually
-- **Test Rules** - Verify your rules work correctly
+- **Test Rules** - Check which SMS senders match your configured senders
 - **Process SMS History** - Parse historical SMS messages
 
-### Settings & Help
+### Settings
 - **Export Config** - Save your configuration to a file
 - **Import Config** - Load configuration from a file
-- **Bug Report** - Report issues with device information
+- **Settings** - Change theme (light/dark/system) and language
 
 ---
 
@@ -102,15 +106,24 @@ Banks may use different addresses for different notification types. Common forma
 - Phone numbers: `+1234567890`
 - Alphanumeric: `MyBank`, `BANK-SMS`
 
-### Adding Regex Rules
+### Adding Rules
 
-Regex rules extract transaction details from SMS messages. Each rule should capture:
-1. Amount
-2. Currency
-3. Card (last 4 digits)
-4. Merchant name
-5. Timestamp
-6. Balance (optional)
+Rules are unified by type:
+
+- **PAYMENT** — extracts spending transactions (debit/purchase)
+- **INCOME** — extracts incoming transfers (salary, refunds)
+- **IGNORE** — suppresses promotional or non-financial SMS
+
+PAYMENT and INCOME rules use named capture groups. IGNORE rules just need to match anywhere in the message body.
+
+Named groups for PAYMENT/INCOME rules:
+- `(?P<amount>...)` — transaction amount
+- `(?P<currency>...)` — currency code (e.g., USD, EUR)
+- `(?P<card>...)` — card identifier (optional)
+- `(?P<merchant>...)` — merchant/counterparty name (optional)
+- `(?P<date>...)` — date portion of timestamp (optional)
+- `(?P<time>...)` — time portion of timestamp (optional)
+- `(?P<balance>...)` — remaining balance (optional)
 
 ### Enable/Disable Rules
 
@@ -156,13 +169,19 @@ The Regex Builder helps you create parsing patterns for bank SMS messages.
 
 ### Regex Pattern Requirements
 
-Your pattern must have exactly 6 capture groups:
-1. `(amount)` - Transaction amount (e.g., `100.50`)
-2. `(currency)` - Currency code (e.g., `USD`, `EUR`)
-3. `(card)` - Card identifier (e.g., `*1234`)
-4. `(merchant)` - Merchant name
-5. `(timestamp)` - Transaction date/time
-6. `(balance)` - Remaining balance (optional)
+Use **named capture groups** (`(?P<name>...)`). All groups are optional except `amount`:
+
+| Group | Example | Notes |
+|-------|---------|-------|
+| `amount` | `(?P<amount>\d+\.\d{2})` | Required for PAYMENT/INCOME |
+| `currency` | `(?P<currency>[A-Z]{3})` | |
+| `card` | `(?P<card>\*\d{4})` | Last 4 digits |
+| `merchant` | `(?P<merchant>.+?)` | |
+| `date` | `(?P<date>\d{2}/\d{2}/\d{4})` | |
+| `time` | `(?P<time>\d{2}:\d{2})` | |
+| `balance` | `(?P<balance>\d+\.\d{2})` | |
+
+IGNORE rules need no capture groups — they just match the message body.
 
 ### Example Pattern
 
@@ -276,6 +295,16 @@ Use the Regex Builder to test patterns with real SMS messages.
 3. **Backup Regularly** - Export your configuration periodically
 4. **Use Categories** - Proper categorization helps track spending habits
 5. **Check Sender Addresses** - Banks may change addresses; add all variants
+
+---
+
+## Settings
+
+Access **Settings** from the main screen to:
+
+- **Theme** - Choose Light, Dark, or System default
+- **Language** - Select app language
+- **Privacy → View Privacy Notice** - Re-read the data usage agreement shown at first launch
 
 ---
 

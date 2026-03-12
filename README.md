@@ -38,6 +38,7 @@
   - AndroidJUnit5 for instrumented tests
   - Appium for E2E UI automation
   - JaCoCo for code coverage
+  - Allure for test reporting
 - **CI/CD:** GitHub Actions
 - **Code Quality:** ktlint
 
@@ -47,16 +48,16 @@
 app/src/
 ├── main/
 │   ├── java/com/example/banksmstracker/
-│   │   ├── data/           # Data models (Payment, Category, Sender, etc.)
-│   │   ├── database/       # Room entities, DAOs, and database
-│   │   ├── parser/         # SMS receiver and parsing
-│   │   ├── processor/      # Payment processing logic
+│   │   ├── data/           # Data models (Payment, Category, Sender, Rule, Income, etc.)
+│   │   ├── database/       # Room entities, DAOs, and database (v8 schema)
+│   │   ├── parser/         # SMS BroadcastReceiver
+│   │   ├── processor/      # Payment/income/ignore processing logic
 │   │   ├── repository/     # Data repositories
 │   │   ├── serializer/     # Config loading/validation
 │   │   ├── ui/             # Activities and UI components
 │   │   └── util/           # Utility classes
 │   └── res/                # Android resources
-├── test/                   # Unit tests
+├── test/                   # Unit tests + Appium E2E tests
 └── androidTest/            # Instrumented tests
 ```
 
@@ -157,12 +158,13 @@ After installation, the app requires the following permissions:
 
 1. **Start Appium server:**
    ```bash
-   make appium-docker-start
+   docker compose up -d appium
    ```
 
 2. **Run Appium tests:**
    ```bash
-   make test-appium
+   make test-appium        # full suite (~116 tests, ~60 min)
+   make test-smoke         # smoke only (~18 tests, ~10 min)
    ```
 
 ### Code Coverage Report
@@ -208,11 +210,16 @@ This project uses ktlint for Kotlin code formatting:
 ```bash
 make help          # Show all available commands
 make build         # Build the project
-make test          # Run all tests
-make coverage      # Generate coverage report
-make lint          # Run linter
+make test          # Run unit tests
+make test-smoke    # Appium smoke tests (~18, ~10 min)
+make test-appium   # Full Appium suite (~116, ~60 min)
+make test-android  # Instrumented tests (connectedAndroidTest)
+make coverage      # Generate JaCoCo coverage report
+make lint          # Run ktlint
 make install       # Install debug APK on connected device
 make clean         # Clean build artifacts
+make allure-report # Generate Allure HTML report
+make allure-serve  # Serve Allure report in browser
 ```
 
 ## Quality Assurance Highlights
