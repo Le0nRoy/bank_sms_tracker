@@ -70,6 +70,16 @@
           "regex": "Transfer between Accounts:",
           "ruleType": "IGNORE",
           "description": "Internal account transfer"
+        },
+        {
+          "regex": "<#>\\sBy\\sentering\\scode\\syou\\sconfirm\\stransfer\\sto\\ssomeone.\\nPlease,\\smake\\ssure\\syou're\\sentering\\sit\\son\\shttps://tbconline.ge\\sor\\sin\\smobilebank\\n\\d+\\n.+",
+          "ruleType": "IGNORE",
+          "description": "OTP for money transfer (whitespace-escaped variant)"
+        },
+        {
+          "regex": "<#>\\sBy\\sentering\\scode\\syou\\sconfirm\\stransfer\\sto\\ssomeone.Please,\\smake\\ssure\\syou're\\sentering\\sit\\son\\shttps://tbconline.ge\\sor\\sin\\smobilebank\\d+.+",
+          "ruleType": "IGNORE",
+          "description": "OTP for money transfer (single-line variant)"
         }
       ]
     }
@@ -81,11 +91,26 @@
     },
     {
       "name": "Bars & Restaurants",
-      "merchants": ["MEQANIKA", "dodo pizza modzravi", "COFFEE LAB LTD", "SOMA NOODLE BAE RAMEN", "Tegi LTD"]
+      "merchants": [
+        "MEQANIKA",
+        "dodo pizza modzravi",
+        "COFFEE LAB LTD",
+        "SOMA NOODLE BAE RAMEN",
+        "Tegi LTD",
+        "SARAMENE ONIMUSHA",
+        "kfc 006 saburtalo",
+        "SANTINO",
+        "IC NEO 12",
+        "COFF.EE* CENTRET",
+        "KFC 001 Goodwill",
+        "LOLLY LTD",
+        "CHASHNAGIRI",
+        "DUNKIN YAZBEGI"
+      ]
     },
     {
       "name": "Delivery",
-      "merchants": ["Wolt"]
+      "merchants": ["Wolt", "Vip Pay*YANDEX.DELIVER"]
     },
     {
       "name": "Transport",
@@ -93,19 +118,44 @@
     },
     {
       "name": "Groceries",
-      "merchants": ["MAGNITI", "I/M GVANTSA NADARAIA", "ltd bulbaland", "agrohub", "ltd zgva ludi", "I/M NANA TIBUA", "carrefour(axs)", "p/e shorena meladze"]
+      "merchants": [
+        "MAGNITI",
+        "I/M GVANTSA NADARAIA",
+        "ltd bulbaland",
+        "agrohub",
+        "ltd zgva ludi",
+        "I/M NANA TIBUA",
+        "carrefour(axs)",
+        "p/e shorena meladze",
+        "FOODMART",
+        "NIKORA",
+        "IOLI",
+        "SPS SAVI 73",
+        "SMART RETAIL",
+        "S Market (Urbnisi)3",
+        "NINOS TAMBAQO LLC"
+      ]
     },
     {
       "name": "Subscriptions",
-      "merchants": ["GOOGLE *YouTube", "MICROSOFT*MICROSOFT 36"]
+      "merchants": [
+        "GOOGLE *YouTube",
+        "MICROSOFT*MICROSOFT 36",
+        "Patreon* Membership",
+        "FOR SUPPORT OVD-INFO",
+        "CLAUDE.AI SUBSCRIPTION",
+        "GOOGLE *Telegram",
+        "ILOVEPDF.COM",
+        "Google Telegram"
+      ]
     },
     {
       "name": "Households",
-      "merchants": ["Supermaket FIX Price", "clean house jsc", "DRY CLEAN LTD"]
+      "merchants": ["Supermaket FIX Price", "clean house jsc", "DRY CLEAN LTD", "Domino"]
     },
     {
       "name": "Pharmacy",
-      "merchants": ["PSP 73", "PSP 142"]
+      "merchants": ["PSP 73", "PSP 142", "PHARMADEPOT 315", "PSP 67"]
     },
     {
       "name": "Pets",
@@ -113,11 +163,68 @@
     },
     {
       "name": "Withdrawal",
-      "merchants": ["ATM TBC-248 (Gamsakhurdia 6", "ATM TBC-1383 (Vaja-25)"]
+      "merchants": [
+        "ATM TBC-248 (Gamsakhurdia 6",
+        "ATM TBC-1383 (Vaja-25)",
+        "ATM TBC-310 (Saburtalo 32/2",
+        "ATM TBC-247 (Gori 2)",
+        "ATM TBC-1318 (Gori Sokar)"
+      ]
     },
     {
       "name": "Leisure & Hobbies",
-      "merchants": ["CALIBER", "SHOW TECHNICS CENTERE"]
+      "merchants": [
+        "CALIBER",
+        "SHOW TECHNICS CENTERE",
+        "Leader LLC",
+        "TKT.GE",
+        "bakuraini salaro nodo",
+        "HOTEL VELI",
+        "POTALONU",
+        "HOOKAH STORE"
+      ]
+    },
+    {
+      "name": "Utilities",
+      "merchants": [
+        "GWP",
+        "TELMICO",
+        "MAG GELINK",
+        "Dasuftaveba",
+        "SELF-EMPLOYMENT.MOH.GO",
+        "Tbilisi Energy"
+      ]
+    },
+    {
+      "name": "Technics",
+      "merchants": [
+        "PCShop.ge (Saburtalo)",
+        "zoommer (pekini)",
+        "ELIT ELECTRONICS",
+        "LTD ADA",
+        "Zoommer (siti moli)"
+      ]
+    },
+    {
+      "name": "Medicine",
+      "merchants": [
+        "Dentsblanches ltd",
+        "JSC EVEX TCA Tsintsadz",
+        "SS INSURANCE COMP. IME",
+        "ALTRA VITA LTD"
+      ]
+    },
+    {
+      "name": "Games",
+      "merchants": ["STEAMGAMES.COM 4259522"]
+    },
+    {
+      "name": "Presents",
+      "merchants": ["Fw-market*Flowwow 3 No", "PSHC 1"]
+    },
+    {
+      "name": "Clothes",
+      "merchants": ["colins (saburtalo city", "SHOP NIKE 1"]
     }
   ]
 }
