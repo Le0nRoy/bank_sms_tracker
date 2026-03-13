@@ -65,6 +65,10 @@ class RoomPaymentRepository(private val paymentDao: PaymentDao) : PaymentReposit
     override suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?) {
         paymentDao.updateCategoryForRule(ruleId, categoryName)
     }
+
+    override suspend fun updateCategoryForMerchant(merchant: String, categoryName: String?) {
+        paymentDao.updateCategoryForMerchant(merchant, categoryName)
+    }
 }
 
 private fun PaymentEntity.toDomain(): Payment = Payment(

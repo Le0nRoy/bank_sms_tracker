@@ -23,35 +23,41 @@ class TbcBankRulesIntegrationTest {
 
         @Test
         fun `declined transaction should be ignored`() {
-            val message = "Transaction 19.00 GEL  was declined.\n\nReason: Not enough funds.\nMC GOLD (***'9664') \n13/01/2026\nGOOGLE *Telegram\nBalance: 10.67 GEL "
+            val message = "Transaction 19.00 GEL  was declined.\n\nReason: Not enough funds." +
+                "\nMC GOLD (***'9664') \n13/01/2026\nGOOGLE *Telegram\nBalance: 10.67 GEL "
             val result = processor.getMessageResult(message, "TBC SMS")
             assertTrue(result is MessageProcessResult.Ignored)
         }
 
         @Test
         fun `OTP for money transfer should be ignored`() {
-            val message = "<#> By entering code you confirm transfer to someone.\nPlease, make sure you're entering it on https://tbconline.ge or in mobilebank\n8950\nUkq+nWD1jJ0"
+            val message = "<#> By entering code you confirm transfer to someone." +
+                "\nPlease, make sure you're entering it on https://tbconline.ge or in mobilebank" +
+                "\n8950\nUkq+nWD1jJ0"
             val result = processor.getMessageResult(message, "TBC SMS")
             assertTrue(result is MessageProcessResult.Ignored)
         }
 
         @Test
         fun `OTP for card payment confirmation should be ignored`() {
-            val message = "Code: 914970\nWith the code, you can confirm a 212.00 GEL payment with your card ***9664 at TKT.GE1"
+            val message = "Code: 914970\nWith the code, you can confirm a 212.00 GEL payment" +
+                " with your card ***9664 at TKT.GE1"
             val result = processor.getMessageResult(message, "TBC SMS")
             assertTrue(result is MessageProcessResult.Ignored)
         }
 
         @Test
         fun `short hash OTP should be ignored`() {
-            val message = "<#> Code:3135 Please check that you enter this code only on https://tbconline.ge or in our mobile application Ukq+nWD1jJ0"
+            val message = "<#> Code:3135 Please check that you enter this code only on" +
+                " https://tbconline.ge or in our mobile application Ukq+nWD1jJ0"
             val result = processor.getMessageResult(message, "TBC SMS")
             assertTrue(result is MessageProcessResult.Ignored)
         }
 
         @Test
         fun `generic OTP verification code should be ignored`() {
-            val message = "Code: 4363\nPlease check that you enter this code on web address https://tbconline.ge or in mobilebank\ncKFVduDh43e"
+            val message = "Code: 4363\nPlease check that you enter this code on web address" +
+                " https://tbconline.ge or in mobilebank\ncKFVduDh43e"
             val result = processor.getMessageResult(message, "TBC SMS")
             assertTrue(result is MessageProcessResult.Ignored)
         }
@@ -76,7 +82,8 @@ class TbcBankRulesIntegrationTest {
 
         @Test
         fun `salary deposit to card should be parsed as income`() {
-            val message = "Deposit money: 5485.00 USD\nMC GOLD (***9664)\nLets Deel 05/01/2026 17:01:50\nBalance: 14599.73 GEL "
+            val message = "Deposit money: 5485.00 USD\nMC GOLD (***9664)" +
+                "\nLets Deel 05/01/2026 17:01:50\nBalance: 14599.73 GEL "
             val result = processor.getMessageResult(message, "TBC SMS")
             assertTrue(result is MessageProcessResult.IncomeResult)
             val income = (result as MessageProcessResult.IncomeResult).income
@@ -112,7 +119,8 @@ class TbcBankRulesIntegrationTest {
 
         @Test
         fun `payment reversal should be parsed as income`() {
-            val message = "Reversal:\n249.00 GEL\nMC GOLD (***9664)\nzoommer (pekini)\n05/01/2026 18:43:33\nBalance: 269.48 GEL \n"
+            val message = "Reversal:\n249.00 GEL\nMC GOLD (***9664)\nzoommer (pekini)" +
+                "\n05/01/2026 18:43:33\nBalance: 269.48 GEL \n"
             val result = processor.getMessageResult(message, "TBC SMS")
             assertTrue(result is MessageProcessResult.IncomeResult)
             val income = (result as MessageProcessResult.IncomeResult).income

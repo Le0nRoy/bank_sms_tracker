@@ -34,6 +34,8 @@ import com.example.banksmstracker.database.SenderEntity
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.util.Constants
 import com.example.banksmstracker.util.SmsAddressMatcher
+import com.example.banksmstracker.util.regexToTemplate
+import com.example.banksmstracker.util.templateToRegex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -73,33 +75,9 @@ class RegexBuilderActivity : BaseActivity() {
     private var selectedRuleType: RuleType = RuleType.PAYMENT
     private var lastSelectedSmsAddress: String? = null
     private var pendingAutoSelectAddress: String? = null
-
-    // Regex presets extracted from default rules
-    private val regexPresets = RegexPresets()
-
-    private val placeholderToRegex: Map<String, String> by lazy {
-        mapOf(
-            "amount" to regexPresets.amount,
-            "currency" to regexPresets.currency,
-            "card" to regexPresets.card,
-            "merchant" to regexPresets.merchant,
-            "date" to regexPresets.date,
-            "time" to regexPresets.time,
-            "balance" to regexPresets.balance
-        )
-    }
+    private var pendingRestoreSenderName: String? = null
 
     data class SmsMessage(val address: String, val body: String, val date: Long = 0)
-
-    class RegexPresets {
-        val amount = "(?<amount>\\d+(?:[.]\\d{2}))"
-        val currency = "(?<currency>[A-Z]{3})"
-        val card = "(?<card>.+?)"
-        val merchant = "(?<merchant>.+?)"
-        val date = "(?<date>\\d{2}/\\d{2}/\\d{4})"
-        val time = "(?<time>\\d{2}:\\d{2}:\\d{2})"
-        val balance = "(?<balance>\\d+(?:[.]\\d{2}))"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -497,6 +475,14 @@ class RegexBuilderActivity : BaseActivity() {
 
                 setupExistingPatternsSpinner(emptyList())
 
+                // Restore sender selection after a save (feature 4.1: sender must not be erased).
+                val restoreName = pendingRestoreSenderName
+                if (restoreName != null) {
+                    pendingRestoreSenderName = null
+                    val index = senders.indexOfFirst { it.name == restoreName }
+                    if (index >= 0) spinnerSenders.setSelection(index + 1)
+                }
+
                 // Auto-select sender if requested from ApplyRulesActivity
                 val autoAddress = pendingAutoSelectAddress
                 if (autoAddress != null) {
@@ -649,7 +635,8 @@ class RegexBuilderActivity : BaseActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
 
-                // Refresh senders list
+                // Refresh senders list while preserving the current sender selection.
+                pendingRestoreSenderName = sender.name
                 loadSenders()
             } catch (e: Exception) {
                 Toast.makeText(
@@ -659,18 +646,6 @@ class RegexBuilderActivity : BaseActivity() {
                 ).show()
             }
         }
-    }
-
-    private fun templateToRegex(template: String): String {
-        var result = template
-        placeholderToRegex.forEach { (name, regex) -> result = result.replace("⟨$name⟩", regex) }
-        return result
-    }
-
-    private fun regexToTemplate(regex: String): String {
-        var result = regex
-        placeholderToRegex.forEach { (name, pattern) -> result = result.replace(pattern, "⟨$name⟩") }
-        return result
     }
 
     private fun applyPlaceholderSpans(editable: android.text.Editable) {

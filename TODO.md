@@ -13,25 +13,20 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- Doc reorganization (moved design docs → docs/design/, plans → docs/plans/, ISSUES.md → docs/, AI_REVIEWER_PROMPT.md → docs/ai-rules/)
+- PROMPT.md (2026-03-13) implementation planning complete
 
 ### Completed This Session
-- All PROMPT.md plan tasks (Phases 1–4) confirmed done; plan files updated
-- Docs reorganized: design docs → docs/design/, testing-improvement-plan.md → docs/plans/
-- ISSUES.md → docs/, AI_REVIEWER_PROMPT.md → docs/ai-rules/
+- Analyzed new PROMPT.md requirements
+- Wrote implementation plan: docs/plans/2026-03-13-prompt-features.md
+- Added Phase 9 tasks to TODO.md
 
-### Previous Sessions
-- Phase 5.3-5.7: Regex Builder, Spending Reports, Apply Rules, Payment Details, Ignore Rules
-- Phase 5.9-5.11: SMS Export, Income Tracking, Theme Toggle
-- Phase 5.12: Localization & Settings Activity (Russian + English, SettingsActivity)
-- Phase 2–4 of PROMPT.md plan: CardView rules, menu reorg, auto-fill sender, block editor, perf tests, personal data agreement, Allure reporting
-- Achieved 96.6% code coverage; fixed BUG-001–006; DB migrations v1→v8
-- All Appium E2E tests: 10 test classes, 116+ tests
-
-### Next Steps
-- Implement remaining open items: SmsExport Appium test, RoomPerformanceTest, @Story/@Severity Allure annotations
-- Income UI screen (Phase 5.10)
-- Background Service / notification system (Phase 8)
+### Next Steps (Phase 9, in order)
+1. Extract RegexFormatUtils (prerequisite)
+2. Write failing tests for BUG-007 through BUG-010, create bug report files
+3. Fix bugs one by one (TDD)
+4. Quick wins: 4.1, 4.4, 3.0
+5. Merchant model: DB migration v8→v9, 1.2, 1.3, 1.1
+6. New features: 2.1, 4.2
 
 ---
 
@@ -318,6 +313,72 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 - [ ] Implement opt-in analytics collection
 - [ ] Privacy-first design (no PII collection)
 - [ ] Analytics dashboard for aggregate insights
+
+---
+
+## Phase 9: PROMPT.md Batch (2026-03-13)
+
+> **Plan:** [docs/plans/2026-03-13-prompt-features.md](docs/plans/2026-03-13-prompt-features.md)
+
+### 9.0 Prerequisites (before bug fixes)
+- [ ] Extract `RegexFormatUtils` shared utility (presets, templateToRegex, applyPlaceholderSpans)
+
+### 9.1 Bug Fixes (TDD — write tests first)
+- [ ] Fix BUG-007: Category re-assignment from payment detail doesn't update existing payments
+- [ ] Fix BUG-008: End date filter shows no payments when end < start date
+- [ ] Fix BUG-009: Start date filter shows earlier payments (investigate race condition)
+- [ ] Fix BUG-010: `⟨merchant⟩` block not highlighted in Regex Builder
+
+### 9.2 Quick Wins
+- [ ] Task 4.1: Preserve sender selection after regex save
+- [ ] Task 4.4: Show human-readable newlines when loading pattern into Regex Builder
+- [ ] Task 3.0: Show formatted (highlighted + newlines) regexes in Senders screen
+
+### 9.3 Merchant Model Enhancements
+- [ ] DB migration v8→v9: add `displayName` and `isRegex` columns to `category_merchants`
+- [ ] Task 1.2: Optional display name for merchants (shows instead of pattern in reports)
+- [ ] Task 1.3: Regex support for merchant matching in `PaymentProcessor`
+- [ ] Task 1.1: "Move to Category" button for each merchant in Categories screen
+
+### 9.4 New Features
+- [ ] Task 2.1: Merchant search/filter in Payments screen
+- [ ] Task 4.2: Edit Existing Pattern — open as separate `PatternListActivity`
+
+---
+
+## Phase 9 Maintenance
+
+### 9.M1 Remove Dead Code
+- [ ] Delete `SenderRuleEntity` class from `database/Entities.kt` (legacy, replaced by `RuleEntity`; remove ConfigDao methods that use it: `insertRule`, `updateRule`, `deleteRule` for `SenderRuleEntity`)
+- [ ] Delete `PaymentProcessor.getPaymentFromMessage()` (`processor/PaymentProcessor.kt:164`) — never called; `processMessageFull()` used instead
+- [ ] Remove unused `SmsAddressMatcher.matchesAny(Collection<String>)` overload (`util/SmsAddressMatcher.kt:44`) — only `Set<String>` overload is used in production
+- [ ] Prune unused `RuleDao` methods (nearly all — `getAllRules`, `getRulesByType`, `getEnabledRules*`, `getRuleById`, `insertRules` batch, `updateRule`, `deleteRule`, `deleteRuleById`, `deleteRulesForSenderByType`, `getRulesCount*`, `updateRuleType`)
+- [ ] Prune unused `IncomeDao` methods (`getAllIncomes`, `getIncomesByDateRange`, `getIncomesBySender`, `getDistinctSenderAddresses`, `updateIncome`, `deleteIncomeById`, `getIncomeCount`, `getTotalIncomeByDateRange`)
+- [ ] Prune unused `IgnoreRuleDao` methods (`getEnabledIgnoreRules`, `getIgnoreRuleById`, `deleteIgnoreRule`, `deleteIgnoreRulesForSender`, `getIgnoreRulesCount`)
+- [ ] Prune unused `ConfigDao` entity methods (`updateMerchant`, `deleteMerchant`, `updateAddress`, `deleteAddress`)
+
+> **Note:** DAO pruning should be deferred until after Phase 9.3 merchant model changes (tasks 1.2/1.3) — some methods may become useful then.
+
+---
+
+## Phase 9 Future Items (do NOT implement now)
+
+### 9.F1 Spending Report Diagrams (Task 2.5)
+- [ ] Research chart library (MPAndroidChart or Vico)
+- [ ] Design bar chart / pie chart for category breakdown
+- [ ] Integrate into spending report dialog
+
+### 9.F2 Central Bank API for Currency Rates (Task 2.6)
+- [ ] Research available central bank APIs (NBG, ECB, etc.)
+- [ ] Design abstraction layer for multiple bank APIs
+- [ ] Implement exchange rate retrieval and caching
+- [ ] Apply rates to normalize multi-currency payments
+
+### 9.F3 Regex-Free Text Box in Regex Builder (Task 4.5)
+- [ ] Design token model: words + preset chips as separate objects
+- [ ] Implement custom `EditText` or `SpannableStringBuilder` approach
+- [ ] Regex transformation hidden from user (internal state only)
+- [ ] Full multiline support in token view
 
 ---
 

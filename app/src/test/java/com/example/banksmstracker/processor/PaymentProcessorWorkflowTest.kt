@@ -510,5 +510,15 @@ class PaymentProcessorWorkflowTest {
                 }
             }
         }
+
+        override suspend fun updateCategoryForMerchant(merchant: String, categoryName: String?) {
+            payments.replaceAll { payment ->
+                if (payment.merchant?.equals(merchant, ignoreCase = true) == true) {
+                    payment.copy(categoryId = categoryName)
+                } else {
+                    payment
+                }
+            }
+        }
     }
 }

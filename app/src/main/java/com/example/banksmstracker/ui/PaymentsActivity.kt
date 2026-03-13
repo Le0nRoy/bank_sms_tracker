@@ -288,21 +288,7 @@ class PaymentsActivity : BaseActivity() {
     }
 
     private fun applyFilter() {
-        filteredPayments = allPayments.filter { payment ->
-            val matchesCategory = selectedCategory == null || payment.categoryId == selectedCategory
-            val matchesSender = selectedSender == null || payment.senderAddress == selectedSender
-            val matchesDateRange = when {
-                startDate != null || endDate != null -> {
-                    // Date filter is active - payments without receivedAt are excluded
-                    val receivedAt = payment.receivedAt ?: return@filter false
-                    val afterStart = startDate?.let { receivedAt >= it } ?: true
-                    val beforeEnd = endDate?.let { receivedAt <= it } ?: true
-                    afterStart && beforeEnd
-                }
-                else -> true // No date filter - include all payments
-            }
-            matchesCategory && matchesSender && matchesDateRange
-        }
+        filteredPayments = filterPayments(allPayments, selectedCategory, selectedSender, startDate, endDate)
 
         adapter.submitList(filteredPayments)
         updateUI()
@@ -525,23 +511,39 @@ class PaymentsActivity : BaseActivity() {
     private fun addMerchantToCategory(merchant: String, category: Category, parentDialog: AlertDialog) {
         lifecycleScope.launch {
             try {
-                val updatedMerchants = category.merchants.toMutableList()
-                if (!updatedMerchants.any { it.equals(merchant, ignoreCase = true) }) {
-                    updatedMerchants.add(merchant)
-                    val updatedCategory = category.copy(merchants = updatedMerchants)
-                    withContext(Dispatchers.IO) {
-                        ConfigRepository.updateCategory(updatedCategory)
+                withContext(Dispatchers.IO) {
+                    // Remove the merchant from all categories that currently contain it.
+                    val allCategories = ConfigRepository.getCategories()
+                    for (cat in allCategories) {
+                        val hadMerchant = cat.merchants.any { it.equals(merchant, ignoreCase = true) }
+                        if (hadMerchant) {
+                            val withoutMerchant = cat.merchants.filterNot {
+                                it.equals(merchant, ignoreCase = true)
+                            }.toMutableList()
+                            ConfigRepository.updateCategory(cat.copy(merchants = withoutMerchant))
+                        }
                     }
 
-                    Toast.makeText(
-                        this@PaymentsActivity,
-                        getString(R.string.merchant_added_to_category, merchant, category.name),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    // Add merchant to the chosen category (if not already there after the cleanup).
+                    val refreshed = ConfigRepository.getCategories().first { it.id == category.id }
+                    if (!refreshed.merchants.any { it.equals(merchant, ignoreCase = true) }) {
+                        ConfigRepository.updateCategory(
+                            refreshed.copy(merchants = (refreshed.merchants + merchant).toMutableList())
+                        )
+                    }
 
-                    parentDialog.dismiss()
-                    loadData(preserveScroll = true)
+                    // Update categoryId on all existing payments with this merchant.
+                    paymentRepository.updateCategoryForMerchant(merchant, category.name)
                 }
+
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.merchant_added_to_category, merchant, category.name),
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                parentDialog.dismiss()
+                loadData(preserveScroll = true)
             } catch (e: Exception) {
                 Toast.makeText(
                     this@PaymentsActivity,

@@ -13,6 +13,7 @@ interface PaymentRepository {
     suspend fun updatePaymentCategory(paymentId: Long, categoryName: String?)
     suspend fun getPaymentsByRule(ruleId: Long): List<Payment>
     suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?)
+    suspend fun updateCategoryForMerchant(merchant: String, categoryName: String?)
 }
 
 // For testing purposes
@@ -67,6 +68,16 @@ class InMemoryPaymentRepository : PaymentRepository {
     override suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?) {
         payments.replaceAll { payment ->
             if (payment.ruleId == ruleId) {
+                payment.copy(categoryId = categoryName)
+            } else {
+                payment
+            }
+        }
+    }
+
+    override suspend fun updateCategoryForMerchant(merchant: String, categoryName: String?) {
+        payments.replaceAll { payment ->
+            if (payment.merchant?.equals(merchant, ignoreCase = true) == true) {
                 payment.copy(categoryId = categoryName)
             } else {
                 payment

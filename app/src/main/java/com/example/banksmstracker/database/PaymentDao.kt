@@ -37,4 +37,7 @@ interface PaymentDao {
 
     @Query("UPDATE payments SET categoryName = :categoryName WHERE ruleId = :ruleId")
     suspend fun updateCategoryForRule(ruleId: Long, categoryName: String?)
+
+    @Query("UPDATE payments SET categoryName = :categoryName WHERE merchant = :merchant COLLATE NOCASE")
+    suspend fun updateCategoryForMerchant(merchant: String, categoryName: String?)
 }

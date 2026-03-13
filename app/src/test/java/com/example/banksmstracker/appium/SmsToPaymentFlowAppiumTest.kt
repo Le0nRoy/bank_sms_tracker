@@ -99,7 +99,11 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
 
         // Add rule — keyboard may still be up after address entry, shrinking the viewport.
         // Dismiss keyboard and scroll to end so the new sender's btnAddRule is visible.
-        try { driver.hideKeyboard() } catch (e: Exception) { /* keyboard not visible */ }
+        try {
+            driver.hideKeyboard()
+        } catch (e: Exception) {
+            /* keyboard not visible */
+        }
         shortWait()
         try {
             driver.findElement(
