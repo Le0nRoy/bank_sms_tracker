@@ -21,30 +21,35 @@ internal fun parseTransactionTimestamp(timestamp: String?): Long? {
 }
 
 /**
- * Filters a list of payments by category, sender, and date range.
+ * Filters a list of payments by category, sender, date range, and merchant name.
  *
  * Date filtering uses [Payment.timestamp] (the transaction date from the SMS body) as the primary
  * date source, falling back to [Payment.receivedAt] if the timestamp cannot be parsed. This
  * correctly handles the case where all payments were imported in a single batch (giving them
  * the same [Payment.receivedAt]) but have different transaction dates.
  *
- * @param payments      Full list of payments to filter.
+ * @param payments          Full list of payments to filter.
  * @param selectedCategory  Category name to match, or null to include all categories.
  * @param selectedSender    Sender address to match, or null to include all senders.
- * @param startDate     Inclusive lower bound in milliseconds, or null for no lower bound.
- * @param endDate       Inclusive upper bound in milliseconds, or null for no upper bound.
+ * @param startDate         Inclusive lower bound in milliseconds, or null for no lower bound.
+ * @param endDate           Inclusive upper bound in milliseconds, or null for no upper bound.
+ * @param merchantQuery     Substring to match against [Payment.merchant] (case-insensitive),
+ *                          or null/blank to include all merchants.
  */
 internal fun filterPayments(
     payments: List<Payment>,
     selectedCategory: String?,
     selectedSender: String?,
     startDate: Long?,
-    endDate: Long?
+    endDate: Long?,
+    merchantQuery: String? = null
 ): List<Payment> = payments.filter { payment ->
     val matchesCategory = selectedCategory == null || payment.categoryId == selectedCategory
     val matchesSender = selectedSender == null || payment.senderAddress == selectedSender
     val matchesDate = matchesDateRange(payment, startDate, endDate)
-    matchesCategory && matchesSender && matchesDate
+    val matchesMerchant = merchantQuery.isNullOrBlank() ||
+        (payment.merchant?.contains(merchantQuery.trim(), ignoreCase = true) == true)
+    matchesCategory && matchesSender && matchesDate && matchesMerchant
 }
 
 private fun matchesDateRange(payment: Payment, startDate: Long?, endDate: Long?): Boolean {

@@ -41,6 +41,7 @@
     <string name="start_date">Начальная дата</string>
     <string name="end_date">Конечная дата</string>
     <string name="clear">Очистить</string>
+    <string name="search_merchant_hint">Поиск по продавцу…</string>
     <string name="recategorize_payments">Переопределить категории</string>
     <string name="recategorize_success">Переопределено %1$d платежей</string>
     <string name="recategorize_failed">Ошибка переопределения: %1$s</string>

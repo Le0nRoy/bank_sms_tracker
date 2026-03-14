@@ -225,12 +225,14 @@ class BugReportActivity : BaseActivity() {
                 val sender = prefs.getString(PaymentsActivity.KEY_FILTER_SENDER, null)
                 val startDate = prefs.getLong(PaymentsActivity.KEY_FILTER_START_DATE, -1L).takeIf { it >= 0 }
                 val endDate = prefs.getLong(PaymentsActivity.KEY_FILTER_END_DATE, -1L).takeIf { it >= 0 }
+                val merchant = prefs.getString(PaymentsActivity.KEY_FILTER_MERCHANT, null)
                 val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
                 report.append("  Category: ${category ?: "(all)"}\n")
                 report.append("  Sender: ${sender ?: "(all)"}\n")
                 report.append("  Start: ${startDate?.let { dateFmt.format(Date(it)) } ?: "(none)"}\n")
                 report.append("  End: ${endDate?.let { dateFmt.format(Date(it)) } ?: "(none)"}\n")
+                report.append("  Merchant: ${merchant ?: "(all)"}\n")
             } catch (e: Exception) {
                 report.append(getString(R.string.error_with_message, e.message ?: ""))
                 report.append("\n")

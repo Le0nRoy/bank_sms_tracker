@@ -46,6 +46,7 @@ class PaymentsActivity : BaseActivity() {
     private lateinit var btnEndDate: Button
     private lateinit var btnClearDates: Button
     private lateinit var btnSpendingReport: Button
+    private lateinit var etMerchantSearch: android.widget.EditText
 
     private lateinit var paymentRepository: RoomPaymentRepository
     private var allPayments: List<Payment> = emptyList()
@@ -56,6 +57,7 @@ class PaymentsActivity : BaseActivity() {
     private var selectedSender: String? = null
     private var startDate: Long? = null
     private var endDate: Long? = null
+    private var merchantSearchQuery: String? = null
 
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val adapter = PaymentAdapter()
@@ -100,6 +102,15 @@ class PaymentsActivity : BaseActivity() {
         btnStartDate = findViewById(R.id.btnStartDate)
         btnEndDate = findViewById(R.id.btnEndDate)
         btnClearDates = findViewById(R.id.btnClearDates)
+        etMerchantSearch = findViewById(R.id.etMerchantSearch)
+        etMerchantSearch.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: android.text.Editable?) {
+                merchantSearchQuery = s?.toString()?.takeIf { it.isNotBlank() }
+                applyFilter()
+            }
+        })
 
         if (!BuildConfig.DEBUG) {
             btnExportCsv.visibility = View.GONE
@@ -288,7 +299,7 @@ class PaymentsActivity : BaseActivity() {
     }
 
     private fun applyFilter() {
-        filteredPayments = filterPayments(allPayments, selectedCategory, selectedSender, startDate, endDate)
+        filteredPayments = filterPayments(allPayments, selectedCategory, selectedSender, startDate, endDate, merchantSearchQuery)
 
         adapter.submitList(filteredPayments)
         updateUI()
@@ -302,6 +313,7 @@ class PaymentsActivity : BaseActivity() {
             .putString(KEY_FILTER_SENDER, selectedSender)
             .putLong(KEY_FILTER_START_DATE, startDate ?: -1L)
             .putLong(KEY_FILTER_END_DATE, endDate ?: -1L)
+            .putString(KEY_FILTER_MERCHANT, merchantSearchQuery)
             .apply()
     }
 
@@ -665,5 +677,6 @@ class PaymentsActivity : BaseActivity() {
         const val KEY_FILTER_SENDER = "filter_sender"
         const val KEY_FILTER_START_DATE = "filter_start_date"
         const val KEY_FILTER_END_DATE = "filter_end_date"
+        const val KEY_FILTER_MERCHANT = "filter_merchant"
     }
 }

@@ -3,6 +3,7 @@ package com.example.banksmstracker.ui
 import com.example.banksmstracker.data.Payment
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -242,6 +243,69 @@ class PaymentsFilterTest {
         val result = filterPayments(listOf(payment), null, null, startDate, endDate)
 
         assertEquals(1, result.size, "Should include payment using receivedAt as fallback")
+    }
+
+    // ── Task 2.1: Merchant search filter ──────────────────────────────────────
+
+    private fun makePaymentWithMerchant(merchant: String?) = Payment(
+        id = 1, amount = 10.0, currency = "GEL", card = null,
+        merchant = merchant, timestamp = "01/03/2026 10:00:00",
+        balance = null, categoryId = null, senderAddress = "TBC SMS",
+        receivedAt = batchImportDate, ruleId = null
+    )
+
+    @Test
+    fun `Task21 merchant query returns only payments with matching merchant`() {
+        val payments = listOf(
+            makePaymentWithMerchant("Carrefour"),
+            makePaymentWithMerchant("Bolt"),
+            makePaymentWithMerchant("bolt food")  // should match "bolt" case-insensitively
+        )
+        val result = filterPayments(payments, null, null, null, null, merchantQuery = "bolt")
+        assertEquals(2, result.size)
+        assertTrue(result.all { it.merchant?.contains("bolt", ignoreCase = true) == true })
+    }
+
+    @Test
+    fun `Task21 blank merchant query includes all payments`() {
+        val payments = listOf(
+            makePaymentWithMerchant("Carrefour"),
+            makePaymentWithMerchant("Bolt")
+        )
+        assertEquals(2, filterPayments(payments, null, null, null, null, merchantQuery = "").size)
+        assertEquals(2, filterPayments(payments, null, null, null, null, merchantQuery = "  ").size)
+        assertEquals(2, filterPayments(payments, null, null, null, null, merchantQuery = null).size)
+    }
+
+    @Test
+    fun `Task21 merchant query excludes payment with null merchant`() {
+        val payments = listOf(
+            makePaymentWithMerchant(null),
+            makePaymentWithMerchant("Bolt")
+        )
+        val result = filterPayments(payments, null, null, null, null, merchantQuery = "bolt")
+        assertEquals(1, result.size)
+        assertEquals("Bolt", result[0].merchant)
+    }
+
+    @Test
+    fun `Task21 merchant query is case-insensitive`() {
+        val payments = listOf(makePaymentWithMerchant("CARREFOUR CITY"))
+        assertEquals(1, filterPayments(payments, null, null, null, null, merchantQuery = "carrefour").size)
+        assertEquals(1, filterPayments(payments, null, null, null, null, merchantQuery = "CARREFOUR").size)
+        assertEquals(1, filterPayments(payments, null, null, null, null, merchantQuery = "City").size)
+    }
+
+    @Test
+    fun `Task21 merchant query combined with category filter`() {
+        val payments = listOf(
+            makePayment("01/03/2026 10:00:00", categoryId = "Food").copy(merchant = "Bolt Food"),
+            makePayment("02/03/2026 10:00:00", categoryId = "Transport").copy(merchant = "Bolt"),
+            makePayment("03/03/2026 10:00:00", categoryId = "Food").copy(merchant = "Carrefour")
+        )
+        val result = filterPayments(payments, "Food", null, null, null, merchantQuery = "bolt")
+        assertEquals(1, result.size)
+        assertEquals("Bolt Food", result[0].merchant)
     }
 
     @Test

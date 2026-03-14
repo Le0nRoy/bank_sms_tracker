@@ -13,7 +13,7 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- Task 2.1: Merchant search in Payments screen
+- Task 9.3 Merchant model (next)
 
 ### Completed This Session
 - Phase 9.0: Extracted `RegexTemplateUtils.kt` (`regexToTemplate`/`templateToRegex`) and `RegexSpanUtils.kt` (`applyPlaceholderSpans`)
@@ -339,7 +339,7 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 - [ ] Task 1.1: "Move to Category" button for each merchant in Categories screen
 
 ### 9.4 New Features
-- [ ] Task 2.1: Merchant search/filter in Payments screen
+- [x] Task 2.1: Merchant search/filter in Payments screen
 - [ ] Task 4.2: Edit Existing Pattern — open as separate `PatternListActivity`
 
 ---

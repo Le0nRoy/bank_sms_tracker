@@ -20,7 +20,7 @@
 | 1.1 | Simple category change for merchants (Categories screen) | HIGH | Feature | M | — |
 | 1.2 | Optional display name for merchants | HIGH | Feature | M | — |
 | 1.3 | Regex support for merchant matching | HIGH | Feature | M | — |
-| 2.1 | Merchant search in Payments | MEDIUM | Feature | M | — |
+| 2.1 | Merchant search in Payments | MEDIUM | Feature | M | ✅ Done (2026-03-14) |
 | 4.2 | Edit Existing Pattern separate window | MEDIUM | Feature | L | — |
 | BUG-011 | Replace `receivedAt` with non-nullable `timestamp` | HIGH | Bug/Refactor | L | — |
 | 2.5 | Spending report diagrams | FUTURE | TODO.md | — | — |

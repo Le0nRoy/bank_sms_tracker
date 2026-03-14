@@ -41,6 +41,7 @@
     <string name="start_date">Start Date</string>
     <string name="end_date">End Date</string>
     <string name="clear">Clear</string>
+    <string name="search_merchant_hint">Search merchant…</string>
     <string name="recategorize_payments">Re-categorize All Payments</string>
     <string name="recategorize_success">Re-categorized %1$d payments</string>
     <string name="recategorize_failed">Failed to re-categorize: %1$s</string>
