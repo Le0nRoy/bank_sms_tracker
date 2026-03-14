@@ -146,4 +146,83 @@ class RegexTemplateUtilsTest {
         val roundTripped = templateToRegex(regexToTemplate(original))
         assertEquals(original, roundTripped)
     }
+
+    // ── decodeNewlines / encodeNewlines ─────────────────────────────────────────
+
+    @Test
+    fun `decodeNewlines converts backslash-n literal to actual newline`() {
+        // Stored pattern has the two-character sequence \n (backslash + n)
+        val stored = "Line1\\nLine2"
+        assertEquals("Line1\nLine2", decodeNewlines(stored))
+    }
+
+    @Test
+    fun `decodeNewlines is no-op when no backslash-n present`() {
+        val stored = "No newlines here"
+        assertEquals("No newlines here", decodeNewlines(stored))
+    }
+
+    @Test
+    fun `encodeNewlines converts actual newline to backslash-n literal`() {
+        val display = "Line1\nLine2"
+        assertEquals("Line1\\nLine2", encodeNewlines(display))
+    }
+
+    @Test
+    fun `encodeNewlines is no-op when no newline present`() {
+        val display = "No newlines here"
+        assertEquals("No newlines here", encodeNewlines(display))
+    }
+
+    @Test
+    fun `newlines round-trip encode then decode preserves pattern`() {
+        val original = "Line1\nLine2\nLine3"
+        assertEquals(original, decodeNewlines(encodeNewlines(original)))
+    }
+
+    @Test
+    fun `Task44 loading pattern decodes backslash-n literals as visual newlines`() {
+        // A stored regex like "(?m)^Amount[ ]+\\nMerchant" should display as two lines
+        val stored = "(?m)^Amount[ ]+\\nMerchant"
+        val display = decodeNewlines(regexToTemplate(stored))
+        assertTrue('\n' in display, "Expected actual newline in display string")
+        assertTrue(!display.contains("\\n"),
+            "Expected no backslash-n literal in display string")
+    }
+
+    // ── Task 3.0: display decode / save encode chains ───────────────────────
+
+    private fun decodePattern(stored: String): String = stored.replace("\\s", " ")
+    private fun encodePattern(raw: String): String = raw.replace(" ", "\\s")
+
+    @Test
+    fun `Task30 displayDecode converts full stored pattern to human-readable template`() {
+        // Stored pattern uses \s, (?<name>...) groups, and \n literals
+        val stored = "(?m)^(?<amount>\\d+(?:[.]\\d{2}))[ ]+(?<currency>[A-Z]{3})\\n(?<merchant>.+?)"
+        val display = decodeNewlines(regexToTemplate(decodePattern(stored)))
+        assertEquals("(?m)^⟨amount⟩[ ]+⟨currency⟩\n⟨merchant⟩", display)
+    }
+
+    @Test
+    fun `Task30 saveEncode converts display template back to storable regex`() {
+        val display = "(?m)^⟨amount⟩[ ]+⟨currency⟩\n⟨merchant⟩"
+        val stored = encodePattern(templateToRegex(encodeNewlines(display)))
+        assertTrue(stored.contains("(?<amount>"), "amount group not restored")
+        assertTrue(stored.contains("(?<currency>"), "currency group not restored")
+        assertTrue(stored.contains("(?<merchant>"), "merchant group not restored")
+        assertTrue(stored.contains("\\n"), "newline not encoded back to \\n literal")
+        assertTrue(!stored.contains("\n") || stored.indexOf('\n') == -1,
+            "actual newline should not remain in stored pattern")
+    }
+
+    @Test
+    fun `Task30 roundtrip decode-then-encode preserves semantic equivalence`() {
+        val original = "(?m)^(?<amount>\\d+(?:[.]\\d{2}))[ ]+(?<currency>[A-Z]{3})\\n(?<merchant>.+?)"
+        val display = decodeNewlines(regexToTemplate(decodePattern(original)))
+        val reEncoded = encodePattern(templateToRegex(encodeNewlines(display)))
+        // The re-encoded pattern should be compilable as a valid regex
+        val regex = Regex(reEncoded, setOf(RegexOption.MULTILINE))
+        val testSms = "100.00 USD\nShop Name"
+        assertTrue(regex.containsMatchIn(testSms), "Re-encoded pattern should still match SMS")
+    }
 }

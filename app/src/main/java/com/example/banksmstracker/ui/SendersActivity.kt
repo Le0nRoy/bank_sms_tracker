@@ -20,6 +20,11 @@ import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.util.applyPlaceholderSpans
+import com.example.banksmstracker.util.decodeNewlines
+import com.example.banksmstracker.util.encodeNewlines
+import com.example.banksmstracker.util.regexToTemplate
+import com.example.banksmstracker.util.templateToRegex
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.launch
@@ -294,7 +299,9 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
             val spinnerRuleType: android.widget.Spinner = ruleView.findViewById(R.id.spinnerRuleType)
 
             editText.hint = itemView.context.getString(R.string.sender_rule_hint, index + 1)
-            editText.setText(rule.pattern)
+            val displayPattern = decodeNewlines(regexToTemplate(rule.pattern))
+            editText.setText(displayPattern)
+            editText.text?.let { applyPlaceholderSpans(it, itemView.context) }
             switchEnabled.isChecked = rule.enabled
 
             // Set up rule type spinner
@@ -328,9 +335,17 @@ class SendersAdapter(private val callbacks: SenderCallbacks) : RecyclerView.Adap
                 override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
             }
 
+            editText.addTextChangedListener(object : android.text.TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(s: android.text.Editable?) {
+                    s?.let { applyPlaceholderSpans(it, itemView.context) }
+                }
+            })
             editText.setSimpleWatcher { newValue ->
-                if (index in sender.rules.indices && sender.rules[index].pattern != newValue) {
-                    sender.rules[index].pattern = newValue
+                val encoded = templateToRegex(encodeNewlines(newValue))
+                if (index in sender.rules.indices && sender.rules[index].pattern != encoded) {
+                    sender.rules[index].pattern = encoded
                     callbacks.onSenderUpdated(sender)
                 }
             }

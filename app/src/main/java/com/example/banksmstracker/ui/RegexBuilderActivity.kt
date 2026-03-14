@@ -34,6 +34,9 @@ import com.example.banksmstracker.database.SenderEntity
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.util.Constants
 import com.example.banksmstracker.util.SmsAddressMatcher
+import com.example.banksmstracker.util.applyPlaceholderSpans
+import com.example.banksmstracker.util.decodeNewlines
+import com.example.banksmstracker.util.encodeNewlines
 import com.example.banksmstracker.util.regexToTemplate
 import com.example.banksmstracker.util.templateToRegex
 import kotlinx.coroutines.CoroutineScope
@@ -182,7 +185,7 @@ class RegexBuilderActivity : BaseActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {
-                s?.let { applyPlaceholderSpans(it) }
+                s?.let { applyPlaceholderSpans(it, this@RegexBuilderActivity) }
             }
         })
 
@@ -538,7 +541,7 @@ class RegexBuilderActivity : BaseActivity() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position > 0 && position <= rules.size) {
                     val selectedRule = rules[position - 1]
-                    etRegexPattern.setText(regexToTemplate(decodePattern(selectedRule.pattern)))
+                    etRegexPattern.setText(decodeNewlines(regexToTemplate(decodePattern(selectedRule.pattern))))
                 }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -557,7 +560,7 @@ class RegexBuilderActivity : BaseActivity() {
 
     private fun saveRegexToSender() {
         val regexPattern = encodePattern(
-            templateToRegex(etRegexPattern.text.toString().trim().replace("\n", "").replace("\r", ""))
+            templateToRegex(encodeNewlines(etRegexPattern.text.toString().trim()).replace("\r", ""))
         )
 
         if (regexPattern.isBlank()) {
@@ -645,53 +648,6 @@ class RegexBuilderActivity : BaseActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
-        }
-    }
-
-    private fun applyPlaceholderSpans(editable: android.text.Editable) {
-        for (s in editable.getSpans(
-            0,
-            editable.length,
-            android.text.style.BackgroundColorSpan::class.java
-        )) {
-            editable.removeSpan(s)
-        }
-        for (s in editable.getSpans(
-            0,
-            editable.length,
-            android.text.style.ForegroundColorSpan::class.java
-        )) {
-            editable.removeSpan(s)
-        }
-        for (s in editable.getSpans(
-            0,
-            editable.length,
-            android.text.style.StyleSpan::class.java
-        )) {
-            editable.removeSpan(s)
-        }
-        val bgColor = androidx.core.content.ContextCompat.getColor(this, R.color.purple_500)
-        Regex("⟨[^⟩]+⟩").findAll(editable.toString()).forEach { match ->
-            val start = match.range.first
-            val end = match.range.last + 1
-            editable.setSpan(
-                android.text.style.BackgroundColorSpan(bgColor),
-                start,
-                end,
-                android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            editable.setSpan(
-                android.text.style.ForegroundColorSpan(android.graphics.Color.WHITE),
-                start,
-                end,
-                android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            editable.setSpan(
-                android.text.style.StyleSpan(android.graphics.Typeface.BOLD),
-                start,
-                end,
-                android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
         }
     }
 

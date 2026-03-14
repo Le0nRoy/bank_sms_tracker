@@ -13,20 +13,18 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- PROMPT.md (2026-03-13) implementation planning complete
+- Task 2.1: Merchant search in Payments screen
 
 ### Completed This Session
-- Analyzed new PROMPT.md requirements
-- Wrote implementation plan: docs/plans/2026-03-13-prompt-features.md
-- Added Phase 9 tasks to TODO.md
+- Phase 9.0: Extracted `RegexTemplateUtils.kt` (`regexToTemplate`/`templateToRegex`) and `RegexSpanUtils.kt` (`applyPlaceholderSpans`)
+- Phase 9.1: Fixed BUG-007, BUG-008, BUG-009, BUG-010 (all TDD)
+- Phase 9.2: Task 4.1 (preserve sender), Task 4.4 (decode newlines in Regex Builder), Task 3.0 (formatted display in Senders)
 
 ### Next Steps (Phase 9, in order)
-1. Extract RegexFormatUtils (prerequisite)
-2. Write failing tests for BUG-007 through BUG-010, create bug report files
-3. Fix bugs one by one (TDD)
-4. Quick wins: 4.1, 4.4, 3.0
-5. Merchant model: DB migration v8→v9, 1.2, 1.3, 1.1
-6. New features: 2.1, 4.2
+1. Task 2.1: Merchant search in Payments (next)
+2. Merchant model: DB migration v8→v9, 1.2, 1.3, 1.1
+3. Task 4.2: PatternListActivity
+4. BUG-011: Non-nullable timestamp (L)
 
 ---
 
@@ -321,18 +319,18 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 > **Plan:** [docs/plans/2026-03-13-prompt-features.md](docs/plans/2026-03-13-prompt-features.md)
 
 ### 9.0 Prerequisites (before bug fixes)
-- [ ] Extract `RegexFormatUtils` shared utility (presets, templateToRegex, applyPlaceholderSpans)
+- [x] Extract `RegexFormatUtils` shared utility → `RegexTemplateUtils.kt` + `RegexSpanUtils.kt`
 
 ### 9.1 Bug Fixes (TDD — write tests first)
-- [ ] Fix BUG-007: Category re-assignment from payment detail doesn't update existing payments
-- [ ] Fix BUG-008: End date filter shows no payments when end < start date
-- [ ] Fix BUG-009: Start date filter shows earlier payments (investigate race condition)
-- [ ] Fix BUG-010: `⟨merchant⟩` block not highlighted in Regex Builder
+- [x] Fix BUG-007: Category re-assignment from payment detail doesn't update existing payments
+- [x] Fix BUG-008: End date filter shows no payments when end < start date
+- [x] Fix BUG-009: Start date filter shows earlier payments (investigate race condition)
+- [x] Fix BUG-010: `⟨merchant⟩` block not highlighted in Regex Builder
 
 ### 9.2 Quick Wins
-- [ ] Task 4.1: Preserve sender selection after regex save
-- [ ] Task 4.4: Show human-readable newlines when loading pattern into Regex Builder
-- [ ] Task 3.0: Show formatted (highlighted + newlines) regexes in Senders screen
+- [x] Task 4.1: Preserve sender selection after regex save
+- [x] Task 4.4: Show human-readable newlines when loading pattern into Regex Builder
+- [x] Task 3.0: Show formatted (highlighted + newlines) regexes in Senders screen
 
 ### 9.3 Merchant Model Enhancements
 - [ ] DB migration v8→v9: add `displayName` and `isRegex` columns to `category_merchants`

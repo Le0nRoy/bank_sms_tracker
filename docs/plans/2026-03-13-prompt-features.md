@@ -8,24 +8,24 @@
 
 ## Overview
 
-| # | Task | Priority | Type | Complexity |
-|---|------|----------|------|-----------|
-| 2.2 | Category change from payment detail | HIGHEST | Bug (TDD) | M |
-| 2.3 | End date filter shows no payments | HIGHEST | Bug (TDD) | S |
-| 2.4 | Start date filter shows earlier payments | HIGHEST | Bug (TDD) | S |
-| 4.3 | `⟨merchant⟩` block not highlighted | HIGHEST | Bug (TDD) | S |
-| 1.1 | Simple category change for merchants (Categories screen) | HIGH | Feature | M |
-| 1.2 | Optional display name for merchants | HIGH | Feature | M |
-| 1.3 | Regex support for merchant matching | HIGH | Feature | M |
-| 2.1 | Merchant search in Payments | MEDIUM | Feature | M |
-| 3.0 | Formatted regex display in Senders | MEDIUM | Feature | S |
-| 4.1 | Sender not erased after regex save | MEDIUM | Feature | XS |
-| 4.2 | Edit Existing Pattern separate window | MEDIUM | Feature | L |
-| 4.4 | Human-readable newlines in Regex Builder | MEDIUM | Feature | XS |
-| BUG-011 | Replace `receivedAt` with non-nullable `timestamp` | HIGH | Bug/Refactor | L |
-| 2.5 | Spending report diagrams | FUTURE | TODO.md | — |
-| 2.6 | Central bank API for currency | FUTURE | TODO.md | — |
-| 4.5 | Text box free from regex special chars | FUTURE | TODO.md | — |
+| # | Task | Priority | Type | Complexity | Status |
+|---|------|----------|------|-----------|--------|
+| 2.2 | Category change from payment detail | HIGHEST | Bug (TDD) | M | ✅ Done |
+| 2.3 | End date filter shows no payments | HIGHEST | Bug (TDD) | S | ✅ Done |
+| 2.4 | Start date filter shows earlier payments | HIGHEST | Bug (TDD) | S | ✅ Done |
+| 4.3 | `⟨merchant⟩` block not highlighted | HIGHEST | Bug (TDD) | S | ✅ Done |
+| 4.1 | Sender not erased after regex save | MEDIUM | Feature | XS | ✅ Done |
+| 4.4 | Human-readable newlines in Regex Builder | MEDIUM | Feature | XS | ✅ Done (2026-03-14) |
+| 3.0 | Formatted regex display in Senders | MEDIUM | Feature | S | ✅ Done (2026-03-14) |
+| 1.1 | Simple category change for merchants (Categories screen) | HIGH | Feature | M | — |
+| 1.2 | Optional display name for merchants | HIGH | Feature | M | — |
+| 1.3 | Regex support for merchant matching | HIGH | Feature | M | — |
+| 2.1 | Merchant search in Payments | MEDIUM | Feature | M | — |
+| 4.2 | Edit Existing Pattern separate window | MEDIUM | Feature | L | — |
+| BUG-011 | Replace `receivedAt` with non-nullable `timestamp` | HIGH | Bug/Refactor | L | — |
+| 2.5 | Spending report diagrams | FUTURE | TODO.md | — | — |
+| 2.6 | Central bank API for currency | FUTURE | TODO.md | — | — |
+| 4.5 | Text box free from regex special chars | FUTURE | TODO.md | — | — |
 
 **Bug handling policy:** TDD — write failing tests first, document in `bugs/` directory, then implement fix.
 

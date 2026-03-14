@@ -49,6 +49,18 @@ private val KNOWN_GROUP_NAMES = listOf(
     "balance"
 )
 
+/**
+ * Converts the two-character sequence `\n` (backslash + n) in a stored regex pattern into an
+ * actual newline character, so the pattern can be displayed across multiple lines in the UI.
+ */
+fun decodeNewlines(pattern: String): String = pattern.replace("\\n", "\n")
+
+/**
+ * Converts actual newline characters in a display string back into the two-character sequence
+ * `\n` (backslash + n) before the pattern is stored or compiled as a regex.
+ */
+fun encodeNewlines(pattern: String): String = pattern.replace("\n", "\\n")
+
 /** Canonical regex strings for each preset placeholder (used in [templateToRegex]). */
 val PRESET_REGEXES: Map<String, String> = linkedMapOf(
     "amount" to "(?<amount>\\d+(?:[.]\\d{2}))",
