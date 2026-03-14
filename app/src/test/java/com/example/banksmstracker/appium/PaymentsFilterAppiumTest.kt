@@ -248,4 +248,78 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
 
         navigateToMain()
     }
+
+    // ── Task 2.1: Merchant search ──────────────────────────────────────────────
+
+    @Test
+    @Order(13)
+    @Tag("smoke")
+    @DisplayName("Merchant search field exists on Payments screen")
+    fun merchantSearchFieldExists() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        val hasSearchField = elementExists("etMerchantSearch")
+        assertTrue(hasSearchField, "Should have merchant search EditText")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(14)
+    @DisplayName("Merchant search field accepts text input")
+    fun merchantSearchFieldAcceptsInput() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        val searchField = findById("etMerchantSearch")
+        searchField.click()
+        shortWait()
+        searchField.sendKeys("bolt")
+        shortWait()
+
+        // Verify text was entered
+        val enteredText = searchField.text
+        assertTrue(
+            enteredText.contains("bolt", ignoreCase = true),
+            "Search field should contain typed text, got: '$enteredText'"
+        )
+
+        // Hide keyboard and verify app didn't crash
+        try { driver.hideKeyboard() } catch (e: Exception) { /* keyboard may not be visible */ }
+        shortWait()
+
+        // List is still present (empty state or recycler — either is fine)
+        val appStillAlive = elementExists("recyclerPayments") || elementExists("tvEmptyState") ||
+            elementExists("etMerchantSearch")
+        assertTrue(appStillAlive, "App should still be alive after typing in search field")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(15)
+    @DisplayName("Merchant search field clears on text delete")
+    fun merchantSearchFieldClearsOnDelete() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        val searchField = findById("etMerchantSearch")
+        searchField.click()
+        shortWait()
+        searchField.sendKeys("bolt")
+        shortWait()
+        searchField.clear()
+        shortWait()
+
+        val textAfterClear = searchField.text
+        val isEmptyOrHint = textAfterClear.isNullOrBlank() ||
+            textAfterClear == "Search merchant…" ||
+            textAfterClear == "Поиск по продавцу…"
+        assertTrue(isEmptyOrHint, "Search field should be empty after clear, got: '$textAfterClear'")
+
+        try { driver.hideKeyboard() } catch (e: Exception) { }
+
+        navigateToMain()
+    }
 }

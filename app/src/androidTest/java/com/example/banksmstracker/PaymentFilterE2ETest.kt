@@ -8,6 +8,7 @@ import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.parser.SmsReceiver
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
+import com.example.banksmstracker.ui.filterPayments
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -70,7 +71,7 @@ class PaymentFilterE2ETest {
             sender1.addresses = mutableListOf("BANK-A")
             sender1.rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3}) card (?<card>\\d+) (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
                 )
             )
             ConfigRepository.updateSender(sender1)
@@ -80,7 +81,7 @@ class PaymentFilterE2ETest {
             sender2.addresses = mutableListOf("BANK-B")
             sender2.rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3}) card (?<card>\\d+) (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
                 )
             )
             ConfigRepository.updateSender(sender2)
@@ -233,6 +234,62 @@ class PaymentFilterE2ETest {
         val payments = waitForPayments(1)
         assertEquals(1, payments.size)
         assertEquals("BANK-A", payments[0].senderAddress)
+    }
+
+    // ── Task 2.1: Merchant filter (in-memory filterPayments against real DB data) ─────
+
+    private fun makePaymentWithMerchant(merchant: String?) = Payment(
+        id = null,
+        amount = 10.0,
+        currency = "GEL",
+        card = null,
+        merchant = merchant,
+        timestamp = "01/03/2026 10:00:00",
+        balance = null,
+        categoryId = null,
+        senderAddress = "BANK-A",
+        receivedAt = System.currentTimeMillis(),
+        ruleId = null
+    )
+
+    @Test
+    @DisplayName("Task21 merchantFilter_returnsOnlyMatchingPayments")
+    fun task21MerchantFilterReturnsOnlyMatchingPayments() = runBlocking {
+        paymentRepository.savePayment(makePaymentWithMerchant("Carrefour City"), "sms-carrefour-city", "BANK-A")
+        paymentRepository.savePayment(makePaymentWithMerchant("Bolt Food"), "sms-bolt-food", "BANK-A")
+        paymentRepository.savePayment(makePaymentWithMerchant("bolt"), "sms-bolt", "BANK-A")
+
+        val all = paymentRepository.getAllPayments()
+        val result = filterPayments(all, null, null, null, null, merchantQuery = "bolt")
+
+        assertEquals(2, result.size, "Should match 'Bolt Food' and 'bolt'")
+        assertTrue(result.all { it.merchant?.contains("bolt", ignoreCase = true) == true })
+    }
+
+    @Test
+    @DisplayName("Task21 merchantFilter_blankQuery_returnsAll")
+    fun task21MerchantFilterBlankQueryReturnsAll() = runBlocking {
+        paymentRepository.savePayment(makePaymentWithMerchant("Carrefour"), "sms-carrefour", "BANK-A")
+        paymentRepository.savePayment(makePaymentWithMerchant("Bolt"), "sms-bolt", "BANK-A")
+
+        val all = paymentRepository.getAllPayments()
+        val resultNull = filterPayments(all, null, null, null, null, merchantQuery = null)
+        val resultBlank = filterPayments(all, null, null, null, null, merchantQuery = "  ")
+
+        assertEquals(all.size, resultNull.size, "null query should return all")
+        assertEquals(all.size, resultBlank.size, "blank query should return all")
+    }
+
+    @Test
+    @DisplayName("Task21 merchantFilter_noMatch_returnsEmpty")
+    fun task21MerchantFilterNoMatchReturnsEmpty() = runBlocking {
+        paymentRepository.savePayment(makePaymentWithMerchant("Carrefour"), "sms-carrefour", "BANK-A")
+        paymentRepository.savePayment(makePaymentWithMerchant("Bolt"), "sms-bolt", "BANK-A")
+
+        val all = paymentRepository.getAllPayments()
+        val result = filterPayments(all, null, null, null, null, merchantQuery = "xyz_no_match")
+
+        assertEquals(0, result.size, "Non-matching query should return empty list")
     }
 
     @Test
