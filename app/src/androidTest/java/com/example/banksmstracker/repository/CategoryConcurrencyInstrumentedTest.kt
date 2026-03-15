@@ -74,7 +74,7 @@ class CategoryConcurrencyInstrumentedTest {
                     currency = "USD",
                     card = null,
                     merchant = "Amazon",
-                    timestamp = null,
+                    timestamp = "",
                     balance = null
                 ),
                 rawMessage = "msg-$i",
@@ -104,7 +104,7 @@ class CategoryConcurrencyInstrumentedTest {
                     currency = "USD",
                     card = null,
                     merchant = "Supermarket",
-                    timestamp = null,
+                    timestamp = "",
                     balance = null
                 ),
                 rawMessage = "msg-$i",
@@ -135,7 +135,7 @@ class CategoryConcurrencyInstrumentedTest {
                     currency = "USD",
                     card = null,
                     merchant = "UnknownShop",
-                    timestamp = null,
+                    timestamp = "",
                     balance = null
                 ),
                 rawMessage = "msg-$i",
@@ -166,7 +166,7 @@ class CategoryConcurrencyInstrumentedTest {
                             currency = "USD",
                             card = null,
                             merchant = "Amazon",
-                            timestamp = null,
+                            timestamp = "",
                             balance = null
                         ),
                         rawMessage = "msg-$i",

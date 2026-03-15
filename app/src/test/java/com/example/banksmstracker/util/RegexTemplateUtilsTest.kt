@@ -186,8 +186,10 @@ class RegexTemplateUtilsTest {
         val stored = "(?m)^Amount[ ]+\\nMerchant"
         val display = decodeNewlines(regexToTemplate(stored))
         assertTrue('\n' in display, "Expected actual newline in display string")
-        assertTrue(!display.contains("\\n"),
-            "Expected no backslash-n literal in display string")
+        assertTrue(
+            !display.contains("\\n"),
+            "Expected no backslash-n literal in display string"
+        )
     }
 
     // ── Task 3.0: display decode / save encode chains ───────────────────────
@@ -211,8 +213,10 @@ class RegexTemplateUtilsTest {
         assertTrue(stored.contains("(?<currency>"), "currency group not restored")
         assertTrue(stored.contains("(?<merchant>"), "merchant group not restored")
         assertTrue(stored.contains("\\n"), "newline not encoded back to \\n literal")
-        assertTrue(!stored.contains("\n") || stored.indexOf('\n') == -1,
-            "actual newline should not remain in stored pattern")
+        assertTrue(
+            !stored.contains("\n") || stored.indexOf('\n') == -1,
+            "actual newline should not remain in stored pattern"
+        )
     }
 
     @Test

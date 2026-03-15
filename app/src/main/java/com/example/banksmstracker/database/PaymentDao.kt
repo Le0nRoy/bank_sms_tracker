@@ -23,9 +23,6 @@ interface PaymentDao {
     @Query("SELECT * FROM payments WHERE senderAddress = :senderAddress ORDER BY id DESC")
     suspend fun getPaymentsBySender(senderAddress: String): List<PaymentEntity>
 
-    @Query("SELECT * FROM payments WHERE receivedAt >= :startTime AND receivedAt <= :endTime ORDER BY id DESC")
-    suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<PaymentEntity>
-
     @Query("SELECT DISTINCT senderAddress FROM payments WHERE senderAddress IS NOT NULL ORDER BY senderAddress")
     suspend fun getDistinctSenderAddresses(): List<String>
 

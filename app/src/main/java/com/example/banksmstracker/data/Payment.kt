@@ -9,10 +9,9 @@ data class Payment(
     val currency: String,
     val card: String?,
     val merchant: String?,
-    val timestamp: String?,
+    val timestamp: String,
     val balance: Double?,
     val categoryId: String? = null,
     val senderAddress: String? = null,
-    val receivedAt: Long? = null,
     val ruleId: Long? = null
 )

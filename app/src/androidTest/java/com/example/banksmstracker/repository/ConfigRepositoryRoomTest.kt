@@ -316,7 +316,7 @@ class ConfigRepositoryRoomTest {
                 currency = "USD",
                 card = null,
                 merchant = "Amazon",
-                timestamp = null,
+                timestamp = "",
                 balance = null
             ),
             rawMessage = "amazon-trigger-test",

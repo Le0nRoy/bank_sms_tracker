@@ -50,7 +50,7 @@ class CategoryConcurrencyTest {
                     currency = "USD",
                     card = null,
                     merchant = "Amazon",
-                    timestamp = null,
+                    timestamp = "",
                     balance = null
                 ),
                 rawMessage = "msg-$i",
@@ -81,7 +81,7 @@ class CategoryConcurrencyTest {
                     currency = "USD",
                     card = null,
                     merchant = "Supermarket",
-                    timestamp = null,
+                    timestamp = "",
                     balance = null
                 ),
                 rawMessage = "msg-$i",
@@ -114,7 +114,7 @@ class CategoryConcurrencyTest {
                     currency = "USD",
                     card = null,
                     merchant = "UnknownShop",
-                    timestamp = null,
+                    timestamp = "",
                     balance = null
                 ),
                 rawMessage = "msg-$i",

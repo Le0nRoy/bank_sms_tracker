@@ -202,11 +202,6 @@ class PaymentProcessorEnabledTest {
         override suspend fun getPaymentsBySender(senderAddress: String): List<Payment> =
             payments.filter { it.senderAddress == senderAddress }
 
-        override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> = payments.filter {
-            val receivedAt = it.receivedAt ?: return@filter false
-            receivedAt in startTime..endTime
-        }
-
         override suspend fun getDistinctSenderAddresses(): List<String> =
             payments.mapNotNull { it.senderAddress }.distinct().sorted()
 

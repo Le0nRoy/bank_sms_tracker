@@ -299,7 +299,8 @@ class PaymentsActivity : BaseActivity() {
     }
 
     private fun applyFilter() {
-        filteredPayments = filterPayments(allPayments, selectedCategory, selectedSender, startDate, endDate, merchantSearchQuery)
+        filteredPayments =
+            filterPayments(allPayments, selectedCategory, selectedSender, startDate, endDate, merchantSearchQuery)
 
         adapter.submitList(filteredPayments)
         updateUI()
@@ -378,20 +379,16 @@ class PaymentsActivity : BaseActivity() {
         sb.appendLine(getString(R.string.csv_header_payments))
         // Data
         for (payment in payments) {
-            val receivedAtStr = payment.receivedAt?.let {
-                SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(it))
-            } ?: ""
             sb.appendLine(
                 listOf(
                     payment.amount.toString(),
                     escapeCsv(payment.currency),
                     escapeCsv(payment.card ?: ""),
                     escapeCsv(payment.merchant ?: ""),
-                    escapeCsv(payment.timestamp ?: ""),
+                    escapeCsv(payment.timestamp),
                     payment.balance?.toString() ?: "",
                     escapeCsv(payment.categoryId ?: ""),
-                    escapeCsv(payment.senderAddress ?: ""),
-                    escapeCsv(receivedAtStr)
+                    escapeCsv(payment.senderAddress ?: "")
                 ).joinToString(",")
             )
         }
@@ -409,8 +406,9 @@ class PaymentsActivity : BaseActivity() {
         val reportBuilder = StringBuilder()
 
         // Determine date range to show
-        val actualStartDate = startDate ?: allPayments.mapNotNull { it.receivedAt }.minOrNull()
-        val actualEndDate = endDate ?: allPayments.mapNotNull { it.receivedAt }.maxOrNull()
+        val actualStartDate =
+            startDate ?: allPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.minOrNull()
+        val actualEndDate = endDate ?: allPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.maxOrNull()
 
         // Date range info
         val dateRangeText = when {
@@ -471,7 +469,7 @@ class PaymentsActivity : BaseActivity() {
         dialogView.findViewById<TextView>(R.id.tvCategory).text =
             payment.categoryId ?: getString(R.string.uncategorized)
         dialogView.findViewById<TextView>(R.id.tvCard).text = payment.card?.let { "****$it" } ?: "-"
-        dialogView.findViewById<TextView>(R.id.tvTimestamp).text = payment.timestamp ?: "-"
+        dialogView.findViewById<TextView>(R.id.tvTimestamp).text = payment.timestamp.ifBlank { "-" }
         dialogView.findViewById<TextView>(R.id.tvBalance).text =
             payment.balance?.let { "${"%.2f".format(it)} ${payment.currency}" } ?: "-"
         dialogView.findViewById<TextView>(R.id.tvSender).text = payment.senderAddress ?: "-"
@@ -653,7 +651,7 @@ class PaymentsActivity : BaseActivity() {
                 tvMerchant.text = payment.merchant ?: getString(R.string.unknown)
                 tvAmount.text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
                 tvCategory.text = payment.categoryId ?: getString(R.string.uncategorized)
-                tvTimestamp.text = payment.timestamp ?: ""
+                tvTimestamp.text = payment.timestamp
 
                 if (!payment.card.isNullOrBlank()) {
                     tvCard.visibility = View.VISIBLE

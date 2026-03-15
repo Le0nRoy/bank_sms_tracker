@@ -22,7 +22,7 @@ class PaymentRepositoryTest {
         currency: String = "USD",
         card: String? = null,
         merchant: String?,
-        timestamp: String? = "2023-01-01T12:00:00Z",
+        timestamp: String = "2023-01-01T12:00:00Z",
         balance: Double? = null,
         categoryId: String? = null
     ): Payment = Payment(
@@ -163,39 +163,6 @@ class PaymentRepositoryTest {
     fun `getDistinctSenderAddresses_returnsEmptyListWhenNoPayments`() = runBlocking {
         val senders = repository.getDistinctSenderAddresses()
         assertTrue(senders.isEmpty())
-    }
-
-    // ==================== Date Range Filtering Tests ====================
-
-    @Test
-    fun `getPaymentsByDateRange_returnsPaymentsInRange`() = runBlocking {
-        // Save payments with known timestamps
-        val payment1 = createTestPayment(amount = 10.0, merchant = "Store 1")
-        val payment2 = createTestPayment(amount = 20.0, merchant = "Store 2")
-        repository.savePayment(payment1, "msg-1", "BANK")
-        Thread.sleep(50) // Ensure different timestamps
-        repository.savePayment(payment2, "msg-2", "BANK")
-
-        val allPayments = repository.getAllPayments()
-        assertEquals(2, allPayments.size)
-
-        // Get range that includes all
-        val startTime = allPayments.minOf { it.receivedAt ?: 0 } - 1000
-        val endTime = allPayments.maxOf { it.receivedAt ?: 0 } + 1000
-        val rangePayments = repository.getPaymentsByDateRange(startTime, endTime)
-        assertEquals(2, rangePayments.size)
-    }
-
-    @Test
-    fun `getPaymentsByDateRange_excludesPaymentsOutsideRange`() = runBlocking {
-        val payment = createTestPayment(amount = 10.0, merchant = "Store")
-        repository.savePayment(payment, "msg-1", "BANK")
-
-        // Query future range that won't include this payment
-        val futureStart = System.currentTimeMillis() + 100000
-        val futureEnd = futureStart + 100000
-        val rangePayments = repository.getPaymentsByDateRange(futureStart, futureEnd)
-        assertTrue(rangePayments.isEmpty())
     }
 
     // ==================== Category Update Tests ====================

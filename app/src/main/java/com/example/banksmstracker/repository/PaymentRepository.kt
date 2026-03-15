@@ -8,7 +8,6 @@ interface PaymentRepository {
     suspend fun getPaymentsByCategory(categoryId: String): List<Payment>
     suspend fun getUncategorizedPayments(): List<Payment>
     suspend fun getPaymentsBySender(senderAddress: String): List<Payment>
-    suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment>
     suspend fun getDistinctSenderAddresses(): List<String>
     suspend fun updatePaymentCategory(paymentId: Long, categoryName: String?)
     suspend fun getPaymentsByRule(ruleId: Long): List<Payment>
@@ -29,8 +28,7 @@ class InMemoryPaymentRepository : PaymentRepository {
         }
         val paymentWithMetadata = payment.copy(
             id = nextId++,
-            senderAddress = senderAddress,
-            receivedAt = System.currentTimeMillis()
+            senderAddress = senderAddress
         )
         payments.add(paymentWithMetadata)
         return true
@@ -46,11 +44,6 @@ class InMemoryPaymentRepository : PaymentRepository {
 
     override suspend fun getPaymentsBySender(senderAddress: String): List<Payment> = payments.filter {
         it.senderAddress == senderAddress
-    }
-
-    override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> = payments.filter {
-        val receivedAt = it.receivedAt ?: return@filter false
-        receivedAt in startTime..endTime
     }
 
     override suspend fun getDistinctSenderAddresses(): List<String> =

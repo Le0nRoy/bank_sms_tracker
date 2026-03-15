@@ -28,6 +28,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private fun parseTransactionTimestampMillis(timestamp: String): Long? =
+    com.example.banksmstracker.ui.parseTransactionTimestamp(timestamp)
+
 class ApplyRulesActivity : BaseActivity() {
 
     private lateinit var resultsContainer: LinearLayout
@@ -108,7 +111,7 @@ class ApplyRulesActivity : BaseActivity() {
 
             val lastPaymentDate = withContext(Dispatchers.IO) {
                 paymentRepository.getAllPayments()
-                    .mapNotNull { it.receivedAt }
+                    .mapNotNull { parseTransactionTimestampMillis(it.timestamp) }
                     .maxOrNull()
             }
 
@@ -254,19 +257,19 @@ class ApplyRulesActivity : BaseActivity() {
                 for ((sender, messages) in smsMessages) {
                     addSectionHeader("$sender (${messages.size} messages)")
 
-                    for (message in messages) {
+                    for (smsWithDate in messages) {
                         try {
                             val payment = withContext(Dispatchers.IO) {
-                                processor.processMessage(message, sender)
+                                processor.processMessage(smsWithDate.body, sender, smsWithDate.date)
                             }
                             parsedCount++
                             addSuccessItem(payment)
                         } catch (e: MessageIgnoredException) {
                             ignoredCount++
-                            addIgnoredItem(sender, message, e.ruleName)
+                            addIgnoredItem(sender, smsWithDate.body, e.ruleName)
                         } catch (e: Exception) {
                             failedCount++
-                            addErrorItem(sender, message, e.message ?: getString(R.string.unknown_error))
+                            addErrorItem(sender, smsWithDate.body, e.message ?: getString(R.string.unknown_error))
                         }
                     }
                 }
@@ -314,7 +317,7 @@ class ApplyRulesActivity : BaseActivity() {
         view.findViewById<TextView>(R.id.tvAmount).text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
         view.findViewById<TextView>(R.id.tvDetails).text = buildString {
             append(getString(R.string.category_display, payment.categoryId ?: getString(R.string.uncategorized)))
-            if (!payment.timestamp.isNullOrBlank()) {
+            if (payment.timestamp.isNotBlank()) {
                 append(" | ${payment.timestamp}")
             }
         }
@@ -374,8 +377,8 @@ class ApplyRulesActivity : BaseActivity() {
 
     data class SmsWithDate(val address: String, val body: String, val date: Long)
 
-    private fun getSmsMessages(configuredSenders: Set<String>): Map<String, List<String>> {
-        val messages = mutableMapOf<String, MutableList<String>>()
+    private fun getSmsMessages(configuredSenders: Set<String>): Map<String, List<SmsWithDate>> {
+        val messages = mutableMapOf<String, MutableList<SmsWithDate>>()
 
         if (configuredSenders.isEmpty()) {
             return messages
@@ -409,13 +412,15 @@ class ApplyRulesActivity : BaseActivity() {
         cursor?.use {
             val addressColumn = it.getColumnIndex("address")
             val bodyColumn = it.getColumnIndex("body")
+            val dateColumn = it.getColumnIndex("date")
 
             while (it.moveToNext()) {
                 val address = it.getString(addressColumn)
                 val body = it.getString(bodyColumn)
+                val date = if (dateColumn >= 0) it.getLong(dateColumn) else System.currentTimeMillis()
 
                 if (!address.isNullOrBlank() && !body.isNullOrBlank()) {
-                    messages.getOrPut(address) { mutableListOf() }.add(body)
+                    messages.getOrPut(address) { mutableListOf() }.add(SmsWithDate(address, body, date))
                 }
             }
         }

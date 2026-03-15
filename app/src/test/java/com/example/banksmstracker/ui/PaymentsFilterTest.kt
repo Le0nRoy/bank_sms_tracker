@@ -15,27 +15,19 @@ import org.junit.jupiter.api.Test
  */
 class PaymentsFilterTest {
 
-    // All test payments share the same receivedAt (batch-import date: 2026-03-12).
-    private val batchImportDate: Long = parseTransactionTimestamp("12/03/2026 22:00:00")!!
-
-    private fun makePayment(
-        timestamp: String,
-        categoryId: String? = null,
-        senderAddress: String? = "TBC SMS",
-        receivedAt: Long = batchImportDate
-    ) = Payment(
-        id = 1,
-        amount = 10.0,
-        currency = "GEL",
-        card = null,
-        merchant = "Test Merchant",
-        timestamp = timestamp,
-        balance = null,
-        categoryId = categoryId,
-        senderAddress = senderAddress,
-        receivedAt = receivedAt,
-        ruleId = null
-    )
+    private fun makePayment(timestamp: String, categoryId: String? = null, senderAddress: String? = "TBC SMS") =
+        Payment(
+            id = 1,
+            amount = 10.0,
+            currency = "GEL",
+            card = null,
+            merchant = "Test Merchant",
+            timestamp = timestamp,
+            balance = null,
+            categoryId = categoryId,
+            senderAddress = senderAddress,
+            ruleId = null
+        )
 
     // ── parseTransactionTimestamp ──────────────────────────────────────────────
 
@@ -44,11 +36,6 @@ class PaymentsFilterTest {
         val result = parseTransactionTimestamp("01/03/2026 10:30:00")
         val expected = parseTransactionTimestamp("01/03/2026 10:30:00")
         assertEquals(expected, result)
-    }
-
-    @Test
-    fun `parseTransactionTimestamp returns null for null input`() {
-        assertNull(parseTransactionTimestamp(null))
     }
 
     @Test
@@ -102,14 +89,11 @@ class PaymentsFilterTest {
 
     @Test
     fun `BUG-008 end date filter does not use receivedAt for comparison`() {
-        // A payment with transaction date = March 5 but receivedAt = March 12 (batch import).
-        val payment = makePayment(
-            timestamp = "05/03/2026 10:00:00",
-            receivedAt = parseTransactionTimestamp("12/03/2026 22:00:00")!!
-        )
+        // A payment with transaction date = March 5 (imported later but timestamp is in the SMS body).
+        val payment = makePayment(timestamp = "05/03/2026 10:00:00")
 
         val startDate = parseTransactionTimestamp("01/03/2026 00:00:00")
-        // endDate = March 11: if filter used receivedAt (March 12) this payment would be excluded.
+        // endDate = March 11: filter must use timestamp (March 5), not the import time.
         val endDate = parseTransactionTimestamp("11/03/2026 23:59:59")
 
         val result = filterPayments(listOf(payment), null, null, startDate, endDate)
@@ -159,11 +143,8 @@ class PaymentsFilterTest {
 
     @Test
     fun `BUG-009 start date does not use receivedAt for comparison`() {
-        // Payment from January, but imported (receivedAt) in March – the old code would show it.
-        val payment = makePayment(
-            timestamp = "01/01/2026 10:00:00",
-            receivedAt = parseTransactionTimestamp("12/03/2026 22:00:00")!!
-        )
+        // Payment from January — must be excluded by a March start date regardless of import time.
+        val payment = makePayment(timestamp = "01/01/2026 10:00:00")
 
         val startDate = parseTransactionTimestamp("01/03/2026 00:00:00")
         val endDate = parseTransactionTimestamp("31/03/2026 23:59:59")
@@ -221,19 +202,18 @@ class PaymentsFilterTest {
     }
 
     @Test
-    fun `fallback to receivedAt when timestamp is null`() {
-        // Payment with no SMS-body timestamp — fall back to receivedAt.
+    fun `payment with parseable timestamp is included by date filter`() {
+        // Payment whose timestamp falls within the filter range.
         val payment = Payment(
             id = 1,
             amount = 10.0,
             currency = "GEL",
             card = null,
             merchant = "Test",
-            timestamp = null,
+            timestamp = "05/03/2026 10:00:00",
             balance = null,
             categoryId = null,
             senderAddress = "TBC SMS",
-            receivedAt = parseTransactionTimestamp("05/03/2026 10:00:00"),
             ruleId = null
         )
 
@@ -242,7 +222,7 @@ class PaymentsFilterTest {
 
         val result = filterPayments(listOf(payment), null, null, startDate, endDate)
 
-        assertEquals(1, result.size, "Should include payment using receivedAt as fallback")
+        assertEquals(1, result.size, "Should include payment with parseable timestamp in range")
     }
 
     // ── Task 2.1: Merchant search filter ──────────────────────────────────────
@@ -251,7 +231,7 @@ class PaymentsFilterTest {
         id = 1, amount = 10.0, currency = "GEL", card = null,
         merchant = merchant, timestamp = "01/03/2026 10:00:00",
         balance = null, categoryId = null, senderAddress = "TBC SMS",
-        receivedAt = batchImportDate, ruleId = null
+        ruleId = null
     )
 
     @Test
@@ -259,7 +239,7 @@ class PaymentsFilterTest {
         val payments = listOf(
             makePaymentWithMerchant("Carrefour"),
             makePaymentWithMerchant("Bolt"),
-            makePaymentWithMerchant("bolt food")  // should match "bolt" case-insensitively
+            makePaymentWithMerchant("bolt food") // should match "bolt" case-insensitively
         )
         val result = filterPayments(payments, null, null, null, null, merchantQuery = "bolt")
         assertEquals(2, result.size)
@@ -309,18 +289,18 @@ class PaymentsFilterTest {
     }
 
     @Test
-    fun `payment with null timestamp and null receivedAt is excluded when date filter active`() {
+    fun `payment with blank timestamp is excluded when date filter active`() {
+        // timestamp = "" means no parseable date — payment must be excluded from date-filtered results.
         val payment = Payment(
             id = 1,
             amount = 10.0,
             currency = "GEL",
             card = null,
             merchant = "Test",
-            timestamp = null,
+            timestamp = "",
             balance = null,
             categoryId = null,
             senderAddress = "TBC SMS",
-            receivedAt = null,
             ruleId = null
         )
 

@@ -48,7 +48,7 @@ class RoomPaymentRepositoryTest {
         currency: String = "USD",
         card: String? = null,
         merchant: String? = null,
-        timestamp: String? = "2023-01-01T12:00:00Z",
+        timestamp: String = "2023-01-01T12:00:00Z",
         balance: Double? = null,
         categoryId: String? = null
     ): Payment = Payment(
@@ -246,38 +246,6 @@ class RoomPaymentRepositoryTest {
     fun getDistinctSenderAddressesReturnsEmptyListWhenNoPayments() = runBlocking {
         val senders = repository.getDistinctSenderAddresses()
         assertTrue(senders.isEmpty())
-    }
-
-    // ==================== Date Range Filtering Tests ====================
-
-    @Test
-    @DisplayName("getPaymentsByDateRange_returnsPaymentsInRange")
-    fun getPaymentsByDateRangeReturnsPaymentsInRange() = runBlocking {
-        val payment1 = createTestPayment(amount = 10.0, merchant = "Store 1")
-        val payment2 = createTestPayment(amount = 20.0, merchant = "Store 2")
-        repository.savePayment(payment1, "msg-1", "BANK")
-        Thread.sleep(50)
-        repository.savePayment(payment2, "msg-2", "BANK")
-
-        val allPayments = repository.getAllPayments()
-        assertEquals(2, allPayments.size)
-
-        val startTime = allPayments.minOf { it.receivedAt ?: 0 } - 1000
-        val endTime = allPayments.maxOf { it.receivedAt ?: 0 } + 1000
-        val rangePayments = repository.getPaymentsByDateRange(startTime, endTime)
-        assertEquals(2, rangePayments.size)
-    }
-
-    @Test
-    @DisplayName("getPaymentsByDateRange_excludesPaymentsOutsideRange")
-    fun getPaymentsByDateRangeExcludesPaymentsOutsideRange() = runBlocking {
-        val payment = createTestPayment(amount = 10.0, merchant = "Store")
-        repository.savePayment(payment, "msg-1", "BANK")
-
-        val futureStart = System.currentTimeMillis() + 100000
-        val futureEnd = futureStart + 100000
-        val rangePayments = repository.getPaymentsByDateRange(futureStart, futureEnd)
-        assertTrue(rangePayments.isEmpty())
     }
 
     // ==================== Category Update Tests ====================

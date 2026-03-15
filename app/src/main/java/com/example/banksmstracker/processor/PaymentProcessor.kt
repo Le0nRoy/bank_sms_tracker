@@ -9,6 +9,9 @@ import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.PaymentRepository
 import com.example.banksmstracker.util.Constants
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class UnparsedMessageException(message: String) : Exception("Cannot parse message: $message")
 
@@ -97,7 +100,7 @@ class PaymentProcessor(
                     currency = currency,
                     card = card,
                     merchant = merchant,
-                    timestamp = timestamp,
+                    timestamp = timestamp ?: "",
                     balance = balance,
                     categoryId = null,
                     ruleId = rule.id
@@ -168,13 +171,17 @@ class PaymentProcessor(
             is MessageProcessResult.Ignored -> throw MessageIgnoredException(result.ruleName)
         }
 
-    suspend fun processMessage(message: String, address: String): Payment {
+    suspend fun processMessage(
+        message: String,
+        address: String,
+        smsReceivedAt: Long = System.currentTimeMillis()
+    ): Payment {
         val result = getMessageResult(message, address)
 
         return when (result) {
             is MessageProcessResult.PaymentResult -> {
                 val categorizedPayment = assignCategory(result.payment)
-                val datedPayment = approximateDate(categorizedPayment)
+                val datedPayment = approximateDate(categorizedPayment, smsReceivedAt)
                 val inserted = paymentRepository.savePayment(datedPayment, message, address)
                 if (!inserted) {
                     Log.d(TAG, "Duplicate payment skipped for sender $address")
@@ -198,13 +205,17 @@ class PaymentProcessor(
      * Full message processing that handles all result types.
      * Returns the processing result for proper handling by the caller.
      */
-    suspend fun processMessageFull(message: String, address: String): MessageProcessResult {
+    suspend fun processMessageFull(
+        message: String,
+        address: String,
+        smsReceivedAt: Long = System.currentTimeMillis()
+    ): MessageProcessResult {
         val result = getMessageResult(message, address)
 
         return when (result) {
             is MessageProcessResult.PaymentResult -> {
                 val categorizedPayment = assignCategory(result.payment)
-                val datedPayment = approximateDate(categorizedPayment)
+                val datedPayment = approximateDate(categorizedPayment, smsReceivedAt)
                 val inserted = paymentRepository.savePayment(datedPayment, message, address)
                 if (!inserted) {
                     Log.d(TAG, "Duplicate payment skipped for sender $address")
@@ -223,18 +234,21 @@ class PaymentProcessor(
         }
     }
 
-    private suspend fun approximateDate(payment: Payment): Payment {
-        if (payment.timestamp != null) return payment
-        val allPayments = paymentRepository.getAllPayments()
-        val now = System.currentTimeMillis()
-        val neighbor = allPayments
-            .filter { it.timestamp != null && it.receivedAt != null }
-            .minByOrNull { Math.abs((it.receivedAt ?: 0L) - now) }
-        return if (neighbor?.timestamp != null) {
-            val approxDate = neighbor.timestamp!!.substringBefore(" ").ifEmpty { neighbor.timestamp!! }
+    private suspend fun approximateDate(payment: Payment, smsReceivedAt: Long): Payment {
+        if (payment.timestamp.isNotBlank()) return payment
+
+        // Try nearest neighbour by insertion id (sequential = chronological)
+        val allDated = paymentRepository.getAllPayments()
+            .filter { it.timestamp.isNotBlank() && it.id != null }
+        val neighbor = allDated.maxByOrNull { it.id!! }
+
+        return if (neighbor != null) {
+            val approxDate = neighbor.timestamp.substringBefore(" ").ifEmpty { neighbor.timestamp }
             payment.copy(timestamp = approxDate)
         } else {
-            payment
+            // Last resort: format device receive time as a date string
+            val fmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            payment.copy(timestamp = fmt.format(Date(smsReceivedAt)))
         }
     }
 

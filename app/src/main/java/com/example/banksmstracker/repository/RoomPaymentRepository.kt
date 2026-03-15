@@ -21,8 +21,7 @@ class RoomPaymentRepository(private val paymentDao: PaymentDao) : PaymentReposit
                     balance = payment.balance,
                     categoryName = payment.categoryId,
                     messageHash = hash,
-                    senderAddress = senderAddress,
-                    receivedAt = System.currentTimeMillis()
+                    senderAddress = senderAddress
                 )
             )
             true
@@ -44,11 +43,6 @@ class RoomPaymentRepository(private val paymentDao: PaymentDao) : PaymentReposit
 
     override suspend fun getPaymentsBySender(senderAddress: String): List<Payment> =
         paymentDao.getPaymentsBySender(senderAddress).map {
-            it.toDomain()
-        }
-
-    override suspend fun getPaymentsByDateRange(startTime: Long, endTime: Long): List<Payment> =
-        paymentDao.getPaymentsByDateRange(startTime, endTime).map {
             it.toDomain()
         }
 
@@ -81,6 +75,5 @@ private fun PaymentEntity.toDomain(): Payment = Payment(
     balance = balance,
     categoryId = categoryName,
     senderAddress = senderAddress,
-    receivedAt = receivedAt,
     ruleId = ruleId
 )

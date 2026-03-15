@@ -4,7 +4,6 @@ import com.example.banksmstracker.data.Payment
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -27,7 +26,7 @@ class PaymentRepositoryEdgeCaseTest {
         currency: String = "USD",
         card: String? = null,
         merchant: String? = "Test Merchant",
-        timestamp: String? = null,
+        timestamp: String = "",
         balance: Double? = null,
         categoryId: String? = null
     ): Payment = Payment(
@@ -170,54 +169,6 @@ class PaymentRepositoryEdgeCaseTest {
 
             assertTrue(first)
             assertFalse(second)
-        }
-    }
-
-    @Nested
-    @DisplayName("Date Range Edge Cases")
-    inner class DateRangeEdgeCases {
-
-        @Test
-        @DisplayName("Query with start equals end returns payments at exact time")
-        fun `query with start equals end returns payments at exact time`() = runBlocking {
-            val payment = createTestPayment()
-            repository.savePayment(payment, "msg-1", "SENDER")
-
-            val receivedAt = repository.getAllPayments()[0].receivedAt ?: 0L
-            val result = repository.getPaymentsByDateRange(receivedAt, receivedAt)
-
-            assertEquals(1, result.size)
-        }
-
-        @Test
-        @DisplayName("Query with start greater than end returns empty")
-        fun `query with start greater than end returns empty`() = runBlocking {
-            val payment = createTestPayment()
-            repository.savePayment(payment, "msg-1", "SENDER")
-
-            val result = repository.getPaymentsByDateRange(Long.MAX_VALUE, 0L)
-            assertTrue(result.isEmpty())
-        }
-
-        @Test
-        @DisplayName("Query with negative timestamps works")
-        fun `query with negative timestamps works`() = runBlocking {
-            val payment = createTestPayment()
-            repository.savePayment(payment, "msg-1", "SENDER")
-
-            // Negative timestamps should return empty (no payments before epoch)
-            val result = repository.getPaymentsByDateRange(-1000L, 0L)
-            assertTrue(result.isEmpty())
-        }
-
-        @Test
-        @DisplayName("Query spanning full Long range returns all payments")
-        fun `query spanning full Long range returns all payments`() = runBlocking {
-            val payment = createTestPayment()
-            repository.savePayment(payment, "msg-1", "SENDER")
-
-            val result = repository.getPaymentsByDateRange(Long.MIN_VALUE, Long.MAX_VALUE)
-            assertEquals(1, result.size)
         }
     }
 
@@ -398,51 +349,27 @@ class PaymentRepositoryEdgeCaseTest {
     }
 
     @Nested
-    @DisplayName("ReceivedAt Timestamp")
-    inner class ReceivedAtTimestamp {
+    @DisplayName("Payment Timestamp")
+    inner class PaymentTimestamp {
 
         @Test
-        @DisplayName("ReceivedAt is set automatically on save")
-        fun `receivedAt is set automatically on save`() = runBlocking {
-            val before = System.currentTimeMillis()
-            val payment = createTestPayment()
+        @DisplayName("Saved payment preserves the provided timestamp")
+        fun `saved payment preserves the provided timestamp`() = runBlocking {
+            val payment = createTestPayment(timestamp = "15/03/2026 10:00:00")
             repository.savePayment(payment, "msg-1", "SENDER")
-            val after = System.currentTimeMillis()
 
             val saved = repository.getAllPayments()[0]
-            assertNotNull(saved.receivedAt)
-            assertTrue(saved.receivedAt!! >= before)
-            assertTrue(saved.receivedAt!! <= after)
+            assertEquals("15/03/2026 10:00:00", saved.timestamp)
         }
 
         @Test
-        @DisplayName("ReceivedAt is preserved from original payment if present")
-        fun `receivedAt is preserved from original payment if present`() = runBlocking {
-            val customTime = 1000000000L
-            val payment = createTestPayment().copy(receivedAt = customTime)
+        @DisplayName("Saved payment with blank timestamp retains blank")
+        fun `saved payment with blank timestamp retains blank`() = runBlocking {
+            val payment = createTestPayment(timestamp = "")
             repository.savePayment(payment, "msg-1", "SENDER")
 
-            // InMemoryPaymentRepository overwrites receivedAt, which is expected behavior
-            // This test verifies the current behavior
             val saved = repository.getAllPayments()[0]
-            assertNotNull(saved.receivedAt)
-        }
-
-        @Test
-        @DisplayName("Multiple payments have increasing receivedAt")
-        fun `multiple payments have increasing receivedAt`() = runBlocking {
-            val payment1 = createTestPayment(amount = 1.0)
-            val payment2 = createTestPayment(amount = 2.0)
-
-            repository.savePayment(payment1, "msg-1", "SENDER")
-            Thread.sleep(10)
-            repository.savePayment(payment2, "msg-2", "SENDER")
-
-            val all = repository.getAllPayments()
-            val time1 = all.find { it.amount == 1.0 }?.receivedAt ?: 0L
-            val time2 = all.find { it.amount == 2.0 }?.receivedAt ?: 0L
-
-            assertTrue(time2 >= time1)
+            assertEquals("", saved.timestamp)
         }
     }
 

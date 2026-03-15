@@ -58,14 +58,14 @@ class SmsReceiver : BroadcastReceiver() {
                 // Async mode - running from actual broadcast
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        handleMessage(testSender, testBody)
+                        handleMessage(testSender, testBody, System.currentTimeMillis())
                     } finally {
                         pendingResult.finish()
                     }
                 }
             } else {
                 // Sync mode - running from tests (goAsync() returns null)
-                runBlocking { handleMessage(testSender, testBody) }
+                runBlocking { handleMessage(testSender, testBody, System.currentTimeMillis()) }
             }
             return
         }
@@ -85,6 +85,8 @@ class SmsReceiver : BroadcastReceiver() {
             SmsMessage.createFromPdu(it as? ByteArray, format)
         } ?: return
 
+        val smsReceivedAt = messages.firstOrNull()?.timestampMillis ?: System.currentTimeMillis()
+
         val pendingResult = goAsync()
         if (pendingResult != null) {
             // Async mode - running from actual broadcast
@@ -93,7 +95,7 @@ class SmsReceiver : BroadcastReceiver() {
                     for (message in messages) {
                         val sender = message.originatingAddress ?: continue
                         val body = message.messageBody
-                        handleMessage(sender, body)
+                        handleMessage(sender, body, smsReceivedAt)
                     }
                 } finally {
                     pendingResult.finish()
@@ -105,15 +107,15 @@ class SmsReceiver : BroadcastReceiver() {
                 for (message in messages) {
                     val sender = message.originatingAddress ?: continue
                     val body = message.messageBody
-                    handleMessage(sender, body)
+                    handleMessage(sender, body, smsReceivedAt)
                 }
             }
         }
     }
 
-    private suspend fun handleMessage(sender: String, body: String) {
+    private suspend fun handleMessage(sender: String, body: String, smsReceivedAt: Long) {
         try {
-            val result = paymentProcessor.processMessageFull(body, sender)
+            val result = paymentProcessor.processMessageFull(body, sender, smsReceivedAt)
             when (result) {
                 is MessageProcessResult.PaymentResult -> {
                     Log.d(

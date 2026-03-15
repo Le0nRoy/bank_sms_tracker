@@ -20,11 +20,11 @@
 - Phase 9.1: Fixed BUG-007, BUG-008, BUG-009, BUG-010 (all TDD)
 - Phase 9.2: Task 4.1 (preserve sender), Task 4.4 (decode newlines in Regex Builder), Task 3.0 (formatted display in Senders)
 - Task 2.1: Merchant search/filter in Payments (UI + unit + instrumented + Appium tests, all passing)
+- BUG-011: Non-nullable `timestamp` — DB migration v8→v9, removed `receivedAt`, `smsReceivedAt` param added to `processMessage()`
 
 ### Next Steps (Phase 9, in order)
 1. Merchant model: DB migration v8→v9, 1.2, 1.3, 1.1
 2. Task 4.2: PatternListActivity
-3. BUG-011: Non-nullable timestamp (L)
 
 ---
 

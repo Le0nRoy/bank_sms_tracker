@@ -9,6 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -549,8 +550,8 @@ class PaymentProcessorEdgeCaseTest {
         }
 
         @Test
-        @DisplayName("Payment with no date and no neighbors has null timestamp")
-        fun `payment with no date and no neighbors has null timestamp`() = runBlocking {
+        @DisplayName("Payment with no date and no neighbors gets device receive time as date")
+        fun `payment with no date and no neighbors gets device receive time as date`() = runBlocking {
             val sender = Sender(
                 name = "Test Bank",
                 addresses = mutableListOf("TESTBANK"),
@@ -558,8 +559,10 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
+            // With no neighbours, approximateDate() falls back to the SMS receive time (device clock).
+            // We only assert non-blank here since the exact value is time-dependent.
             val result = processor.processMessage("100.00 USD", "TESTBANK")
-            assertNull(result.timestamp)
+            assertTrue(result.timestamp.isNotBlank())
         }
 
         @Test

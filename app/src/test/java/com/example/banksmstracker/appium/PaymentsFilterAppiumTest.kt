@@ -286,11 +286,14 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
         )
 
         // Hide keyboard and verify app didn't crash
-        try { driver.hideKeyboard() } catch (e: Exception) { /* keyboard may not be visible */ }
+        try {
+            driver.hideKeyboard()
+        } catch (e: Exception) { /* keyboard may not be visible */ }
         shortWait()
 
         // List is still present (empty state or recycler — either is fine)
-        val appStillAlive = elementExists("recyclerPayments") || elementExists("tvEmptyState") ||
+        val appStillAlive = elementExists("recyclerPayments") ||
+            elementExists("tvEmptyState") ||
             elementExists("etMerchantSearch")
         assertTrue(appStillAlive, "App should still be alive after typing in search field")
 
@@ -318,7 +321,9 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
             textAfterClear == "Поиск по продавцу…"
         assertTrue(isEmptyOrHint, "Search field should be empty after clear, got: '$textAfterClear'")
 
-        try { driver.hideKeyboard() } catch (e: Exception) { }
+        try {
+            driver.hideKeyboard()
+        } catch (e: Exception) { }
 
         navigateToMain()
     }

@@ -65,7 +65,7 @@ class DataClassesTest {
             currency = "EUR",
             card = null,
             merchant = null,
-            timestamp = null,
+            timestamp = "",
             balance = null
         )
         assertEquals(50.0, payment.amount)
@@ -73,7 +73,7 @@ class DataClassesTest {
         assertEquals(null, payment.id)
         assertEquals(null, payment.card)
         assertEquals(null, payment.merchant)
-        assertEquals(null, payment.timestamp)
+        assertEquals("", payment.timestamp)
         assertEquals(null, payment.balance)
         assertEquals(null, payment.categoryId)
     }
@@ -85,7 +85,7 @@ class DataClassesTest {
             currency = "USD",
             card = null,
             merchant = "Test",
-            timestamp = null,
+            timestamp = "",
             balance = null
         )
         val copy = original.copy(categoryId = "Shopping")
@@ -332,7 +332,7 @@ class DataClassesTest {
             currency = "USD",
             card = null,
             merchant = "Test",
-            timestamp = null,
+            timestamp = "",
             balance = null
         )
         val result = MessageProcessResult.PaymentResult(payment)
@@ -373,7 +373,7 @@ class DataClassesTest {
     @Test
     fun `MessageProcessResult types are distinguishable`() {
         val payment =
-            Payment(amount = 100.0, currency = "USD", card = null, merchant = null, timestamp = null, balance = null)
+            Payment(amount = 100.0, currency = "USD", card = null, merchant = null, timestamp = "", balance = null)
         val income = Income(amount = 500.0, currency = "USD", source = null, timestamp = null, balance = null)
 
         val paymentResult: MessageProcessResult = MessageProcessResult.PaymentResult(payment)

@@ -563,13 +563,12 @@ class SmsProcessingPipelineE2ETest {
             assertEquals(5000.50, payment.balance)
             assertEquals("Shopping", payment.categoryId)
             assertEquals("TESTBANK", payment.senderAddress)
-            assertNotNull(payment.receivedAt)
             assertNotNull(payment.id)
         }
 
         @Test
-        @DisplayName("Payments are stored with receivedAt timestamp")
-        fun paymentsAreStoredWithReceivedAtTimestamp() {
+        @DisplayName("Payments are stored with non-blank timestamp")
+        fun paymentsAreStoredWithNonBlankTimestamp() {
             val sender =
                 Sender(
                     name = "TestBank",
@@ -579,17 +578,14 @@ class SmsProcessingPipelineE2ETest {
             val processor = createProcessor(listOf(sender), emptyList())
             smsReceiver.setPaymentProcessorForTest(processor)
 
-            val before = System.currentTimeMillis()
             smsReceiver.onReceive(
                 context,
                 buildSmsIntent("TESTBANK", "Payment 100.00 USD card 1234 Store at 20230901 bal 1000.00")
             )
-            val after = System.currentTimeMillis()
 
             val payment = runBlocking { repository.getAllPayments() }[0]
-            assertNotNull(payment.receivedAt)
-            assertTrue(payment.receivedAt!! >= before)
-            assertTrue(payment.receivedAt!! <= after)
+            // timestamp comes from the SMS body regex group (captured as "20230901" in this case)
+            assertTrue(payment.timestamp.isNotBlank())
         }
 
         @Test

@@ -69,21 +69,16 @@ class PaymentFilterE2ETest {
             val sender1 = ConfigRepository.addSender()
             sender1.name = "Bank A"
             sender1.addresses = mutableListOf("BANK-A")
-            sender1.rules = mutableListOf(
-                Rule(
-                    pattern = "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3}) card (?<card>\\d+) (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
-                )
-            )
+            val rulePattern =
+                "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3})" +
+                    " card (?<card>\\d+) (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
+            sender1.rules = mutableListOf(Rule(pattern = rulePattern))
             ConfigRepository.updateSender(sender1)
 
             val sender2 = ConfigRepository.addSender()
             sender2.name = "Bank B"
             sender2.addresses = mutableListOf("BANK-B")
-            sender2.rules = mutableListOf(
-                Rule(
-                    pattern = "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3}) card (?<card>\\d+) (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
-                )
-            )
+            sender2.rules = mutableListOf(Rule(pattern = rulePattern))
             ConfigRepository.updateSender(sender2)
         }
 
@@ -171,55 +166,6 @@ class PaymentFilterE2ETest {
     }
 
     @Test
-    @DisplayName("filterByDateRange_returnsPaymentsWithinRange")
-    fun filterByDateRangeReturnsPaymentsWithinRange() = runBlocking {
-        val smsReceiver = SmsReceiver()
-        val processor = ConfigRepository.getPaymentProcessor()
-        smsReceiver.setPaymentProcessorForTest(processor)
-
-        val beforeTime = System.currentTimeMillis()
-
-        smsReceiver.onReceive(
-            context,
-            buildSmsIntent("BANK-A", "Payment 100.00 USD card 1111 Store at 20230901 bal 500.00")
-        )
-        waitForPayments(1)
-        delay(100)
-        smsReceiver.onReceive(
-            context,
-            buildSmsIntent("BANK-A", "Payment 200.00 USD card 2222 Store at 20230902 bal 400.00")
-        )
-        waitForPayments(2)
-
-        val afterTime = System.currentTimeMillis()
-
-        val rangePayments = paymentRepository.getPaymentsByDateRange(beforeTime - 1000, afterTime + 1000)
-
-        assertEquals(2, rangePayments.size)
-    }
-
-    @Test
-    @DisplayName("filterByDateRange_excludesPaymentsOutsideRange")
-    fun filterByDateRangeExcludesPaymentsOutsideRange() = runBlocking {
-        val smsReceiver = SmsReceiver()
-        val processor = ConfigRepository.getPaymentProcessor()
-        smsReceiver.setPaymentProcessorForTest(processor)
-
-        smsReceiver.onReceive(
-            context,
-            buildSmsIntent("BANK-A", "Payment 100.00 USD card 1111 Store at 20230901 bal 500.00")
-        )
-        waitForPayments(1)
-
-        // Query future range
-        val futureStart = System.currentTimeMillis() + 100000
-        val futureEnd = futureStart + 100000
-        val emptyPayments = paymentRepository.getPaymentsByDateRange(futureStart, futureEnd)
-
-        assertTrue(emptyPayments.isEmpty())
-    }
-
-    @Test
     @DisplayName("paymentsStoreSenderAddressCorrectly")
     fun paymentsStoreSenderAddressCorrectly() = runBlocking {
         val smsReceiver = SmsReceiver()
@@ -248,7 +194,6 @@ class PaymentFilterE2ETest {
         balance = null,
         categoryId = null,
         senderAddress = "BANK-A",
-        receivedAt = System.currentTimeMillis(),
         ruleId = null
     )
 
@@ -290,28 +235,5 @@ class PaymentFilterE2ETest {
         val result = filterPayments(all, null, null, null, null, merchantQuery = "xyz_no_match")
 
         assertEquals(0, result.size, "Non-matching query should return empty list")
-    }
-
-    @Test
-    @DisplayName("paymentsStoreReceivedAtTimestampCorrectly")
-    fun paymentsStoreReceivedAtTimestampCorrectly() = runBlocking {
-        val smsReceiver = SmsReceiver()
-        val processor = ConfigRepository.getPaymentProcessor()
-        smsReceiver.setPaymentProcessorForTest(processor)
-
-        val beforeTime = System.currentTimeMillis()
-        smsReceiver.onReceive(
-            context,
-            buildSmsIntent("BANK-A", "Payment 100.00 USD card 1111 Store at 20230901 bal 500.00")
-        )
-        val afterTime = System.currentTimeMillis() + 5000 // Allow time for async processing
-
-        val payments = waitForPayments(1)
-        assertEquals(1, payments.size)
-
-        val receivedAt = payments[0].receivedAt
-        assertTrue(receivedAt != null)
-        assertTrue(receivedAt!! >= beforeTime)
-        assertTrue(receivedAt <= afterTime)
     }
 }

@@ -300,7 +300,7 @@
 
     <!-- SMS Export strings -->
     <string name="csv_header_sms">Адрес,Дата,Тип,Текст</string>
-    <string name="csv_header_payments">Сумма,Валюта,Карта,Продавец,Время,Баланс,Категория,Отправитель,ПолученоВ</string>
+    <string name="csv_header_payments">Сумма,Валюта,Карта,Продавец,Время,Баланс,Категория,Отправитель</string>
     <string name="sms_type_inbox">Входящие</string>
     <string name="sms_type_sent">Отправленные</string>
     <string name="sms_type_draft">Черновик</string>

@@ -19,7 +19,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         IgnoreRuleEntity::class,
         IncomeEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class BankSmsDatabase : RoomDatabase() {
@@ -183,6 +183,61 @@ abstract class BankSmsDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 8 to 9: Make payments.timestamp NOT NULL; remove receivedAt column.
+         *
+         * Steps:
+         * 1. Fill any NULL timestamps using receivedAt as a formatted date fallback.
+         * 2. Recreate the payments table without receivedAt and with timestamp NOT NULL.
+         * 3. Copy data over (COALESCE to '01/01/1970' as last resort — should never be needed
+         *    after Step 2, but guards against edge cases).
+         * 4. Drop old table and rename the new one.
+         */
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    UPDATE payments
+                    SET timestamp = strftime('%d/%m/%Y', datetime(receivedAt / 1000, 'unixepoch'))
+                    WHERE timestamp IS NULL AND receivedAt IS NOT NULL
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    CREATE TABLE payments_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        amount REAL NOT NULL,
+                        currency TEXT NOT NULL,
+                        card TEXT,
+                        merchant TEXT,
+                        timestamp TEXT NOT NULL,
+                        balance REAL,
+                        categoryName TEXT,
+                        messageHash TEXT UNIQUE,
+                        senderAddress TEXT,
+                        ruleId INTEGER
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO payments_new
+                        (id, amount, currency, card, merchant, timestamp, balance,
+                         categoryName, messageHash, senderAddress, ruleId)
+                    SELECT id, amount, currency, card, merchant,
+                        COALESCE(timestamp, '01/01/1970'),
+                        balance, categoryName, messageHash, senderAddress, ruleId
+                    FROM payments
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE payments")
+                db.execSQL("ALTER TABLE payments_new RENAME TO payments")
+                db.execSQL(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS index_payments_messageHash ON payments(messageHash)"
+                )
+            }
+        }
+
         fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
@@ -196,7 +251,8 @@ abstract class BankSmsDatabase : RoomDatabase() {
                     MIGRATION_4_5,
                     MIGRATION_5_6,
                     MIGRATION_6_7,
-                    MIGRATION_7_8
+                    MIGRATION_7_8,
+                    MIGRATION_8_9
                 )
                 .build()
                 .also { INSTANCE = it }

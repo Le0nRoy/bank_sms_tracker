@@ -300,7 +300,7 @@
 
     <!-- SMS Export strings -->
     <string name="csv_header_sms">Address,Date,Type,Body</string>
-    <string name="csv_header_payments">Amount,Currency,Card,Merchant,Timestamp,Balance,Category,Sender,ReceivedAt</string>
+    <string name="csv_header_payments">Amount,Currency,Card,Merchant,Timestamp,Balance,Category,Sender</string>
     <string name="sms_type_inbox">Inbox</string>
     <string name="sms_type_sent">Sent</string>
     <string name="sms_type_draft">Draft</string>

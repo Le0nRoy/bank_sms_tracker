@@ -187,7 +187,7 @@ class EntitiesTest {
                 currency = "USD",
                 card = null,
                 merchant = null,
-                timestamp = null,
+                timestamp = "",
                 balance = null,
                 categoryName = null,
                 messageHash = "hash123"
@@ -197,12 +197,11 @@ class EntitiesTest {
             assertEquals("USD", entity.currency)
             assertNull(entity.card)
             assertNull(entity.merchant)
-            assertNull(entity.timestamp)
+            assertEquals("", entity.timestamp)
             assertNull(entity.balance)
             assertNull(entity.categoryName)
             assertEquals("hash123", entity.messageHash)
             assertNull(entity.senderAddress)
-            assertNull(entity.receivedAt)
             assertNull(entity.ruleId)
         }
 
@@ -220,7 +219,6 @@ class EntitiesTest {
                 categoryName = "Shopping",
                 messageHash = "abc123",
                 senderAddress = "VM-BANK",
-                receivedAt = 1705330800000,
                 ruleId = 5
             )
             assertEquals(1L, entity.id)
@@ -233,7 +231,6 @@ class EntitiesTest {
             assertEquals("Shopping", entity.categoryName)
             assertEquals("abc123", entity.messageHash)
             assertEquals("VM-BANK", entity.senderAddress)
-            assertEquals(1705330800000, entity.receivedAt)
             assertEquals(5L, entity.ruleId)
         }
     }
