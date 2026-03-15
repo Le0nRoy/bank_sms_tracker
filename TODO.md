@@ -478,3 +478,4 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 | 2026-03-16 | Task 1.2: Merchant data class with displayName field | pending |
 | 2026-03-16 | Task 1.3: Regex matching support in merchant categories | pending |
 | 2026-03-16 | DB migration v9→v10: category_merchants table (name→pattern, +displayName, +isRegex) | pending |
+| 2026-03-16 | Feature 1.1: Move merchant between categories via dialog | pending |

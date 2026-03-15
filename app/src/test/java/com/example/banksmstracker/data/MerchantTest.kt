@@ -118,12 +118,11 @@ class MerchantTest {
     @DisplayName("Merchant matching logic (mirrors PaymentProcessor.assignCategory)")
     inner class MerchantMatching {
 
-        private fun matches(merchant: Merchant, paymentMerchant: String): Boolean =
-            if (merchant.isRegex) {
-                Regex(merchant.pattern, setOf(RegexOption.IGNORE_CASE)).containsMatchIn(paymentMerchant)
-            } else {
-                merchant.pattern.equals(paymentMerchant, ignoreCase = true)
-            }
+        private fun matches(merchant: Merchant, paymentMerchant: String): Boolean = if (merchant.isRegex) {
+            Regex(merchant.pattern, setOf(RegexOption.IGNORE_CASE)).containsMatchIn(paymentMerchant)
+        } else {
+            merchant.pattern.equals(paymentMerchant, ignoreCase = true)
+        }
 
         @Test
         fun `exact match is case insensitive`() {

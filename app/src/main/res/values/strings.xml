@@ -173,6 +173,12 @@
     <string name="delete">Delete</string>
     <string name="message_ignored">Message ignored by rule</string>
 
+    <!-- Move merchant to category -->
+    <string name="move_to_category">Move to category</string>
+    <string name="move_merchant_dialog_title">Move \'%1$s\' to:</string>
+    <string name="merchant_moved">\'%1$s\' moved to %2$s</string>
+    <string name="no_other_categories">No other categories available</string>
+
     <!-- Delete confirmations -->
     <string name="delete_category_confirm_title">Delete Category</string>
     <string name="delete_category_confirm_message">Are you sure you want to delete this category and all its merchants?</string>

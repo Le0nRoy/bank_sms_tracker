@@ -337,6 +337,12 @@
     <string name="not_captured">(не захвачено)</string>
     <string name="invalid_or_missing">(неверно или отсутствует)</string>
 
+    <!-- Move merchant to category -->
+    <string name="move_to_category">Переместить в категорию</string>
+    <string name="move_merchant_dialog_title">Переместить \'%1$s\' в:</string>
+    <string name="merchant_moved">\'%1$s\' перемещён в %2$s</string>
+    <string name="no_other_categories">Нет других категорий</string>
+
     <!-- Personal Data Agreement -->
     <string name="terms_title">Уведомление о личных данных</string>
     <string name="terms_message">Это приложение обрабатывает ваши банковские SMS для извлечения и хранения записей о платежах локально на вашем устройстве.\n\nВсе данные остаются на устройстве и никогда не передаются на внешние серверы или третьим лицам.\n\nНажимая «Понятно», вы подтверждаете, что SMS читаются и обрабатываются локально для обнаружения платежей.</string>

@@ -198,6 +198,57 @@ class CategoriesActivity :
             ConfigRepository.updateCategory(category)
         }
     }
+
+    override fun onMoveMerchantRequested(merchant: Merchant, currentCategory: Category) {
+        lifecycleScope.launch {
+            val allCategories = ConfigRepository.getCategories()
+                .filter { it.id != currentCategory.id }
+            if (allCategories.isEmpty()) {
+                Toast.makeText(this@CategoriesActivity, R.string.no_other_categories, Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+            showMoveMerchantDialog(merchant, currentCategory, allCategories)
+        }
+    }
+
+    private fun showMoveMerchantDialog(
+        merchant: Merchant,
+        currentCategory: Category,
+        targetCategories: List<Category>
+    ) {
+        val displayName = merchant.displayName ?: merchant.pattern
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.move_merchant_dialog_title, displayName))
+            .setItems(targetCategories.map { it.name }.toTypedArray()) { _, idx ->
+                moveMerchantToCategory(merchant, currentCategory, targetCategories[idx])
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun moveMerchantToCategory(merchant: Merchant, currentCategory: Category, targetCategory: Category) {
+        lifecycleScope.launch {
+            try {
+                currentCategory.merchants.removeAll { it.pattern == merchant.pattern }
+                targetCategory.merchants.add(merchant)
+                ConfigRepository.updateCategory(currentCategory)
+                ConfigRepository.updateCategory(targetCategory)
+                val displayName = merchant.displayName ?: merchant.pattern
+                Toast.makeText(
+                    this@CategoriesActivity,
+                    getString(R.string.merchant_moved, displayName, targetCategory.name),
+                    Toast.LENGTH_SHORT
+                ).show()
+                loadCategories()
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this@CategoriesActivity,
+                    getString(R.string.error_generic),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
 }
 
 class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
@@ -206,6 +257,7 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
     interface CategoryCallbacks {
         fun onCategoryUpdated(category: Category)
         fun onCategoryDeleteRequested(category: Category, position: Int)
+        fun onMoveMerchantRequested(merchant: Merchant, currentCategory: Category)
     }
 
     private val categories: MutableList<Category> = mutableListOf()
@@ -292,6 +344,7 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
             val view = LayoutInflater.from(itemView.context)
                 .inflate(R.layout.view_dynamic_edit_text_with_delete, merchantsContainer, false)
             val editText: EditText = view.findViewById(R.id.etValue)
+            val btnMove: android.widget.ImageButton = view.findViewById(R.id.btnMove)
             val btnDelete: android.widget.ImageButton = view.findViewById(R.id.btnDelete)
 
             editText.hint = itemView.context.getString(R.string.merchant_hint, index + 1)
@@ -311,6 +364,12 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
                         category.merchants[index] = updated
                         callbacks.onCategoryUpdated(category)
                     }
+                }
+            }
+
+            btnMove.setOnClickListener {
+                if (index in category.merchants.indices) {
+                    callbacks.onMoveMerchantRequested(category.merchants[index], category)
                 }
             }
 

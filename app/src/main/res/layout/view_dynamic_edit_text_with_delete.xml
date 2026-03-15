@@ -19,6 +19,16 @@
         android:textColorHint="@color/text_hint" />
 
     <ImageButton
+        android:id="@+id/btnMove"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="4dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/move_to_category"
+        android:src="@android:drawable/ic_menu_send"
+        app:tint="@color/text_hint" />
+
+    <ImageButton
         android:id="@+id/btnDelete"
         android:layout_width="36dp"
         android:layout_height="36dp"
