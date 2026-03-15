@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.R
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.repository.ConfigRepository
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.concurrent.atomic.AtomicBoolean
@@ -281,24 +282,35 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
             }
 
             btnAddMerchant.setOnClickListener {
-                category.merchants.add("")
+                category.merchants.add(Merchant(pattern = ""))
                 callbacks.onCategoryUpdated(category)
-                addMerchantField(category.merchants.lastIndex, "", category, callbacks)
+                addMerchantField(category.merchants.lastIndex, Merchant(pattern = ""), category, callbacks)
             }
         }
 
-        private fun addMerchantField(index: Int, value: String, category: Category, callbacks: CategoryCallbacks) {
+        private fun addMerchantField(index: Int, merchant: Merchant, category: Category, callbacks: CategoryCallbacks) {
             val view = LayoutInflater.from(itemView.context)
                 .inflate(R.layout.view_dynamic_edit_text_with_delete, merchantsContainer, false)
             val editText: EditText = view.findViewById(R.id.etValue)
             val btnDelete: android.widget.ImageButton = view.findViewById(R.id.btnDelete)
 
             editText.hint = itemView.context.getString(R.string.merchant_hint, index + 1)
-            editText.setText(value)
+            // Display the human-readable name if set, otherwise the pattern
+            editText.setText(merchant.displayName ?: merchant.pattern)
             editText.setSimpleWatcher { newValue ->
-                if (index in category.merchants.indices && category.merchants[index] != newValue) {
-                    category.merchants[index] = newValue
-                    callbacks.onCategoryUpdated(category)
+                if (index in category.merchants.indices) {
+                    val current = category.merchants[index]
+                    val displayText = current.displayName ?: current.pattern
+                    if (displayText != newValue) {
+                        // Update the display name if one was already set; otherwise update pattern.
+                        val updated = if (current.displayName != null) {
+                            current.copy(displayName = newValue.ifEmpty { null })
+                        } else {
+                            current.copy(pattern = newValue)
+                        }
+                        category.merchants[index] = updated
+                        callbacks.onCategoryUpdated(category)
+                    }
                 }
             }
 
@@ -327,6 +339,6 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
 private fun Category.clone(): Category = Category(
     id = id,
     name = name,
-    merchants = merchants.toMutableList(),
+    merchants = merchants.map { it.copy() }.toMutableList(),
     enabled = enabled
 )

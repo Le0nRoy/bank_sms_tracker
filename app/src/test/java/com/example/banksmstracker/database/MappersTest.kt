@@ -1,5 +1,6 @@
 package com.example.banksmstracker.database
 
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.RuleType
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -45,8 +46,8 @@ class MappersTest {
         fun `single category with merchants maps correctly`() {
             val categoryEntity = CategoryEntity(id = 1, name = "Shopping", enabled = true)
             val merchants = listOf(
-                CategoryMerchantEntity(id = 1, categoryId = 1, name = "Amazon"),
-                CategoryMerchantEntity(id = 2, categoryId = 1, name = "eBay")
+                CategoryMerchantEntity(id = 1, categoryId = 1, pattern = "Amazon"),
+                CategoryMerchantEntity(id = 2, categoryId = 1, pattern = "eBay")
             )
             val categoryWithMerchants = CategoryWithMerchants(
                 category = categoryEntity,
@@ -56,8 +57,8 @@ class MappersTest {
 
             assertEquals(1, result.size)
             assertEquals(2, result[0].merchants.size)
-            assertTrue(result[0].merchants.contains("Amazon"))
-            assertTrue(result[0].merchants.contains("eBay"))
+            assertTrue(result[0].merchants.contains(Merchant("Amazon")))
+            assertTrue(result[0].merchants.contains(Merchant("eBay")))
         }
 
         @Test
@@ -65,13 +66,13 @@ class MappersTest {
         fun `multiple categories map correctly`() {
             val category1 = CategoryWithMerchants(
                 category = CategoryEntity(id = 1, name = "Shopping", enabled = true),
-                merchants = listOf(CategoryMerchantEntity(id = 1, categoryId = 1, name = "Amazon"))
+                merchants = listOf(CategoryMerchantEntity(id = 1, categoryId = 1, pattern = "Amazon"))
             )
             val category2 = CategoryWithMerchants(
                 category = CategoryEntity(id = 2, name = "Food", enabled = false),
                 merchants = listOf(
-                    CategoryMerchantEntity(id = 2, categoryId = 2, name = "McDonalds"),
-                    CategoryMerchantEntity(id = 3, categoryId = 2, name = "Subway")
+                    CategoryMerchantEntity(id = 2, categoryId = 2, pattern = "McDonalds"),
+                    CategoryMerchantEntity(id = 3, categoryId = 2, pattern = "Subway")
                 )
             )
             val result = listOf(category1, category2).toDomainCategories()
@@ -91,7 +92,7 @@ class MappersTest {
         fun `merchants are converted to MutableList`() {
             val categoryEntity = CategoryEntity(id = 1, name = "Test", enabled = true)
             val merchants = listOf(
-                CategoryMerchantEntity(id = 1, categoryId = 1, name = "Merchant1")
+                CategoryMerchantEntity(id = 1, categoryId = 1, pattern = "Merchant1")
             )
             val categoryWithMerchants = CategoryWithMerchants(
                 category = categoryEntity,
@@ -99,7 +100,7 @@ class MappersTest {
             )
             val result = listOf(categoryWithMerchants).toDomainCategories()
 
-            result[0].merchants.add("NewMerchant")
+            result[0].merchants.add(Merchant("NewMerchant"))
             assertEquals(2, result[0].merchants.size)
         }
     }

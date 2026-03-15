@@ -2,6 +2,7 @@ package com.example.banksmstracker
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.repository.ConfigRepository
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -40,7 +41,7 @@ class ConfigPersistenceE2ETest {
     fun categoryPersistsAfterAdd() = runBlocking {
         val category = ConfigRepository.addCategory()
         category.name = "Test Category"
-        category.merchants = mutableListOf("Merchant1", "Merchant2")
+        category.merchants = mutableListOf(Merchant("Merchant1"), Merchant("Merchant2"))
         ConfigRepository.updateCategory(category)
 
         // Get categories again (should read from database)
@@ -58,10 +59,10 @@ class ConfigPersistenceE2ETest {
         ConfigRepository.updateCategory(category)
 
         category.name = "Updated Name"
-        category.merchants = mutableListOf("Merchant1")
+        category.merchants = mutableListOf(Merchant("Merchant1"))
         ConfigRepository.updateCategory(category)
 
-        category.merchants = mutableListOf("Merchant1", "Merchant2", "Merchant3")
+        category.merchants = mutableListOf(Merchant("Merchant1"), Merchant("Merchant2"), Merchant("Merchant3"))
         ConfigRepository.updateCategory(category)
 
         val categories = ConfigRepository.getCategories()
@@ -121,12 +122,12 @@ class ConfigPersistenceE2ETest {
     fun multipleCategoriesPersistCorrectly() = runBlocking {
         val cat1 = ConfigRepository.addCategory()
         cat1.name = "Category 1"
-        cat1.merchants = mutableListOf("Merchant1")
+        cat1.merchants = mutableListOf(Merchant("Merchant1"))
         ConfigRepository.updateCategory(cat1)
 
         val cat2 = ConfigRepository.addCategory()
         cat2.name = "Category 2"
-        cat2.merchants = mutableListOf("Merchant2", "Merchant3")
+        cat2.merchants = mutableListOf(Merchant("Merchant2"), Merchant("Merchant3"))
         ConfigRepository.updateCategory(cat2)
 
         val categories = ConfigRepository.getCategories()
@@ -168,7 +169,7 @@ class ConfigPersistenceE2ETest {
         // Add category and sender
         val category = ConfigRepository.addCategory()
         category.name = "Groceries"
-        category.merchants = mutableListOf("Supermarket")
+        category.merchants = mutableListOf(Merchant("Supermarket"))
         ConfigRepository.updateCategory(category)
 
         val sender = ConfigRepository.addSender()
@@ -199,7 +200,7 @@ class ConfigPersistenceE2ETest {
         // Create some data
         val category = ConfigRepository.addCategory()
         category.name = "Persistence Test"
-        category.merchants = mutableListOf("Test Merchant")
+        category.merchants = mutableListOf(Merchant("Test Merchant"))
         ConfigRepository.updateCategory(category)
 
         val sender = ConfigRepository.addSender()

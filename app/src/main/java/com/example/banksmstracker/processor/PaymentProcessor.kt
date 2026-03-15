@@ -257,7 +257,13 @@ class PaymentProcessor(
 
         // Only match against enabled categories
         val category = enabledCategories.find { category ->
-            category.merchants.any { it.equals(merchant, ignoreCase = true) }
+            category.merchants.any { m ->
+                if (m.isRegex) {
+                    Regex(m.pattern, setOf(RegexOption.IGNORE_CASE)).containsMatchIn(merchant)
+                } else {
+                    m.pattern.equals(merchant, ignoreCase = true)
+                }
+            }
         }
 
         return if (category != null) {

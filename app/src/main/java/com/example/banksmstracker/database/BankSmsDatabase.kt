@@ -19,7 +19,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         IgnoreRuleEntity::class,
         IncomeEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class BankSmsDatabase : RoomDatabase() {
@@ -238,6 +238,44 @@ abstract class BankSmsDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 9 to 10: Extend category_merchants table with displayName and
+         * isRegex columns; rename 'name' column to 'pattern'.
+         *
+         * SQLite does not support column renaming via ALTER TABLE on older Android versions, so the
+         * table is recreated. Existing merchants are migrated as exact-match patterns
+         * (isRegex = 0, displayName = NULL).
+         */
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE category_merchants_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        categoryId INTEGER NOT NULL,
+                        pattern TEXT NOT NULL,
+                        displayName TEXT,
+                        isRegex INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY (categoryId) REFERENCES categories(id)
+                            ON DELETE CASCADE ON UPDATE CASCADE
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_category_merchants_new_categoryId " +
+                        "ON category_merchants_new(categoryId)"
+                )
+                db.execSQL(
+                    """
+                    INSERT INTO category_merchants_new (id, categoryId, pattern)
+                        SELECT id, categoryId, name FROM category_merchants
+                    """.trimIndent()
+                )
+                db.execSQL("DROP TABLE category_merchants")
+                db.execSQL("ALTER TABLE category_merchants_new RENAME TO category_merchants")
+            }
+        }
+
         fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
@@ -252,7 +290,8 @@ abstract class BankSmsDatabase : RoomDatabase() {
                     MIGRATION_5_6,
                     MIGRATION_6_7,
                     MIGRATION_7_8,
-                    MIGRATION_8_9
+                    MIGRATION_8_9,
+                    MIGRATION_9_10
                 )
                 .build()
                 .also { INSTANCE = it }

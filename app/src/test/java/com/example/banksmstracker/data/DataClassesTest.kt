@@ -9,13 +9,13 @@ class DataClassesTest {
 
     @Test
     fun `Category default enabled is true`() {
-        val category = Category(name = "Test", merchants = mutableListOf())
+        val category = Category(name = "Test", merchants = mutableListOf<Merchant>())
         assertTrue(category.enabled)
     }
 
     @Test
     fun `Category can be created with enabled false`() {
-        val category = Category(name = "Test", merchants = mutableListOf(), enabled = false)
+        val category = Category(name = "Test", merchants = mutableListOf<Merchant>(), enabled = false)
         assertFalse(category.enabled)
     }
 
@@ -98,7 +98,7 @@ class DataClassesTest {
     @Test
     fun `SmsConfig holds senders and categories`() {
         val sender = Sender(name = "Bank", addresses = mutableListOf("123"), rules = mutableListOf())
-        val category = Category(name = "Shopping", merchants = mutableListOf("Amazon"))
+        val category = Category(name = "Shopping", merchants = mutableListOf(Merchant("Amazon")))
 
         val config = SmsConfig(
             senders = mutableListOf(sender),

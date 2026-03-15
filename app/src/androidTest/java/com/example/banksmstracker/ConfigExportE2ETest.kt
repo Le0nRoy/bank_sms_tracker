@@ -2,6 +2,7 @@ package com.example.banksmstracker
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.repository.ConfigRepository
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -44,7 +45,7 @@ class ConfigExportE2ETest {
         // Create some test data
         val category = ConfigRepository.addCategory()
         category.name = "Test Category"
-        category.merchants = mutableListOf("Merchant1", "Merchant2")
+        category.merchants = mutableListOf(Merchant("Merchant1"), Merchant("Merchant2"))
         ConfigRepository.updateCategory(category)
 
         val sender = ConfigRepository.addSender()
@@ -108,7 +109,7 @@ class ConfigExportE2ETest {
         // Create test data
         val category = ConfigRepository.addCategory()
         category.name = "Export Category"
-        category.merchants = mutableListOf("Exported Merchant")
+        category.merchants = mutableListOf(Merchant("Exported Merchant"))
         ConfigRepository.updateCategory(category)
 
         val sender = ConfigRepository.addSender()
@@ -172,7 +173,7 @@ class ConfigExportE2ETest {
     fun shareConfigFileJsonMatchesExport() = runBlocking {
         val category = ConfigRepository.addCategory()
         category.name = "Match Test"
-        category.merchants = mutableListOf("Merchant")
+        category.merchants = mutableListOf(Merchant("Merchant"))
         ConfigRepository.updateCategory(category)
 
         val exportJson = ConfigRepository.exportConfigJson()
@@ -196,12 +197,12 @@ class ConfigExportE2ETest {
         // Create multiple categories and senders
         val cat1 = ConfigRepository.addCategory()
         cat1.name = "Category 1"
-        cat1.merchants = mutableListOf("Merchant 1")
+        cat1.merchants = mutableListOf(Merchant("Merchant 1"))
         ConfigRepository.updateCategory(cat1)
 
         val cat2 = ConfigRepository.addCategory()
         cat2.name = "Category 2"
-        cat2.merchants = mutableListOf("Merchant 2", "Merchant 3")
+        cat2.merchants = mutableListOf(Merchant("Merchant 2"), Merchant("Merchant 3"))
         ConfigRepository.updateCategory(cat2)
 
         val sender1 = ConfigRepository.addSender()

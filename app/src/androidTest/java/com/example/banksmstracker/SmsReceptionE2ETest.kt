@@ -4,6 +4,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
@@ -55,7 +56,7 @@ class SmsReceiverE2ETest {
         val categories = listOf(
             Category(
                 name = "Shops",
-                merchants = listOf("Amazon").toMutableList()
+                merchants = mutableListOf(Merchant("Amazon"))
             )
         )
 

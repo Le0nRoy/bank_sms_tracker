@@ -2,6 +2,7 @@ package com.example.banksmstracker
 
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.database.BankSmsDatabase
@@ -109,7 +110,7 @@ class CategoryCascadeE2ETest {
         // Create a category first
         val category = ConfigRepository.addCategory()
         category.name = "TestCat"
-        category.merchants = mutableListOf("Store")
+        category.merchants = mutableListOf(Merchant("Store"))
         ConfigRepository.updateCategory(category)
 
         val smsReceiver = SmsReceiver()
@@ -138,7 +139,7 @@ class CategoryCascadeE2ETest {
         // Create initial category
         val category = ConfigRepository.addCategory()
         category.name = "Groceries"
-        category.merchants = mutableListOf("SuperMarket")
+        category.merchants = mutableListOf(Merchant("SuperMarket"))
         ConfigRepository.updateCategory(category)
 
         val smsReceiver = SmsReceiver()
@@ -166,7 +167,7 @@ class CategoryCascadeE2ETest {
         // Now add a new category for Electronics
         val techCategory = ConfigRepository.addCategory()
         techCategory.name = "Tech"
-        techCategory.merchants = mutableListOf("Electronics")
+        techCategory.merchants = mutableListOf(Merchant("Electronics"))
         ConfigRepository.updateCategory(techCategory)
 
         // Re-categorize all payments
@@ -184,7 +185,7 @@ class CategoryCascadeE2ETest {
         // Create category
         val category = ConfigRepository.addCategory()
         category.name = "Shops"
-        category.merchants = mutableListOf("Store")
+        category.merchants = mutableListOf(Merchant("Store"))
         ConfigRepository.updateCategory(category)
 
         val smsReceiver = SmsReceiver()
@@ -221,7 +222,7 @@ class CategoryCascadeE2ETest {
         // Add a category
         val category = ConfigRepository.addCategory()
         category.name = "TestCat"
-        category.merchants = mutableListOf("SomeMerchant")
+        category.merchants = mutableListOf(Merchant("SomeMerchant"))
         ConfigRepository.updateCategory(category)
 
         val smsReceiver = SmsReceiver()

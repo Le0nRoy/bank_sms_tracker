@@ -3,6 +3,7 @@ package com.example.banksmstracker.repository
 import android.app.Application
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.database.BankSmsDatabase
@@ -65,7 +66,7 @@ class ConfigRepositoryRoomTest {
 
         val category = ConfigRepository.addCategory()
         category.name = "Groceries"
-        category.merchants = mutableListOf("Supermarket", "Grocery Store")
+        category.merchants = mutableListOf(Merchant("Supermarket"), Merchant("Grocery Store"))
 
         ConfigRepository.updateCategory(category)
 
@@ -73,8 +74,8 @@ class ConfigRepositoryRoomTest {
         assertEquals(1, categories.size)
         assertEquals("Groceries", categories[0].name)
         assertEquals(2, categories[0].merchants.size)
-        assertTrue(categories[0].merchants.contains("Supermarket"))
-        assertTrue(categories[0].merchants.contains("Grocery Store"))
+        assertTrue(categories[0].merchants.any { it.pattern == "Supermarket" })
+        assertTrue(categories[0].merchants.any { it.pattern == "Grocery Store" })
     }
 
     @Test
@@ -84,14 +85,14 @@ class ConfigRepositoryRoomTest {
 
         val category = ConfigRepository.addCategory()
         category.name = "Test Category"
-        category.merchants = mutableListOf("Merchant1", "", "   ", "Merchant2")
+        category.merchants = mutableListOf(Merchant("Merchant1"), Merchant(""), Merchant("   "), Merchant("Merchant2"))
 
         ConfigRepository.updateCategory(category)
 
         val categories = ConfigRepository.getCategories()
         assertEquals(2, categories[0].merchants.size)
-        assertTrue(categories[0].merchants.contains("Merchant1"))
-        assertTrue(categories[0].merchants.contains("Merchant2"))
+        assertTrue(categories[0].merchants.any { it.pattern == "Merchant1" })
+        assertTrue(categories[0].merchants.any { it.pattern == "Merchant2" })
     }
 
     @Test
@@ -101,17 +102,17 @@ class ConfigRepositoryRoomTest {
 
         val category = ConfigRepository.addCategory()
         category.name = "Category"
-        category.merchants = mutableListOf("Old Merchant")
+        category.merchants = mutableListOf(Merchant("Old Merchant"))
         ConfigRepository.updateCategory(category)
 
-        category.merchants = mutableListOf("New Merchant 1", "New Merchant 2")
+        category.merchants = mutableListOf(Merchant("New Merchant 1"), Merchant("New Merchant 2"))
         ConfigRepository.updateCategory(category)
 
         val categories = ConfigRepository.getCategories()
         assertEquals(2, categories[0].merchants.size)
-        assertTrue(categories[0].merchants.contains("New Merchant 1"))
-        assertTrue(categories[0].merchants.contains("New Merchant 2"))
-        assertTrue(!categories[0].merchants.contains("Old Merchant"))
+        assertTrue(categories[0].merchants.any { it.pattern == "New Merchant 1" })
+        assertTrue(categories[0].merchants.any { it.pattern == "New Merchant 2" })
+        assertTrue(categories[0].merchants.none { it.pattern == "Old Merchant" })
     }
 
     @Test
@@ -212,14 +213,14 @@ class ConfigRepositoryRoomTest {
 
         val category = ConfigRepository.addCategory()
         category.name = "Test"
-        category.merchants = mutableListOf("Merchant1")
+        category.merchants = mutableListOf(Merchant("Merchant1"))
         ConfigRepository.updateCategory(category)
 
         val categories1 = ConfigRepository.getCategories()
         val categories2 = ConfigRepository.getCategories()
 
         // Modifying one list should not affect the other
-        categories1[0].merchants.add("Merchant2")
+        categories1[0].merchants.add(Merchant("Merchant2"))
         assertEquals(1, categories2[0].merchants.size)
         assertEquals(2, categories1[0].merchants.size)
     }
@@ -250,7 +251,7 @@ class ConfigRepositoryRoomTest {
 
         val category = ConfigRepository.addCategory()
         category.name = "Groceries"
-        category.merchants = mutableListOf("Supermarket")
+        category.merchants = mutableListOf(Merchant("Supermarket"))
         ConfigRepository.updateCategory(category)
 
         val processor = ConfigRepository.getPaymentProcessor()
@@ -267,12 +268,12 @@ class ConfigRepositoryRoomTest {
         // Add multiple categories
         val cat1 = ConfigRepository.addCategory()
         cat1.name = "Category 1"
-        cat1.merchants = mutableListOf("Merchant 1")
+        cat1.merchants = mutableListOf(Merchant("Merchant 1"))
         ConfigRepository.updateCategory(cat1)
 
         val cat2 = ConfigRepository.addCategory()
         cat2.name = "Category 2"
-        cat2.merchants = mutableListOf("Merchant 2", "Merchant 3")
+        cat2.merchants = mutableListOf(Merchant("Merchant 2"), Merchant("Merchant 3"))
         ConfigRepository.updateCategory(cat2)
 
         // Add multiple senders
@@ -325,7 +326,7 @@ class ConfigRepositoryRoomTest {
 
         // Create a category that maps "Amazon" and call updateCategory
         val cat = ConfigRepository.addCategory()
-        ConfigRepository.updateCategory(cat.copy(name = "Shopping", merchants = mutableListOf("Amazon")))
+        ConfigRepository.updateCategory(cat.copy(name = "Shopping", merchants = mutableListOf(Merchant("Amazon"))))
 
         // updateCategory() must have called recategorizeAllPayments() — verify the payment is categorized
         val payments = repo.getAllPayments()

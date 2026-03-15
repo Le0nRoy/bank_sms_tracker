@@ -1,6 +1,7 @@
 package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
@@ -123,7 +124,7 @@ class PaymentProcessorEnabledTest {
             Category(
                 id = 1,
                 name = "Shopping",
-                merchants = mutableListOf("Amazon"),
+                merchants = mutableListOf(Merchant("Amazon")),
                 enabled = false
             )
         )
@@ -149,7 +150,7 @@ class PaymentProcessorEnabledTest {
             Category(
                 id = 1,
                 name = "Shopping",
-                merchants = mutableListOf("Amazon"),
+                merchants = mutableListOf(Merchant("Amazon")),
                 enabled = true
             )
         )

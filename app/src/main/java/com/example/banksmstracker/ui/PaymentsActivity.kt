@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.BuildConfig
 import com.example.banksmstracker.R
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
@@ -525,10 +526,12 @@ class PaymentsActivity : BaseActivity() {
                     // Remove the merchant from all categories that currently contain it.
                     val allCategories = ConfigRepository.getCategories()
                     for (cat in allCategories) {
-                        val hadMerchant = cat.merchants.any { it.equals(merchant, ignoreCase = true) }
+                        val hadMerchant = cat.merchants.any { m ->
+                            !m.isRegex && m.pattern.equals(merchant, ignoreCase = true)
+                        }
                         if (hadMerchant) {
-                            val withoutMerchant = cat.merchants.filterNot {
-                                it.equals(merchant, ignoreCase = true)
+                            val withoutMerchant = cat.merchants.filterNot { m ->
+                                !m.isRegex && m.pattern.equals(merchant, ignoreCase = true)
                             }.toMutableList()
                             ConfigRepository.updateCategory(cat.copy(merchants = withoutMerchant))
                         }
@@ -536,9 +539,14 @@ class PaymentsActivity : BaseActivity() {
 
                     // Add merchant to the chosen category (if not already there after the cleanup).
                     val refreshed = ConfigRepository.getCategories().first { it.id == category.id }
-                    if (!refreshed.merchants.any { it.equals(merchant, ignoreCase = true) }) {
+                    if (!refreshed.merchants.any { m ->
+                            !m.isRegex && m.pattern.equals(merchant, ignoreCase = true)
+                        }
+                    ) {
                         ConfigRepository.updateCategory(
-                            refreshed.copy(merchants = (refreshed.merchants + merchant).toMutableList())
+                            refreshed.copy(
+                                merchants = (refreshed.merchants + Merchant(merchant)).toMutableList()
+                            )
                         )
                     }
 
@@ -594,7 +602,7 @@ class PaymentsActivity : BaseActivity() {
                 // Update with name and merchant
                 val updatedCategory = newCategory.copy(
                     name = categoryName,
-                    merchants = mutableListOf(merchant)
+                    merchants = mutableListOf(Merchant(merchant))
                 )
                 withContext(Dispatchers.IO) {
                     ConfigRepository.updateCategory(updatedCategory)

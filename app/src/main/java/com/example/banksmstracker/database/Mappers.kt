@@ -1,6 +1,7 @@
 package com.example.banksmstracker.database
 
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
@@ -10,7 +11,13 @@ fun List<CategoryWithMerchants>.toDomainCategories(): List<Category> = map { cat
         id = categoryWithMerchants.category.id,
         name = categoryWithMerchants.category.name,
         merchants = categoryWithMerchants.merchants
-            .map { it.name }
+            .map { entity ->
+                Merchant(
+                    pattern = entity.pattern,
+                    displayName = entity.displayName,
+                    isRegex = entity.isRegex
+                )
+            }
             .toMutableList(),
         enabled = categoryWithMerchants.category.enabled
     )

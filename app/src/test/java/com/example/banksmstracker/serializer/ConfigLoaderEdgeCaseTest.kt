@@ -222,7 +222,7 @@ class ConfigLoaderEdgeCaseTest {
             val config = ConfigLoader.load(configJson)
             assertNotNull(config)
             // Both Amazon entries should be present
-            assertEquals(2, config.categories[0].merchants.count { it == "Amazon" })
+            assertEquals(2, config.categories[0].merchants.count { it.pattern == "Amazon" })
         }
     }
 
@@ -310,7 +310,7 @@ class ConfigLoaderEdgeCaseTest {
             """.trimIndent()
 
             val config = ConfigLoader.load(configJson)
-            assertEquals("Store\nName", config.categories[0].merchants[0])
+            assertEquals("Store\nName", config.categories[0].merchants[0].pattern)
         }
     }
 

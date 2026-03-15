@@ -2,6 +2,7 @@ package com.example.banksmstracker
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.ImportResult
 import kotlinx.coroutines.runBlocking
@@ -131,7 +132,7 @@ class ConfigImportE2ETest {
         // Create existing category
         val existingCategory = ConfigRepository.addCategory()
         existingCategory.name = "Shopping"
-        existingCategory.merchants = mutableListOf("OldMerchant")
+        existingCategory.merchants = mutableListOf(Merchant("OldMerchant"))
         ConfigRepository.updateCategory(existingCategory)
 
         // Import config with same category name
@@ -159,8 +160,8 @@ class ConfigImportE2ETest {
         assertEquals(1, categories.size)
 
         val mergedCategory = categories.first { it.name.equals("Shopping", ignoreCase = true) }
-        assertTrue(mergedCategory.merchants.contains("OldMerchant"))
-        assertTrue(mergedCategory.merchants.contains("NewMerchant"))
+        assertTrue(mergedCategory.merchants.any { it.pattern == "OldMerchant" })
+        assertTrue(mergedCategory.merchants.any { it.pattern == "NewMerchant" })
     }
 
     @Test
@@ -302,7 +303,7 @@ class ConfigImportE2ETest {
         // Create config
         val category = ConfigRepository.addCategory()
         category.name = "Test Category"
-        category.merchants = mutableListOf("Merchant1", "Merchant2")
+        category.merchants = mutableListOf(Merchant("Merchant1"), Merchant("Merchant2"))
         ConfigRepository.updateCategory(category)
 
         val sender = ConfigRepository.addSender()

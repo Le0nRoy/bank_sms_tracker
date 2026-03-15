@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.parser.SmsReceiver
@@ -209,7 +210,7 @@ class EnabledDisabledE2ETest {
 
         val category = Category(
             name = "Disabled Shopping",
-            merchants = mutableListOf("Amazon"),
+            merchants = mutableListOf(Merchant("Amazon")),
             enabled = false // Disabled category
         )
 
@@ -251,7 +252,7 @@ class EnabledDisabledE2ETest {
 
         val category = Category(
             name = "Shopping",
-            merchants = mutableListOf("Amazon"),
+            merchants = mutableListOf(Merchant("Amazon")),
             enabled = true // Enabled category
         )
 
@@ -374,7 +375,7 @@ class EnabledDisabledE2ETest {
         // Add category with enabled=false
         val category = ConfigRepository.addCategory()
         category.name = "Persist Test Category"
-        category.merchants = mutableListOf("TestMerchant")
+        category.merchants = mutableListOf(Merchant("TestMerchant"))
         category.enabled = false
         ConfigRepository.updateCategory(category)
 

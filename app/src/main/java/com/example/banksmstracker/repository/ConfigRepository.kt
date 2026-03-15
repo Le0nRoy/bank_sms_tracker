@@ -92,11 +92,15 @@ object ConfigRepository {
             )
             configDao.deleteMerchantsForCategory(categoryId)
             category.merchants
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
+                .filter { it.pattern.trim().isNotEmpty() }
                 .forEach { merchant ->
                     configDao.insertMerchant(
-                        CategoryMerchantEntity(categoryId = categoryId, name = merchant)
+                        CategoryMerchantEntity(
+                            categoryId = categoryId,
+                            pattern = merchant.pattern.trim(),
+                            displayName = merchant.displayName,
+                            isRegex = merchant.isRegex
+                        )
                     )
                 }
         }
@@ -348,12 +352,14 @@ object ConfigRepository {
                 }
 
                 if (existingCategory != null) {
-                    // Merge merchants
-                    val mergedMerchants = (existingCategory.merchants + importedCategory.merchants)
-                        .map { it.trim() }
-                        .filter { it.isNotEmpty() }
-                        .distinct()
-                        .toMutableList()
+                    // Merge merchants: deduplicate by pattern (case-insensitive)
+                    val existingPatterns = existingCategory.merchants
+                        .map { it.pattern.trim().lowercase() }
+                        .toSet()
+                    val newMerchants = importedCategory.merchants
+                        .filter { it.pattern.trim().isNotEmpty() }
+                        .filter { it.pattern.trim().lowercase() !in existingPatterns }
+                    val mergedMerchants = (existingCategory.merchants + newMerchants).toMutableList()
 
                     val mergedCategory = existingCategory.copy(merchants = mergedMerchants)
                     updateCategoryInternal(mergedCategory)
@@ -364,11 +370,15 @@ object ConfigRepository {
                         CategoryEntity(name = importedCategory.name, enabled = importedCategory.enabled)
                     )
                     importedCategory.merchants
-                        .map { it.trim() }
-                        .filter { it.isNotEmpty() }
+                        .filter { it.pattern.trim().isNotEmpty() }
                         .forEach { merchant ->
                             configDao.insertMerchant(
-                                CategoryMerchantEntity(categoryId = categoryId, name = merchant)
+                                CategoryMerchantEntity(
+                                    categoryId = categoryId,
+                                    pattern = merchant.pattern.trim(),
+                                    displayName = merchant.displayName,
+                                    isRegex = merchant.isRegex
+                                )
                             )
                         }
                     categoriesAdded++
@@ -423,11 +433,15 @@ object ConfigRepository {
         )
         configDao.deleteMerchantsForCategory(categoryId)
         category.merchants
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
+            .filter { it.pattern.trim().isNotEmpty() }
             .forEach { merchant ->
                 configDao.insertMerchant(
-                    CategoryMerchantEntity(categoryId = categoryId, name = merchant)
+                    CategoryMerchantEntity(
+                        categoryId = categoryId,
+                        pattern = merchant.pattern.trim(),
+                        displayName = merchant.displayName,
+                        isRegex = merchant.isRegex
+                    )
                 )
             }
     }
@@ -509,11 +523,15 @@ object ConfigRepository {
                     CategoryEntity(name = category.name, enabled = category.enabled)
                 )
                 category.merchants
-                    .map { it.trim() }
-                    .filter { it.isNotEmpty() }
+                    .filter { it.pattern.trim().isNotEmpty() }
                     .forEach { merchant ->
                         configDao.insertMerchant(
-                            CategoryMerchantEntity(categoryId = categoryId, name = merchant)
+                            CategoryMerchantEntity(
+                                categoryId = categoryId,
+                                pattern = merchant.pattern.trim(),
+                                displayName = merchant.displayName,
+                                isRegex = merchant.isRegex
+                            )
                         )
                     }
             }
@@ -557,7 +575,13 @@ object ConfigRepository {
             val newCategory = config.categories
                 .filter { it.enabled }
                 .firstOrNull { cat ->
-                    cat.merchants.any { it.equals(merchant, ignoreCase = true) }
+                    cat.merchants.any { m ->
+                        if (m.isRegex) {
+                            Regex(m.pattern, setOf(RegexOption.IGNORE_CASE)).containsMatchIn(merchant)
+                        } else {
+                            m.pattern.equals(merchant, ignoreCase = true)
+                        }
+                    }
                 }?.name
 
             if (newCategory != payment.categoryId) {

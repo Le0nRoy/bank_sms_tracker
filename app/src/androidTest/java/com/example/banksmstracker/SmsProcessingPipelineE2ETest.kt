@@ -3,6 +3,7 @@ package com.example.banksmstracker
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.parser.SmsReceiver
@@ -169,8 +170,8 @@ class SmsProcessingPipelineE2ETest {
                 rules = mutableListOf(Rule(pattern = standardRegex))
             )
             val categories = listOf(
-                Category(name = "Shopping", merchants = mutableListOf("Amazon", "Walmart")),
-                Category(name = "Food", merchants = mutableListOf("KFC", "McDonalds"))
+                Category(name = "Shopping", merchants = mutableListOf(Merchant("Amazon"), Merchant("Walmart"))),
+                Category(name = "Food", merchants = mutableListOf(Merchant("KFC"), Merchant("McDonalds")))
             )
             val processor = createProcessor(listOf(sender), categories)
             smsReceiver.setPaymentProcessorForTest(processor)
@@ -209,7 +210,7 @@ class SmsProcessingPipelineE2ETest {
                 rules = mutableListOf(Rule(pattern = standardRegex))
             )
             val categories = listOf(
-                Category(name = "Shopping", merchants = mutableListOf("Amazon"))
+                Category(name = "Shopping", merchants = mutableListOf(Merchant("Amazon")))
             )
             val processor = createProcessor(listOf(sender), categories)
             smsReceiver.setPaymentProcessorForTest(processor)
@@ -385,8 +386,8 @@ class SmsProcessingPipelineE2ETest {
                     rules = mutableListOf(Rule(pattern = standardRegex))
                 )
             val categories = listOf(
-                Category(name = "Shopping", merchants = mutableListOf("Amazon"), enabled = false),
-                Category(name = "Food", merchants = mutableListOf("KFC"), enabled = true)
+                Category(name = "Shopping", merchants = mutableListOf(Merchant("Amazon")), enabled = false),
+                Category(name = "Food", merchants = mutableListOf(Merchant("KFC")), enabled = true)
             )
             val processor = createProcessor(listOf(sender), categories)
             smsReceiver.setPaymentProcessorForTest(processor)
@@ -542,7 +543,7 @@ class SmsProcessingPipelineE2ETest {
                 addresses = mutableListOf("TESTBANK"),
                 rules = mutableListOf(Rule(pattern = standardRegex))
             )
-            val categories = listOf(Category(name = "Shopping", merchants = mutableListOf("Amazon")))
+            val categories = listOf(Category(name = "Shopping", merchants = mutableListOf(Merchant("Amazon"))))
             val processor = createProcessor(listOf(sender), categories)
             smsReceiver.setPaymentProcessorForTest(processor)
 
@@ -636,8 +637,8 @@ class SmsProcessingPipelineE2ETest {
                     rules = mutableListOf(Rule(pattern = standardRegex))
                 )
             val categories = listOf(
-                Category(name = "Shopping", merchants = mutableListOf("Amazon")),
-                Category(name = "Food", merchants = mutableListOf("KFC"))
+                Category(name = "Shopping", merchants = mutableListOf(Merchant("Amazon"))),
+                Category(name = "Food", merchants = mutableListOf(Merchant("KFC")))
             )
             val processor = createProcessor(listOf(sender), categories)
             smsReceiver.setPaymentProcessorForTest(processor)

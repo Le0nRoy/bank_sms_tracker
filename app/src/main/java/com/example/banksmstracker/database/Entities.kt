@@ -30,7 +30,9 @@ data class CategoryEntity(
 data class CategoryMerchantEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val categoryId: Long,
-    val name: String
+    val pattern: String,
+    val displayName: String? = null,
+    val isRegex: Boolean = false
 )
 
 data class CategoryWithMerchants(

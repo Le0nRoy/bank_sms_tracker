@@ -1,6 +1,7 @@
 package com.example.banksmstracker.repository
 
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -29,7 +30,13 @@ class CategoryConcurrencyTest {
             val newCategory = categories
                 .filter { it.enabled }
                 .firstOrNull { cat ->
-                    cat.merchants.any { it.equals(merchant, ignoreCase = true) }
+                    cat.merchants.any { m ->
+                        if (m.isRegex) {
+                            Regex(m.pattern, setOf(RegexOption.IGNORE_CASE)).containsMatchIn(merchant)
+                        } else {
+                            m.pattern.equals(merchant, ignoreCase = true)
+                        }
+                    }
                 }?.name
             if (newCategory != payment.categoryId) {
                 val paymentId = payment.id ?: continue
@@ -58,7 +65,9 @@ class CategoryConcurrencyTest {
             )
         }
 
-        val categories = listOf(Category(id = 1L, name = "Shopping", merchants = mutableListOf("Amazon")))
+        val categories = listOf(
+            Category(id = 1L, name = "Shopping", merchants = mutableListOf(Merchant("Amazon")))
+        )
 
         // Run recategorize in 10 concurrent coroutines
         (1..10).map {
@@ -89,7 +98,9 @@ class CategoryConcurrencyTest {
             )
         }
 
-        val categories = listOf(Category(id = 1L, name = "Groceries", merchants = mutableListOf("Supermarket")))
+        val categories = listOf(
+            Category(id = 1L, name = "Groceries", merchants = mutableListOf(Merchant("Supermarket")))
+        )
 
         // First pass
         recategorizeAll(repository, categories)
@@ -122,7 +133,9 @@ class CategoryConcurrencyTest {
             )
         }
 
-        val categories = listOf(Category(id = 1L, name = "Shopping", merchants = mutableListOf("Amazon")))
+        val categories = listOf(
+            Category(id = 1L, name = "Shopping", merchants = mutableListOf(Merchant("Amazon")))
+        )
 
         recategorizeAll(repository, categories)
 

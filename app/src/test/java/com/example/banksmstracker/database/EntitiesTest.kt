@@ -53,17 +53,24 @@ class EntitiesTest {
         @Test
         @DisplayName("default id is 0")
         fun `default id is 0`() {
-            val entity = CategoryMerchantEntity(categoryId = 1, name = "Amazon")
+            val entity = CategoryMerchantEntity(categoryId = 1, pattern = "Amazon")
             assertEquals(0L, entity.id)
         }
 
         @Test
         @DisplayName("can be created with all fields")
         fun `can be created with all fields`() {
-            val entity = CategoryMerchantEntity(id = 10, categoryId = 5, name = "eBay")
+            val entity = CategoryMerchantEntity(
+                id = 10,
+                categoryId = 5,
+                pattern = "eBay",
+                displayName = "eBay Store",
+                isRegex = false
+            )
             assertEquals(10L, entity.id)
             assertEquals(5L, entity.categoryId)
-            assertEquals("eBay", entity.name)
+            assertEquals("eBay", entity.pattern)
+            assertEquals("eBay Store", entity.displayName)
         }
     }
 
@@ -344,9 +351,9 @@ class EntitiesTest {
         fun `can hold category with multiple merchants`() {
             val category = CategoryEntity(id = 1, name = "Shopping", enabled = true)
             val merchants = listOf(
-                CategoryMerchantEntity(id = 1, categoryId = 1, name = "Amazon"),
-                CategoryMerchantEntity(id = 2, categoryId = 1, name = "eBay"),
-                CategoryMerchantEntity(id = 3, categoryId = 1, name = "Walmart")
+                CategoryMerchantEntity(id = 1, categoryId = 1, pattern = "Amazon"),
+                CategoryMerchantEntity(id = 2, categoryId = 1, pattern = "eBay"),
+                CategoryMerchantEntity(id = 3, categoryId = 1, pattern = "Walmart")
             )
             val categoryWithMerchants = CategoryWithMerchants(
                 category = category,

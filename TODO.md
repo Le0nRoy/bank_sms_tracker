@@ -333,9 +333,9 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 - [x] Task 3.0: Show formatted (highlighted + newlines) regexes in Senders screen
 
 ### 9.3 Merchant Model Enhancements
-- [ ] DB migration v8→v9: add `displayName` and `isRegex` columns to `category_merchants`
-- [ ] Task 1.2: Optional display name for merchants (shows instead of pattern in reports)
-- [ ] Task 1.3: Regex support for merchant matching in `PaymentProcessor`
+- [x] DB migration v9→v10: add `displayName` and `isRegex` columns to `category_merchants` (rename `name` → `pattern`)
+- [x] Task 1.2: Optional display name for merchants (`Merchant` data class with `displayName`; shown in Categories screen)
+- [x] Task 1.3: Regex support for merchant matching in `PaymentProcessor` (`isRegex` flag triggers `containsMatchIn`)
 - [ ] Task 1.1: "Move to Category" button for each merchant in Categories screen
 
 ### 9.4 New Features
@@ -475,3 +475,6 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 | 2026-01-14 | SettingsAppiumTest added (12 tests) | - |
 | 2026-01-14 | LocaleE2ETest enhanced (11 tests) | - |
 | 2026-01-14 | Documentation updates (AGENTS.md, TESTING.md) | - |
+| 2026-03-16 | Task 1.2: Merchant data class with displayName field | pending |
+| 2026-03-16 | Task 1.3: Regex matching support in merchant categories | pending |
+| 2026-03-16 | DB migration v9→v10: category_merchants table (name→pattern, +displayName, +isRegex) | pending |

@@ -1,6 +1,7 @@
 package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
@@ -232,7 +233,8 @@ class PaymentProcessorEdgeCaseTest {
                 addresses = mutableListOf("TESTBANK"),
                 rules = mutableListOf(Rule(pattern = validRegex))
             )
-            val category = Category(name = "Shopping", merchants = mutableListOf("Amazon", "Walmart"))
+            val category =
+                Category(name = "Shopping", merchants = mutableListOf(Merchant("Amazon"), Merchant("Walmart")))
             val processor = PaymentProcessor(listOf(sender), listOf(category), repository)
 
             // "AMAZON" should match "Amazon" in category
@@ -253,7 +255,7 @@ class PaymentProcessorEdgeCaseTest {
                 addresses = mutableListOf("TESTBANK"),
                 rules = mutableListOf(Rule(pattern = optionalMerchantRegex))
             )
-            val category = Category(name = "Shopping", merchants = mutableListOf("Amazon"))
+            val category = Category(name = "Shopping", merchants = mutableListOf(Merchant("Amazon")))
             val processor = PaymentProcessor(listOf(sender), listOf(category), repository)
 
             val payment = processor.processMessage("100.00 USD", "TESTBANK")
@@ -268,7 +270,8 @@ class PaymentProcessorEdgeCaseTest {
                 addresses = mutableListOf("TESTBANK"),
                 rules = mutableListOf(Rule(pattern = validRegex))
             )
-            val category = Category(name = "Shopping", merchants = mutableListOf("Amazon", "Walmart"))
+            val category =
+                Category(name = "Shopping", merchants = mutableListOf(Merchant("Amazon"), Merchant("Walmart")))
             val processor = PaymentProcessor(listOf(sender), listOf(category), repository)
 
             val payment = processor.processMessage("100.00 USD *1234 UnknownMerchant", "TESTBANK")
@@ -453,7 +456,7 @@ class PaymentProcessorEdgeCaseTest {
             )
             val disabledCategory = Category(
                 name = "Shopping",
-                merchants = mutableListOf("Amazon"),
+                merchants = mutableListOf(Merchant("Amazon")),
                 enabled = false
             )
             val processor = PaymentProcessor(listOf(sender), listOf(disabledCategory), repository)

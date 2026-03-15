@@ -2,6 +2,7 @@ package com.example.banksmstracker
 
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.database.BankSmsDatabase
@@ -86,7 +87,7 @@ class PaymentDeduplicationE2ETest {
 
             val category = ConfigRepository.addCategory()
             category.name = "Shops"
-            category.merchants = mutableListOf("Amazon")
+            category.merchants = mutableListOf(Merchant("Amazon"))
             ConfigRepository.updateCategory(category)
 
             processor = ConfigRepository.getPaymentProcessor()

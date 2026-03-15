@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.room.withTransaction
 import androidx.test.core.app.ApplicationProvider
 import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.database.BankSmsDatabase
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +55,13 @@ class CategoryConcurrencyInstrumentedTest {
             val newCategory = categories
                 .filter { it.enabled }
                 .firstOrNull { cat ->
-                    cat.merchants.any { it.equals(merchant, ignoreCase = true) }
+                    cat.merchants.any { m ->
+                        if (m.isRegex) {
+                            Regex(m.pattern, setOf(RegexOption.IGNORE_CASE)).containsMatchIn(merchant)
+                        } else {
+                            m.pattern.equals(merchant, ignoreCase = true)
+                        }
+                    }
                 }?.name
             if (newCategory != payment.categoryId) {
                 val paymentId = payment.id ?: continue
@@ -82,7 +89,7 @@ class CategoryConcurrencyInstrumentedTest {
             )
         }
 
-        val categories = listOf(Category(id = 1L, name = "Shopping", merchants = mutableListOf("Amazon")))
+        val categories = listOf(Category(id = 1L, name = "Shopping", merchants = mutableListOf(Merchant("Amazon"))))
 
         (1..10).map {
             async(Dispatchers.Default) { recategorizeAll(repository, categories) }
@@ -112,7 +119,8 @@ class CategoryConcurrencyInstrumentedTest {
             )
         }
 
-        val categories = listOf(Category(id = 1L, name = "Groceries", merchants = mutableListOf("Supermarket")))
+        val categories =
+            listOf(Category(id = 1L, name = "Groceries", merchants = mutableListOf(Merchant("Supermarket"))))
 
         recategorizeAll(repository, categories)
         val afterFirst = repository.getAllPayments().map { it.categoryId }
@@ -143,7 +151,7 @@ class CategoryConcurrencyInstrumentedTest {
             )
         }
 
-        val categories = listOf(Category(id = 1L, name = "Shopping", merchants = mutableListOf("Amazon")))
+        val categories = listOf(Category(id = 1L, name = "Shopping", merchants = mutableListOf(Merchant("Amazon"))))
 
         recategorizeAll(repository, categories)
 
@@ -176,7 +184,7 @@ class CategoryConcurrencyInstrumentedTest {
             }
         }
 
-        val categories = listOf(Category(id = 1L, name = "Shopping", merchants = mutableListOf("Amazon")))
+        val categories = listOf(Category(id = 1L, name = "Shopping", merchants = mutableListOf(Merchant("Amazon"))))
 
         val start = System.currentTimeMillis()
         withContext(Dispatchers.IO) { recategorizeAll(repository, categories) }

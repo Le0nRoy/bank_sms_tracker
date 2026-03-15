@@ -2,6 +2,7 @@ package com.example.banksmstracker
 
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.parser.SmsReceiver
@@ -79,7 +80,7 @@ class SmsReceptionWithRoomE2ETest {
 
             val category = ConfigRepository.addCategory()
             category.name = "Shops"
-            category.merchants = mutableListOf("Amazon")
+            category.merchants = mutableListOf(Merchant("Amazon"))
             ConfigRepository.updateCategory(category)
         }
 
@@ -164,7 +165,7 @@ class SmsReceptionWithRoomE2ETest {
         // Add TestStore to Shops category
         val category = ConfigRepository.getCategories().firstOrNull { it.name == "Shops" }
         if (category != null) {
-            category.merchants.add("TestStore")
+            category.merchants.add(Merchant("TestStore"))
             ConfigRepository.updateCategory(category)
         }
 
