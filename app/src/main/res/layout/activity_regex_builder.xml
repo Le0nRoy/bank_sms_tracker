@@ -99,21 +99,13 @@
                 style="?android:attr/buttonBarButtonStyle" />
 
             <!-- Section 4: Existing Patterns -->
-            <TextView
+            <Button
+                android:id="@+id/btnBrowsePatterns"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/existing_patterns_label"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
+                android:text="@string/browse_patterns"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="4dp" />
-
-            <Spinner
-                android:id="@+id/spinnerExistingPatterns"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/edit_text_themed"
-                android:padding="8dp" />
+                style="?android:attr/buttonBarButtonStyle" />
 
             <!-- Section 5: Regex Pattern -->
             <TextView

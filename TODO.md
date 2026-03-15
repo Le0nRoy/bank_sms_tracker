@@ -340,7 +340,7 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 
 ### 9.4 New Features
 - [x] Task 2.1: Merchant search/filter in Payments screen
-- [ ] Task 4.2: Edit Existing Pattern — open as separate `PatternListActivity`
+- [x] Task 4.2: Edit Existing Pattern — open as separate `PatternListActivity`
 
 ---
 
@@ -415,6 +415,7 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 
 | Date | Task | Commit |
 |------|------|--------|
+| 2026-03-16 | Task 4.2: PatternListActivity for browsing/selecting patterns | pending |
 | 2025-12-29 | Initial Room integration | 9e334f1 |
 | 2025-12-29 | CLAUDE.md created | - |
 | 2025-12-29 | docs/DESIGN.md created | - |

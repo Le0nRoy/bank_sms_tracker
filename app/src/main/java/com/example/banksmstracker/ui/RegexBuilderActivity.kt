@@ -3,6 +3,7 @@ package com.example.banksmstracker.ui
 import android.Manifest
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
@@ -24,7 +25,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.R
-import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.RuleType
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.database.BankSmsDatabase
@@ -53,8 +53,12 @@ class RegexBuilderActivity : BaseActivity() {
     private lateinit var tvResults: TextView
     private lateinit var spinnerSenders: Spinner
     private lateinit var btnSaveRegex: Button
-    private lateinit var spinnerExistingPatterns: Spinner
+    private lateinit var btnBrowsePatterns: Button
     private lateinit var spinnerRuleType: Spinner
+
+    companion object {
+        private const val RC_SELECT_PATTERN = 1001
+    }
 
     // Preset buttons
     private lateinit var btnPresetAmount: Button
@@ -108,7 +112,7 @@ class RegexBuilderActivity : BaseActivity() {
         tvResults = findViewById(R.id.tvResults)
         spinnerSenders = findViewById(R.id.spinnerSenders)
         btnSaveRegex = findViewById(R.id.btnSaveRegex)
-        spinnerExistingPatterns = findViewById(R.id.spinnerExistingPatterns)
+        btnBrowsePatterns = findViewById(R.id.btnBrowsePatterns)
         spinnerRuleType = findViewById(R.id.spinnerRuleType)
 
         // Initialize preset buttons
@@ -144,8 +148,6 @@ class RegexBuilderActivity : BaseActivity() {
                     2 -> RuleType.INCOME
                     else -> RuleType.PAYMENT
                 }
-                // Refresh existing patterns when rule type changes
-                refreshExistingPatterns()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
@@ -166,6 +168,10 @@ class RegexBuilderActivity : BaseActivity() {
             } else {
                 requestSmsPermission()
             }
+        }
+
+        btnBrowsePatterns.setOnClickListener {
+            openPatternList()
         }
 
         // Clear buttons
@@ -445,6 +451,7 @@ class RegexBuilderActivity : BaseActivity() {
             if (senders.isEmpty()) {
                 spinnerSenders.isEnabled = false
                 btnSaveRegex.isEnabled = false
+                btnBrowsePatterns.isEnabled = false
                 val adapter = ArrayAdapter(
                     this@RegexBuilderActivity,
                     android.R.layout.simple_spinner_item,
@@ -452,10 +459,10 @@ class RegexBuilderActivity : BaseActivity() {
                 )
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spinnerSenders.adapter = adapter
-                setupExistingPatternsSpinner(emptyList())
             } else {
                 spinnerSenders.isEnabled = true
                 btnSaveRegex.isEnabled = true
+                btnBrowsePatterns.isEnabled = true
                 val senderNames = listOf(getString(R.string.select_sender_hint)) +
                     senders.map { it.name }
                 val adapter = ArrayAdapter(
@@ -465,18 +472,6 @@ class RegexBuilderActivity : BaseActivity() {
                 )
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 spinnerSenders.adapter = adapter
-
-                // Setup existing patterns spinner
-                spinnerSenders.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                        refreshExistingPatterns()
-                    }
-                    override fun onNothingSelected(parent: AdapterView<*>?) {
-                        setupExistingPatternsSpinner(emptyList())
-                    }
-                }
-
-                setupExistingPatternsSpinner(emptyList())
 
                 // Restore sender selection after a save (feature 4.1: sender must not be erased).
                 val restoreName = pendingRestoreSenderName
@@ -514,44 +509,30 @@ class RegexBuilderActivity : BaseActivity() {
         }
     }
 
-    private fun refreshExistingPatterns() {
+    private fun openPatternList() {
         val position = spinnerSenders.selectedItemPosition
-        if (position > 0 && position <= senders.size) {
-            val selectedSender = senders[position - 1]
-            val rulesOfType = selectedSender.rules.filter { it.ruleType == selectedRuleType }
-            setupExistingPatternsSpinner(rulesOfType)
-        } else {
-            setupExistingPatternsSpinner(emptyList())
+        if (position <= 0 || senders.isEmpty()) {
+            Toast.makeText(this, R.string.no_sender_selected, Toast.LENGTH_SHORT).show()
+            return
         }
+        val sender = senders[position - 1]
+        val senderId = sender.id ?: return
+        val intent = Intent(this, PatternListActivity::class.java).apply {
+            putExtra(PatternListActivity.EXTRA_SENDER_ID, senderId)
+            putExtra(PatternListActivity.EXTRA_SENDER_NAME, sender.name)
+            putExtra(PatternListActivity.EXTRA_RULE_TYPE, selectedRuleType.value)
+        }
+        @Suppress("DEPRECATION")
+        startActivityForResult(intent, RC_SELECT_PATTERN)
     }
 
-    private fun setupExistingPatternsSpinner(rules: List<Rule>) {
-        val patternOptions = mutableListOf(getString(R.string.new_pattern_hint))
-        patternOptions.addAll(rules.map { truncatePattern(it.pattern) })
-
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            patternOptions
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerExistingPatterns.adapter = adapter
-
-        spinnerExistingPatterns.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (position > 0 && position <= rules.size) {
-                    val selectedRule = rules[position - 1]
-                    etRegexPattern.setText(decodeNewlines(regexToTemplate(decodePattern(selectedRule.pattern))))
-                }
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+    @Suppress("DEPRECATION")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == RC_SELECT_PATTERN && resultCode == RESULT_OK) {
+            val rawPattern = data?.getStringExtra(PatternListActivity.EXTRA_SELECTED_PATTERN) ?: return
+            etRegexPattern.setText(decodeNewlines(regexToTemplate(decodePattern(rawPattern))))
         }
-    }
-
-    private fun truncatePattern(pattern: String): String = if (pattern.length > 40) {
-        pattern.take(37) + "..."
-    } else {
-        pattern
     }
 
     private fun encodePattern(raw: String): String = raw.replace(" ", "\\s")

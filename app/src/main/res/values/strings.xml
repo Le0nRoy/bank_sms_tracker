@@ -343,6 +343,16 @@
     <string name="not_captured">(not captured)</string>
     <string name="invalid_or_missing">(invalid or missing)</string>
 
+    <!-- Pattern List (Feature 4.2) -->
+    <string name="browse_patterns">Browse Existing Patterns</string>
+    <string name="pattern_list_title_short">Patterns</string>
+    <string name="pattern_list_title">Patterns for %1$s (%2$s)</string>
+    <string name="no_patterns_available">No patterns saved for this sender and rule type.</string>
+    <string name="load_into_builder">Load into Builder</string>
+    <string name="delete_pattern_confirm_title">Delete Pattern</string>
+    <string name="delete_pattern_confirm_message">Are you sure you want to delete this pattern?</string>
+    <string name="pattern_deleted">Pattern deleted</string>
+
     <!-- Personal Data Agreement -->
     <string name="terms_title">Personal Data Notice</string>
     <string name="terms_message">This app processes your bank SMS messages to extract and store payment records locally on your device.\n\nAll data stays on your device and is never transmitted to external servers or third parties.\n\nBy tapping \"I Understand\", you acknowledge that SMS messages are read and parsed locally to detect payments.</string>

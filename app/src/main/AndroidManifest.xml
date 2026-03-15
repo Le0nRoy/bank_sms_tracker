@@ -57,6 +57,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.PatternListActivity"
+            android:label="@string/pattern_list_title_short"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.BugReportActivity"
             android:label="@string/bug_report"
             android:exported="false" />

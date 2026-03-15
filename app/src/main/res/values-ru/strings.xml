@@ -343,6 +343,16 @@
     <string name="merchant_moved">\'%1$s\' перемещён в %2$s</string>
     <string name="no_other_categories">Нет других категорий</string>
 
+    <!-- Pattern List (Feature 4.2) -->
+    <string name="browse_patterns">Просмотр существующих шаблонов</string>
+    <string name="pattern_list_title_short">Шаблоны</string>
+    <string name="pattern_list_title">Шаблоны: %1$s (%2$s)</string>
+    <string name="no_patterns_available">Нет сохранённых шаблонов для этого отправителя и типа правила.</string>
+    <string name="load_into_builder">Загрузить в конструктор</string>
+    <string name="delete_pattern_confirm_title">Удалить шаблон</string>
+    <string name="delete_pattern_confirm_message">Вы уверены, что хотите удалить этот шаблон?</string>
+    <string name="pattern_deleted">Шаблон удалён</string>
+
     <!-- Personal Data Agreement -->
     <string name="terms_title">Уведомление о личных данных</string>
     <string name="terms_message">Это приложение обрабатывает ваши банковские SMS для извлечения и хранения записей о платежах локально на вашем устройстве.\n\nВсе данные остаются на устройстве и никогда не передаются на внешние серверы или третьим лицам.\n\nНажимая «Понятно», вы подтверждаете, что SMS читаются и обрабатываются локально для обнаружения платежей.</string>
