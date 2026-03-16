@@ -390,14 +390,14 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 ## Phase 8: Background Service & Real-time Processing
 
 ### 8.1 Background Service
-- [ ] Implement foreground service for permanent background operation
-- [ ] Add service lifecycle management (start on boot, survive app close)
-- [ ] Create persistent notification for service status
+- [x] Implement foreground service for permanent background operation
+- [x] Add service lifecycle management (start on boot, survive app close)
+- [x] Create persistent notification for service status
 
 ### 8.2 Real-time SMS Monitoring
-- [ ] Watch for all incoming SMS messages in real time
-- [ ] Parse messages immediately on receipt (background service)
-- [ ] Handle messages from both configured and unknown senders
+- [x] Watch for all incoming SMS messages in real time
+- [x] Parse messages immediately on receipt (background service)
+- [x] Handle messages from both configured and unknown senders
 
 ### 8.3 Notification System
 - [ ] Send notification for messages from configured senders without applicable regex
@@ -488,3 +488,5 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 | 2026-03-17 | Task 1.3: Regex matching support in merchant categories | 706d6e6 |
 | 2026-03-17 | DB migration v9→v10: category_merchants table (name→pattern, +displayName, +isRegex) | 706d6e6 |
 | 2026-03-17 | Feature 1.1: Move merchant between categories via dialog | a1d62e1 |
+| 2026-03-17 | Task 8.1: SmsProcessingService foreground service | (8.1) |
+| 2026-03-17 | Task 8.2: Real-time SMS monitoring in background service | (8.2) |

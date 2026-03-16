@@ -12,6 +12,7 @@ import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.IncomeEntity
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.service.SmsProcessingService
 import com.example.banksmstracker.util.HashUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +47,13 @@ class SmsReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent?.action != "android.provider.Telephony.SMS_RECEIVED") return
+
+        // If the foreground service is running it handles real-time SMS — skip here to avoid
+        // double-processing. Hash deduplication provides a safety net even if both run.
+        if (SmsProcessingService.isRunning()) {
+            Log.d(TAG, "SmsProcessingService is running — delegating real-time SMS to service")
+            return
+        }
 
         initializePaymentProcessor(context)
 
