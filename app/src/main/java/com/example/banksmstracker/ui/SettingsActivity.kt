@@ -11,6 +11,7 @@ import androidx.core.os.LocaleListCompat
 import com.example.banksmstracker.BankSmsTrackerApp
 import com.example.banksmstracker.R
 import com.example.banksmstracker.service.BootReceiver
+import com.example.banksmstracker.service.NotificationHelper
 import com.example.banksmstracker.service.SmsProcessingService
 
 class SettingsActivity : BaseActivity() {
@@ -28,6 +29,7 @@ class SettingsActivity : BaseActivity() {
         setupThemeSelection()
         setupLanguageSelection()
         setupBackgroundServiceToggle()
+        setupNotificationSection()
         setupPrivacySection()
     }
 
@@ -87,6 +89,36 @@ class SettingsActivity : BaseActivity() {
             } else {
                 SmsProcessingService.stop(this)
             }
+        }
+    }
+
+    private fun setupNotificationSection() {
+        val prefs = getSharedPreferences(BankSmsTrackerApp.PREFS_NAME, MODE_PRIVATE)
+
+        val switchUnmatched = findViewById<Switch>(R.id.switchUnmatchedSmsNotifications)
+        switchUnmatched.isChecked = prefs.getBoolean(
+            NotificationHelper.KEY_NOTIFICATIONS_UNMATCHED_SMS,
+            true
+        )
+        switchUnmatched.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean(NotificationHelper.KEY_NOTIFICATIONS_UNMATCHED_SMS, isChecked)
+                .apply()
+        }
+
+        val switchSound = findViewById<Switch>(R.id.switchNotificationsSound)
+        switchSound.isChecked = prefs.getBoolean(NotificationHelper.KEY_NOTIFICATIONS_SOUND, true)
+        switchSound.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean(NotificationHelper.KEY_NOTIFICATIONS_SOUND, isChecked).apply()
+        }
+
+        val switchVibration = findViewById<Switch>(R.id.switchNotificationsVibration)
+        switchVibration.isChecked = prefs.getBoolean(
+            NotificationHelper.KEY_NOTIFICATIONS_VIBRATION,
+            true
+        )
+        switchVibration.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean(NotificationHelper.KEY_NOTIFICATIONS_VIBRATION, isChecked)
+                .apply()
         }
     }
 

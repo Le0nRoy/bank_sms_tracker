@@ -14,11 +14,13 @@ import android.os.IBinder
 import android.telephony.SmsMessage
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.example.banksmstracker.BankSmsTrackerApp
 import com.example.banksmstracker.R
 import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.IncomeEntity
 import com.example.banksmstracker.processor.PaymentProcessor
+import com.example.banksmstracker.processor.UnparsedMessageException
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.util.HashUtil
 import com.example.banksmstracker.util.SmsAddressMatcher
@@ -145,6 +147,15 @@ class SmsProcessingService : Service() {
             logProcessingResult(result, sender, body)
             if (result is MessageProcessResult.IncomeResult) {
                 saveIncome(result, body, sender)
+            }
+        } catch (e: UnparsedMessageException) {
+            Log.d(TAG, "SMS from $sender could not be parsed — sending unmatched notification")
+            val prefs = applicationContext.getSharedPreferences(
+                BankSmsTrackerApp.PREFS_NAME,
+                MODE_PRIVATE
+            )
+            if (prefs.getBoolean(NotificationHelper.KEY_NOTIFICATIONS_UNMATCHED_SMS, true)) {
+                NotificationHelper.sendUnmatchedSmsNotification(applicationContext, sender, body)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error processing SMS from $sender: ${e.message}\nBody: $body")

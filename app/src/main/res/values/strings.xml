@@ -366,4 +366,12 @@
     <string name="sms_monitor_notification_text">Monitoring bank SMS messages</string>
     <string name="background_service_section_title">Background Service</string>
     <string name="background_service_toggle_label">Enable background SMS monitoring</string>
+
+    <!-- Notifications -->
+    <string name="notifications_section_title">Notifications</string>
+    <string name="notifications_unmatched_sms_label">Unmatched SMS notifications</string>
+    <string name="notifications_sound_label">Sound</string>
+    <string name="notifications_vibration_label">Vibration</string>
+    <string name="unmatched_sms_channel_desc">Alerts when a bank SMS cannot be matched to any payment rule</string>
+    <string name="unmatched_sms_notification_title">Unmatched SMS from %1$s</string>
 </resources>
