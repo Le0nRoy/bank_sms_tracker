@@ -13,7 +13,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         CategoryMerchantEntity::class,
         SenderEntity::class,
         SenderAddressEntity::class,
-        SenderRuleEntity::class,
         RuleEntity::class,
         PaymentEntity::class,
         IgnoreRuleEntity::class,

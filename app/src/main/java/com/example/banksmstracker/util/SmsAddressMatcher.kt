@@ -33,14 +33,4 @@ object SmsAddressMatcher {
      */
     fun matchesAny(smsAddress: String, configuredAddresses: Set<String>): Boolean =
         configuredAddresses.any { matches(smsAddress, it) }
-
-    /**
-     * Checks if an SMS address matches any of the configured addresses.
-     *
-     * @param smsAddress The address from the SMS message
-     * @param configuredAddresses Collection of configured sender addresses
-     * @return true if the SMS address matches any configured address
-     */
-    fun matchesAny(smsAddress: String, configuredAddresses: Collection<String>): Boolean =
-        configuredAddresses.any { matches(smsAddress, it) }
 }

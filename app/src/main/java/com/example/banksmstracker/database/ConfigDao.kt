@@ -32,12 +32,6 @@ interface ConfigDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMerchant(merchant: CategoryMerchantEntity): Long
 
-    @Update
-    suspend fun updateMerchant(merchant: CategoryMerchantEntity)
-
-    @Delete
-    suspend fun deleteMerchant(merchant: CategoryMerchantEntity)
-
     @Query("DELETE FROM category_merchants WHERE categoryId = :categoryId")
     suspend fun deleteMerchantsForCategory(categoryId: Long)
 
@@ -62,24 +56,6 @@ interface ConfigDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAddress(address: SenderAddressEntity): Long
 
-    @Update
-    suspend fun updateAddress(address: SenderAddressEntity)
-
-    @Delete
-    suspend fun deleteAddress(address: SenderAddressEntity)
-
     @Query("DELETE FROM sender_addresses WHERE senderId = :senderId")
     suspend fun deleteAddressesForSender(senderId: Long)
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertRule(rule: SenderRuleEntity): Long
-
-    @Update
-    suspend fun updateRule(rule: SenderRuleEntity)
-
-    @Delete
-    suspend fun deleteRule(rule: SenderRuleEntity)
-
-    @Query("DELETE FROM sender_rules WHERE senderId = :senderId")
-    suspend fun deleteRulesForSender(senderId: Long)
 }

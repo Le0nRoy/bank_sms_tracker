@@ -72,26 +72,6 @@ data class SenderAddressEntity(
 )
 
 @Entity(
-    tableName = "sender_rules",
-    foreignKeys = [
-        ForeignKey(
-            entity = SenderEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["senderId"],
-            onDelete = ForeignKey.CASCADE,
-            onUpdate = ForeignKey.CASCADE
-        )
-    ],
-    indices = [Index(value = ["senderId"])]
-)
-data class SenderRuleEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val senderId: Long,
-    val regex: String,
-    val enabled: Boolean = true
-)
-
-@Entity(
     tableName = "rules",
     foreignKeys = [
         ForeignKey(

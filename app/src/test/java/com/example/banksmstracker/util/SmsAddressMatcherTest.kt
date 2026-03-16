@@ -130,37 +130,4 @@ class SmsAddressMatcherTest {
             assertTrue(SmsAddressMatcher.matchesAny("AD-ICICI", configured))
         }
     }
-
-    @Nested
-    @DisplayName("matchesAny() with Collection")
-    inner class MatchesAnyCollectionTest {
-
-        @Test
-        @DisplayName("matches when sms address matches any configured address in list")
-        fun `matches when sms address matches any configured address in list`() {
-            val configured = listOf("HDFC", "ICICI", "SBI")
-            assertTrue(SmsAddressMatcher.matchesAny("VM-HDFC", configured))
-            assertTrue(SmsAddressMatcher.matchesAny("AD-ICICI", configured))
-        }
-
-        @Test
-        @DisplayName("does not match when sms address matches none in list")
-        fun `does not match when sms address matches none in list`() {
-            val configured = listOf("HDFC", "ICICI")
-            assertFalse(SmsAddressMatcher.matchesAny("AXIS", configured))
-        }
-
-        @Test
-        @DisplayName("empty list never matches")
-        fun `empty list never matches`() {
-            assertFalse(SmsAddressMatcher.matchesAny("BANK", emptyList()))
-        }
-
-        @Test
-        @DisplayName("handles duplicates in collection")
-        fun `handles duplicates in collection`() {
-            val configured = listOf("HDFC", "HDFC", "ICICI")
-            assertTrue(SmsAddressMatcher.matchesAny("VM-HDFC", configured))
-        }
-    }
 }

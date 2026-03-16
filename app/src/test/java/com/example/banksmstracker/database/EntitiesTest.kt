@@ -118,28 +118,6 @@ class EntitiesTest {
     }
 
     @Nested
-    @DisplayName("SenderRuleEntity")
-    inner class SenderRuleEntityTest {
-
-        @Test
-        @DisplayName("default values are correct")
-        fun `default values are correct`() {
-            val entity = SenderRuleEntity(senderId = 1, regex = ".*payment.*")
-            assertEquals(0L, entity.id)
-            assertEquals(1L, entity.senderId)
-            assertEquals(".*payment.*", entity.regex)
-            assertTrue(entity.enabled)
-        }
-
-        @Test
-        @DisplayName("can be created with disabled status")
-        fun `can be created with disabled status`() {
-            val entity = SenderRuleEntity(id = 1, senderId = 2, regex = ".*", enabled = false)
-            assertFalse(entity.enabled)
-        }
-    }
-
-    @Nested
     @DisplayName("RuleEntity")
     inner class RuleEntityTest {
 
