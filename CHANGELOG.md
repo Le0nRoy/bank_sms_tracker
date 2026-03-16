@@ -8,6 +8,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase PROMPT-2: Merchant Model & Pattern Management**
+  - `Merchant` data class with `pattern`, `displayName` (optional), and `isRegex` fields (Task 1.2)
+  - Regex matching for merchants — `isRegex=true` enables regex pattern matching in addition to exact string matching (Task 1.3)
+  - Backward-compatible `MerchantSerializer` supports both legacy plain-string and new object format in JSON config
+  - "Move to Category" dialog for each merchant in `CategoriesActivity` (Task 1.1)
+  - `PatternListActivity` — dedicated screen for browsing, previewing (with span highlights and real newlines), loading, and deleting patterns from `RegexBuilderActivity` (Task 4.2)
+  - Merchant search field in `PaymentsActivity` with real-time filtering (Task 2.1)
+  - Formatted regex display in `SendersActivity` — shows human-readable `⟨preset⟩` tokens and decoded newlines (Task 3.0)
+  - `RegexTemplateUtils` — shared utility for `regexToTemplate`, `templateToRegex`, `encodeNewlines`, `decodeNewlines` (replaces duplicated logic in `RegexBuilderActivity`)
+  - `RegexSpanUtils` — shared utility for `applyPlaceholderSpans` (used in both `RegexBuilderActivity` and `SendersActivity`)
+
+### Fixed
+- **BUG-011**: Made `payments.timestamp` non-nullable; removed `receivedAt` column from `Payment` and `PaymentEntity`; `PaymentProcessor` now guarantees a non-null timestamp (from SMS body, nearest neighbour, or device SMS receive time)
+- **BUG-007**: `addMerchantToCategory` now removes the merchant from all other categories before adding and retroactively updates `categoryName` on existing payment rows
+- **BUG-008/009**: Date filter in `PaymentsActivity` now uses parsed transaction `timestamp` instead of `receivedAt` (batch-import time); extracted to `PaymentsFilter.kt`
+- **BUG-010**: `regexToTemplate` now correctly converts any `(?<name>...)` capture group form to `⟨name⟩` token using regex-based matching
+- **Feature 4.1**: Sender selection preserved after saving a regex pattern in `RegexBuilderActivity`
+- **Feature 4.4**: `\\n` literals in stored regex patterns are decoded to actual newlines when loaded into the Regex Builder text box and re-encoded on save
+
+### Changed
+- `Category.merchants` type changed from `MutableList<String>` to `MutableList<Merchant>`
+- `RegexBuilderActivity` patterns spinner replaced by "Browse Patterns" button launching `PatternListActivity`
+- Database version bumped from v8 to v10 (two migrations)
+
+### Database Migrations
+- v8 → v9: `payments.timestamp` made NOT NULL; `receivedAt` column removed; NULL timestamps back-filled from `receivedAt` as date string
+- v9 → v10: `category_merchants.name` renamed to `pattern`; `displayName TEXT` and `isRegex INTEGER NOT NULL DEFAULT 0` columns added
+
 - **Phase 5.12: Localization & Multi-Language Support**
   - SettingsActivity with dedicated settings screen (replaces popup dialog)
   - Per-app language switching using AppCompatDelegate.setApplicationLocales()
@@ -178,6 +206,9 @@ The app includes automatic database migrations:
 - v4 → v5: Added `ignore_rules` table for spam filtering
 - v5 → v6: Added `senderId` to ignore_rules (foreign key)
 - v6 → v7: Added `incomes` table for income tracking
+- v7 → v8: Unified rules table (payment + ignore rules consolidated)
+- v8 → v9: Made `payments.timestamp` NOT NULL; removed `receivedAt` column
+- v9 → v10: Extended `category_merchants` with `displayName` and `isRegex` columns; renamed `name` → `pattern`
 
 ---
 

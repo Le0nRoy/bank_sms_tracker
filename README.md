@@ -17,7 +17,8 @@
 - **Spending Reports** - Category breakdown with percentage analysis and date range filtering
 - **Regex Builder** - Visual tool to create and test regex patterns with real SMS messages
   - Select SMS from inbox with sender filtering
-  - Edit existing patterns via dropdown
+  - Browse and load existing patterns via PatternListActivity
+- **Advanced Merchant Matching** - Merchants support exact string or regex pattern matching with optional display names
 - **Payment Details** - Click payments to view details and categorize merchants
 - **Ignore Rules** - Filter out spam/promotional messages with regex patterns
 - **Import/Export** - Backup and restore your configuration as JSON
@@ -49,7 +50,7 @@ app/src/
 ├── main/
 │   ├── java/com/example/banksmstracker/
 │   │   ├── data/           # Data models (Payment, Category, Sender, Rule, Income, etc.)
-│   │   ├── database/       # Room entities, DAOs, and database (v8 schema)
+│   │   ├── database/       # Room entities, DAOs, and database (v10 schema)
 │   │   ├── parser/         # SMS BroadcastReceiver
 │   │   ├── processor/      # Payment/income/ignore processing logic
 │   │   ├── repository/     # Data repositories
@@ -211,7 +212,7 @@ This project uses ktlint for Kotlin code formatting:
 make help          # Show all available commands
 make build         # Build the project
 make test          # Run unit tests
-make test-smoke    # Appium smoke tests (~18, ~10 min)
+make test-smoke    # Appium smoke tests (~21, ~10 min)
 make test-appium   # Full Appium suite (~116, ~60 min)
 make test-android  # Instrumented tests (connectedAndroidTest)
 make coverage      # Generate JaCoCo coverage report

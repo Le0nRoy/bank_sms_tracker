@@ -11,12 +11,15 @@
   - `MainActivity` routes to category/sender management screens (`app/src/main/java/com/example/banksmstracker/ui/MainActivity.kt`).
   - `SettingsActivity` handles theme and language preferences (`app/src/main/java/com/example/banksmstracker/ui/SettingsActivity.kt`).
   - `SmsReceiver` processes incoming SMS, bootstrapping `PaymentProcessor` from `ConfigRepository` (`app/src/main/java/com/example/banksmstracker/parser/SmsReceiver.kt`).
+  - `PatternListActivity` — launched from `RegexBuilderActivity` via "Browse Patterns" button; shows all saved regex patterns for a sender with span highlighting; returns selected pattern via `setResult()` (`app/src/main/java/com/example/banksmstracker/ui/PatternListActivity.kt`).
 - **Persistence**
   - Configuration + payments live in a Room database (`app/src/main/java/com/example/banksmstracker/database/*`).
   - `ConfigRepository` is the single source of truth; always use its suspend helpers to read/update categories or senders.
 - **Domain model**
   - Configuration lives in `SmsConfig` (`data/` package) and is loaded from `assets/default_rules.json`.
   - `PaymentProcessor` parses/categorises messages using regex rules supplied by the config and persists via `PaymentRepository`.
+  - `Merchant` (`data/Category.kt`) — each category merchant has `pattern: String`, `displayName: String?` (shown in UI; falls back to `pattern` when null), and `isRegex: Boolean`. When `isRegex=true`, the pattern is matched as a case-insensitive regex against `payment.merchant`; otherwise exact case-insensitive string comparison is used.
+  - `Payment.timestamp` is non-nullable (`String`). `PaymentProcessor` guarantees a value from (1) SMS body date groups, (2) nearest neighbour by insertion id, or (3) device SMS receive time.
 - **Repositories**
   - `ConfigRepository` lazily loads + caches config; always call `ConfigRepository.load(app)` before accessing `config`.
   - `RoomPaymentRepository` is the production implementation; respects `PaymentRepository` interface methods.
@@ -72,7 +75,7 @@ fun second() { }
 
 ### Payment Parsing
 - Extend parsing by adding regex rules to `PaymentRegexRule` instances.
-- For categorisation, update `categories` in config; `PaymentProcessor.assignCategory` performs case-insensitive merchant lookup.
+- For categorisation, update `categories` in config; `PaymentProcessor.assignCategory` performs case-insensitive merchant lookup (exact string or regex, depending on `merchant.isRegex`).
 - `PaymentRepository.savePayment` requires the raw message + sender for deduping; duplicates are ignored by hash.
 
 ### Config Editing
@@ -231,8 +234,8 @@ docker compose stop appium
 ```
 
 **Current Test Status:**
-- Unit tests: 195+ tests (JUnit 5) - includes BankSmsTrackerAppTest
-- Appium E2E tests: 116 tests (100% pass rate) - includes SettingsAppiumTest
+- Unit tests: 405+ tests (JUnit 5) - includes BankSmsTrackerAppTest, PaymentsFilterTest, RegexTemplateUtilsTest, MoveMerchantToCategoryTest
+- Appium E2E tests: 116 tests (21 smoke) - includes PatternListActivity and merchant search coverage
 - Integration tests: 77 tests (AndroidJUnit) - includes LocaleE2ETest
 - Code coverage: 96.6%
 

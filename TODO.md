@@ -13,7 +13,7 @@
 > Update this section before context is summarized (~2% remaining).
 
 ### Active Task
-- Task 9.3 Merchant model (next)
+- ALL tasks from the 2026-03-13 PROMPT.md batch are complete on branch `feature/create-pov`.
 
 ### Completed This Session
 - Phase 9.0: Extracted `RegexTemplateUtils.kt` (`regexToTemplate`/`templateToRegex`) and `RegexSpanUtils.kt` (`applyPlaceholderSpans`)
@@ -21,10 +21,14 @@
 - Phase 9.2: Task 4.1 (preserve sender), Task 4.4 (decode newlines in Regex Builder), Task 3.0 (formatted display in Senders)
 - Task 2.1: Merchant search/filter in Payments (UI + unit + instrumented + Appium tests, all passing)
 - BUG-011: Non-nullable `timestamp` — DB migration v8→v9, removed `receivedAt`, `smsReceivedAt` param added to `processMessage()`
+- Task 1.2: Merchant data class with `displayName` field; DB migration v9→v10
+- Task 1.3: Regex support for merchant matching (`isRegex` flag in `PaymentProcessor`)
+- Task 1.1: "Move to Category" dialog for each merchant in Categories screen
+- Task 4.2: `PatternListActivity` for browsing and selecting existing patterns
 
-### Next Steps (Phase 9, in order)
-1. Merchant model: DB migration v8→v9, 1.2, 1.3, 1.1
-2. Task 4.2: PatternListActivity
+### Next Steps
+- Branch `feature/create-pov` is ready for review/merge. All 2026-03-13 prompt features are done.
+- Future items tracked below (9.F1–9.F3) are deferred to a later session.
 
 ---
 
@@ -336,7 +340,7 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 - [x] DB migration v9→v10: add `displayName` and `isRegex` columns to `category_merchants` (rename `name` → `pattern`)
 - [x] Task 1.2: Optional display name for merchants (`Merchant` data class with `displayName`; shown in Categories screen)
 - [x] Task 1.3: Regex support for merchant matching in `PaymentProcessor` (`isRegex` flag triggers `containsMatchIn`)
-- [ ] Task 1.1: "Move to Category" button for each merchant in Categories screen
+- [x] Task 1.1: "Move to Category" button for each merchant in Categories screen
 
 ### 9.4 New Features
 - [x] Task 2.1: Merchant search/filter in Payments screen
@@ -362,17 +366,20 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 ## Phase 9 Future Items (do NOT implement now)
 
 ### 9.F1 Spending Report Diagrams (Task 2.5)
+**Plan:** Bar chart/pie chart visualization of spending by category. Candidate libraries: MPAndroidChart, Vico. Add after basic report is stable; requires chart library integration.
 - [ ] Research chart library (MPAndroidChart or Vico)
 - [ ] Design bar chart / pie chart for category breakdown
 - [ ] Integrate into spending report dialog
 
 ### 9.F2 Central Bank API for Currency Rates (Task 2.6)
+**Plan:** Integrate APIs from central banks (e.g., National Bank of Georgia, ECB) to retrieve exchange rates. Use rates to normalize multi-currency payments to a base currency. Needs abstraction layer per bank, fallback to static rates when offline.
 - [ ] Research available central bank APIs (NBG, ECB, etc.)
 - [ ] Design abstraction layer for multiple bank APIs
 - [ ] Implement exchange rate retrieval and caching
 - [ ] Apply rates to normalize multi-currency payments
 
 ### 9.F3 Regex-Free Text Box in Regex Builder (Task 4.5)
+**Plan:** Fully WYSIWYG editor where user sees only words and colored preset chips. Regex transformations are invisible (internal state vs. display state). Requires custom EditText subclass with token model; significant UI work.
 - [ ] Design token model: words + preset chips as separate objects
 - [ ] Implement custom `EditText` or `SpannableStringBuilder` approach
 - [ ] Regex transformation hidden from user (internal state only)
@@ -415,7 +422,7 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 
 | Date | Task | Commit |
 |------|------|--------|
-| 2026-03-16 | Task 4.2: PatternListActivity for browsing/selecting patterns | pending |
+| 2026-03-17 | Task 4.2: PatternListActivity for browsing/selecting patterns | a9e7737 |
 | 2025-12-29 | Initial Room integration | 9e334f1 |
 | 2025-12-29 | CLAUDE.md created | - |
 | 2025-12-29 | docs/DESIGN.md created | - |
@@ -476,7 +483,8 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 | 2026-01-14 | SettingsAppiumTest added (12 tests) | - |
 | 2026-01-14 | LocaleE2ETest enhanced (11 tests) | - |
 | 2026-01-14 | Documentation updates (AGENTS.md, TESTING.md) | - |
-| 2026-03-16 | Task 1.2: Merchant data class with displayName field | pending |
-| 2026-03-16 | Task 1.3: Regex matching support in merchant categories | pending |
-| 2026-03-16 | DB migration v9→v10: category_merchants table (name→pattern, +displayName, +isRegex) | pending |
-| 2026-03-16 | Feature 1.1: Move merchant between categories via dialog | pending |
+| 2026-03-17 | BUG-011: Replace receivedAt with non-nullable timestamp (DB migration v8→v9) | e5ce8c0 |
+| 2026-03-17 | Task 1.2: Merchant data class with displayName field | 706d6e6 |
+| 2026-03-17 | Task 1.3: Regex matching support in merchant categories | 706d6e6 |
+| 2026-03-17 | DB migration v9→v10: category_merchants table (name→pattern, +displayName, +isRegex) | 706d6e6 |
+| 2026-03-17 | Feature 1.1: Move merchant between categories via dialog | a1d62e1 |
