@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -26,6 +27,11 @@ import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.data.PieData
+import com.github.mikephil.charting.data.PieDataSet
+import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.PercentFormatter
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -404,62 +410,101 @@ class PaymentsActivity : BaseActivity() {
         }
 
     private fun showSpendingReport() {
-        val reportBuilder = StringBuilder()
-
-        // Determine date range to show
-        val actualStartDate =
-            startDate ?: allPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.minOrNull()
-        val actualEndDate = endDate ?: allPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.maxOrNull()
-
-        // Date range info
-        val dateRangeText = when {
-            actualStartDate != null && actualEndDate != null ->
-                "${dateFormat.format(Date(actualStartDate))} - ${dateFormat.format(Date(actualEndDate))}"
-            actualStartDate != null -> "From ${dateFormat.format(Date(actualStartDate))}"
-            actualEndDate != null -> "Until ${dateFormat.format(Date(actualEndDate))}"
-            else -> getString(R.string.all_time)
-        }
-        reportBuilder.appendLine("Period: $dateRangeText")
-        reportBuilder.appendLine()
+        val dateRangeText = buildDateRangeText()
 
         if (filteredPayments.isEmpty()) {
-            reportBuilder.appendLine(getString(R.string.no_spending_data))
             AlertDialog.Builder(this)
                 .setTitle(R.string.spending_report)
-                .setMessage(reportBuilder.toString())
+                .setMessage("Period: $dateRangeText\n\n${getString(R.string.no_spending_data)}")
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
             return
         }
 
-        // Group payments by category and calculate totals
-        val categoryTotals = filteredPayments
-            .groupBy { it.categoryId ?: getString(R.string.uncategorized) }
-            .mapValues { (_, payments) ->
-                payments.sumOf { it.amount }
-            }
-            .toList()
-            .sortedByDescending { it.second }
-
+        val categoryTotals = buildCategoryTotals()
         val totalAmount = filteredPayments.sumOf { it.amount }
         val currency = filteredPayments.firstOrNull()?.currency ?: ""
+        val reportText = buildReportText(dateRangeText, categoryTotals, totalAmount, currency)
 
-        // Total
-        reportBuilder.appendLine(getString(R.string.total_spending, "%.2f".format(totalAmount), currency))
-        reportBuilder.appendLine()
-
-        // Category breakdown
-        reportBuilder.appendLine(getString(R.string.by_category))
-        categoryTotals.forEach { (category, amount) ->
-            val percentage = if (totalAmount > 0) (amount / totalAmount * 100).toInt() else 0
-            reportBuilder.appendLine("  $category: ${"%.2f".format(amount)} $currency ($percentage%)")
-        }
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_spending_report, null)
+        dialogView.findViewById<TextView>(R.id.tvReportText).text = reportText
+        setupPieChart(dialogView.findViewById(R.id.pieChart), categoryTotals, totalAmount)
 
         AlertDialog.Builder(this)
             .setTitle(R.string.spending_report)
-            .setMessage(reportBuilder.toString())
+            .setView(dialogView)
             .setPositiveButton(android.R.string.ok, null)
             .show()
+    }
+
+    private fun buildDateRangeText(): String {
+        val actualStart = startDate ?: allPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.minOrNull()
+        val actualEnd = endDate ?: allPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.maxOrNull()
+        return when {
+            actualStart != null && actualEnd != null ->
+                "${dateFormat.format(Date(actualStart))} - ${dateFormat.format(Date(actualEnd))}"
+            actualStart != null -> "From ${dateFormat.format(Date(actualStart))}"
+            actualEnd != null -> "Until ${dateFormat.format(Date(actualEnd))}"
+            else -> getString(R.string.all_time)
+        }
+    }
+
+    private fun buildCategoryTotals(): List<Pair<String, Double>> = filteredPayments
+        .groupBy { it.categoryId ?: getString(R.string.uncategorized) }
+        .mapValues { (_, payments) -> payments.sumOf { it.amount } }
+        .toList()
+        .sortedByDescending { it.second }
+
+    private fun buildReportText(
+        dateRangeText: String,
+        categoryTotals: List<Pair<String, Double>>,
+        totalAmount: Double,
+        currency: String
+    ): String {
+        val sb = StringBuilder()
+        sb.appendLine("Period: $dateRangeText")
+        sb.appendLine()
+        sb.appendLine(getString(R.string.total_spending, "%.2f".format(totalAmount), currency))
+        sb.appendLine()
+        sb.appendLine(getString(R.string.by_category))
+        categoryTotals.forEach { (category, amount) ->
+            val percentage = if (totalAmount > 0) (amount / totalAmount * 100).toInt() else 0
+            sb.appendLine("  $category: ${"%.2f".format(amount)} $currency ($percentage%)")
+        }
+        return sb.toString()
+    }
+
+    private fun setupPieChart(chart: PieChart, categoryTotals: List<Pair<String, Double>>, totalAmount: Double) {
+        val entries = categoryTotals.map { (category, amount) ->
+            PieEntry(amount.toFloat(), category)
+        }
+
+        val dataSet = PieDataSet(entries, "").apply {
+            colors = CHART_COLORS
+            valueTextSize = 11f
+            valueTextColor = Color.WHITE
+            sliceSpace = 2f
+        }
+
+        val data = PieData(dataSet).apply {
+            setValueFormatter(PercentFormatter(chart))
+        }
+
+        chart.apply {
+            this.data = data
+            description.isEnabled = false
+            isDrawHoleEnabled = true
+            holeRadius = 40f
+            setUsePercentValues(true)
+            setEntryLabelTextSize(10f)
+            setEntryLabelColor(Color.WHITE)
+            legend.isEnabled = false
+            setDrawCenterText(true)
+            centerText = getString(R.string.total_spending, "%.0f".format(totalAmount), "")
+            setCenterTextSize(12f)
+            animateY(600)
+            invalidate()
+        }
     }
 
     private fun showPaymentDetail(payment: Payment) {
@@ -684,5 +729,18 @@ class PaymentsActivity : BaseActivity() {
         const val KEY_FILTER_START_DATE = "filter_start_date"
         const val KEY_FILTER_END_DATE = "filter_end_date"
         const val KEY_FILTER_MERCHANT = "filter_merchant"
+
+        private val CHART_COLORS = listOf(
+            Color.rgb(64, 150, 220),
+            Color.rgb(255, 140, 50),
+            Color.rgb(90, 190, 100),
+            Color.rgb(230, 80, 80),
+            Color.rgb(160, 100, 210),
+            Color.rgb(255, 200, 50),
+            Color.rgb(80, 200, 200),
+            Color.rgb(200, 100, 150),
+            Color.rgb(130, 180, 80),
+            Color.rgb(180, 130, 80)
+        )
     }
 }

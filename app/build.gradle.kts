@@ -75,6 +75,7 @@ dependencies {
     kapt(libs.androidx.room.compiler)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.mpandroidchart)
 
     // --- unit tests ---
     testImplementation(libs.junit.jupiter.api)
