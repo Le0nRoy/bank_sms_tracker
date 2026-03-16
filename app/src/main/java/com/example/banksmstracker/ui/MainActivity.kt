@@ -8,10 +8,13 @@ import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
+import com.example.banksmstracker.BankSmsTrackerApp
 import com.example.banksmstracker.BuildConfig
 import com.example.banksmstracker.R
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.ImportResult
+import com.example.banksmstracker.service.BootReceiver
+import com.example.banksmstracker.service.SmsProcessingService
 import kotlinx.coroutines.launch
 
 class MainActivity : BaseActivity() {
@@ -33,6 +36,7 @@ class MainActivity : BaseActivity() {
 
         setupButtons()
         checkTermsAgreement()
+        startBackgroundServiceIfEnabled()
     }
 
     private fun setupButtons() {
@@ -109,6 +113,14 @@ class MainActivity : BaseActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
+        }
+    }
+
+    private fun startBackgroundServiceIfEnabled() {
+        val prefs = getSharedPreferences(BankSmsTrackerApp.PREFS_NAME, MODE_PRIVATE)
+        val serviceEnabled = prefs.getBoolean(BootReceiver.KEY_BACKGROUND_SERVICE_ENABLED, true)
+        if (serviceEnabled) {
+            SmsProcessingService.start(this)
         }
     }
 

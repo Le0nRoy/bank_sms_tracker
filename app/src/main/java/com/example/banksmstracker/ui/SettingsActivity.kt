@@ -5,10 +5,13 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import android.widget.Switch
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.example.banksmstracker.BankSmsTrackerApp
 import com.example.banksmstracker.R
+import com.example.banksmstracker.service.BootReceiver
+import com.example.banksmstracker.service.SmsProcessingService
 
 class SettingsActivity : BaseActivity() {
 
@@ -24,6 +27,7 @@ class SettingsActivity : BaseActivity() {
 
         setupThemeSelection()
         setupLanguageSelection()
+        setupBackgroundServiceToggle()
         setupPrivacySection()
     }
 
@@ -69,6 +73,20 @@ class SettingsActivity : BaseActivity() {
             }
             prefs.edit().putString(BankSmsTrackerApp.KEY_LANGUAGE, newLanguage).apply()
             applyLanguage(newLanguage)
+        }
+    }
+
+    private fun setupBackgroundServiceToggle() {
+        val prefs = getSharedPreferences(BankSmsTrackerApp.PREFS_NAME, MODE_PRIVATE)
+        val toggle = findViewById<Switch>(R.id.switchBackgroundService)
+        toggle.isChecked = prefs.getBoolean(BootReceiver.KEY_BACKGROUND_SERVICE_ENABLED, true)
+        toggle.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean(BootReceiver.KEY_BACKGROUND_SERVICE_ENABLED, isChecked).apply()
+            if (isChecked) {
+                SmsProcessingService.start(this)
+            } else {
+                SmsProcessingService.stop(this)
+            }
         }
     }
 

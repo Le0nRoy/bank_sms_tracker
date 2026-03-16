@@ -359,4 +359,11 @@
     <string name="terms_agree">I Understand</string>
     <string name="terms_section_title">Privacy</string>
     <string name="view_privacy_notice">View Privacy Notice</string>
+
+    <!-- Background Service -->
+    <string name="sms_monitor_channel_name">SMS Monitoring</string>
+    <string name="sms_monitor_channel_desc">Keeps the app running to reliably receive bank SMS messages</string>
+    <string name="sms_monitor_notification_text">Monitoring bank SMS messages</string>
+    <string name="background_service_section_title">Background Service</string>
+    <string name="background_service_toggle_label">Enable background SMS monitoring</string>
 </resources>
