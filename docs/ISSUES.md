@@ -95,9 +95,12 @@ Create Gradle task to copy test fixtures during build. Not yet implemented.
 
 ---
 
+## Resolved Issues
+
 ### TODO-001: Appium E2E Test Setup
-**Status:** Deferred
+**Status:** Resolved
 **Created:** 2025-12-29
+**Resolved:** 2026-03-17
 
 **Description:**
 Full UI automation with Appium requires:
@@ -105,14 +108,8 @@ Full UI automation with Appium requires:
 - WebDriver dependencies
 - Test device/emulator configuration
 
-**Notes:**
-Current E2E tests use Android instrumentation with Espresso. Appium integration deferred until UI is more stable.
-
----
-
-## Resolved Issues
-
-_(None yet)_
+**Resolution:**
+Appium infrastructure is fully implemented. Docker-based Appium server configured in `docker-compose.yml`. 116+ tests across 10 test classes in `app/src/test/java/.../appium/`. Smoke subset (~18 tests) available via `make test-smoke`. Full suite via `make test-appium`. Allure reporting integrated with `@Epic`/`@Feature`/`@Step` annotations.
 
 ---
 

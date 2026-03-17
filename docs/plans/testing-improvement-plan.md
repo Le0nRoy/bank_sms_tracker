@@ -3,7 +3,7 @@
 > This document tracks planned improvements to the BankSMSTracker test suite.
 > For current testing approaches, see [testing-approaches.md](../design/testing-approaches.md).
 >
-> **Last updated:** 2026-03-13 — marked completed items based on commits 803bbdc, 6f42259, da0aeb4
+> **Last updated:** 2026-03-17 — marked completed items based on commits 803bbdc, 6f42259, da0aeb4; updated §1.1 with RC-1, OC-3, PF-3/DD-6 fixes
 
 ---
 
@@ -11,15 +11,15 @@
 
 ### 1.1 Unit Test Gaps
 
-| Area | Gap | Priority |
-|------|-----|----------|
-| `SmsAddressMatcher` | Locale-sensitive address normalization | High |
-| `PaymentProcessor.approximateDate()` | Date interpolation from neighbors | High |
-| `ConfigRepository` migration paths | DB version upgrades | Medium |
-| `BugReportActivity` attachment logic | JSON serialization correctness | Medium |
-| `SmsExportActivity` export format | CSV/JSON output structure | Low |
-| `ConfigRepository.load()` | Race condition: concurrent calls from multiple threads | High |
-| `PaymentProcessor` | ReDoS guard: pathological regex patterns | Medium |
+| Area | Gap | Priority | Status |
+|------|-----|----------|--------|
+| `SmsAddressMatcher` | Locale-sensitive address normalization | High | ⬜ Pending |
+| `PaymentProcessor.approximateDate()` | Date interpolation from neighbors | High | ✅ Fixed via PF-3/DD-6 (test still needed) |
+| `ConfigRepository` migration paths | DB version upgrades | Medium | ⬜ Pending |
+| `BugReportActivity` attachment logic | JSON serialization correctness | Medium | ⬜ Pending |
+| `SmsExportActivity` export format | CSV/JSON output structure | Low | ⬜ Pending |
+| `ConfigRepository.load()` | Race condition: concurrent calls from multiple threads | High | ✅ Fixed via RC-1 (`configMutex.withLock`) (test still needed) |
+| `PaymentProcessor` | ReDoS guard: pathological regex patterns | Medium | ✅ Fixed via OC-3 (500 ms `ExecutorService` timeout) (test still needed) |
 
 ### 1.2 Instrumented Test Gaps
 

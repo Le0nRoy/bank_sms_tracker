@@ -181,7 +181,7 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | `rules` | Unified regex patterns for all rule types (PAYMENT, INCOME, IGNORE) |
 | `payments` | Parsed and categorized transactions |
 | `incomes` | Parsed income transactions |
-| `sender_rules` | Legacy payment rules (retained for migration compatibility) |
+| `sender_rules` | Legacy payment rules — dropped in MIGRATION_10_11 (DB v11) |
 | `ignore_rules` | Legacy ignore rules (retained for migration compatibility) |
 
 ## 6. Feature Specifications
@@ -197,7 +197,7 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | Config Export | ✅ | Export configuration as JSON via share intent |
 | UI: Categories | ✅ | Add/edit/delete categories and merchants |
 | UI: Senders | ✅ | Add/edit senders, addresses, and unified rules |
-| Room Persistence | ✅ | SQLite database v8 for all data |
+| Room Persistence | ✅ | SQLite database v11 for all data |
 
 ### 6.2 Extended Features (Implemented)
 
@@ -397,9 +397,8 @@ Docker-based Appium setup for UI automation:
 - All data stored locally in Room database (SQLite, **not encrypted** at rest)
 - No network communication (except optional bug report via share intent)
 - Config export uses secure FileProvider (app-private cache dir)
-- `android:allowBackup="true"` — financial data may be included in Android cloud backup;
-  backup_rules.xml should be configured to exclude the database if this is a concern
-- SMS bodies are logged to Logcat in debug builds (amounts, card last-4, merchants)
+- `android:allowBackup="true"` — `backup_rules.xml` excludes `bank_sms_tracker.db` and `app_terms.xml` from Android cloud backup (SEC-3)
+- SMS bodies are logged to Logcat in `SmsReceiver` only when `BuildConfig.DEBUG` is true; `SmsProcessingService` does not guard all log statements (SEC-1)
 
 ## 11. Future Enhancements
 
@@ -436,8 +435,8 @@ app/src/main/java/com/example/banksmstracker/
 │   ├── RuleType.kt               # PAYMENT / INCOME / IGNORE enum
 │   ├── Sender.kt
 │   └── SmsConfig.kt
-├── database/                      # Room database (schema v8)
-│   ├── BankSmsDatabase.kt         # DB singleton + migrations 1-8
+├── database/                      # Room database (schema v11)
+│   ├── BankSmsDatabase.kt         # DB singleton + migrations 1-11
 │   ├── ConfigDao.kt
 │   ├── Entities.kt
 │   ├── IgnoreRuleDao.kt

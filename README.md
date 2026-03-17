@@ -50,7 +50,7 @@ app/src/
 ├── main/
 │   ├── java/com/example/banksmstracker/
 │   │   ├── data/           # Data models (Payment, Category, Sender, Rule, Income, etc.)
-│   │   ├── database/       # Room entities, DAOs, and database (v10 schema)
+│   │   ├── database/       # Room entities, DAOs, and database (v11 schema)
 │   │   ├── parser/         # SMS BroadcastReceiver
 │   │   ├── processor/      # Payment/income/ignore processing logic
 │   │   ├── repository/     # Data repositories

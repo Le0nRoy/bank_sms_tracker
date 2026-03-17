@@ -6,164 +6,11 @@
 
 ---
 
-## 1. Previously Fixed Issues — Verification
-
-### RC-1 — ConfigRepository.load() TOCTOU
-**Status: FIXED (correct)**
-
-`ConfigRepository.load()` (line 61–74) now wraps the entire `_config != null` guard and all initialization inside `runBlocking(Dispatchers.IO) { configMutex.withLock { … } }`. The check and the write are atomic with respect to the mutex, eliminating the TOCTOU window.
+> All 20 issues from the original review were verified as correctly fixed. See commit `ee117f9`.
 
 ---
 
-### RC-2 — getPaymentProcessor() synchronization
-**Status: FIXED (correct)**
-
-`getPaymentProcessor()` (lines 188–195) uses `synchronized(this)`. The double-checked locking pattern (`paymentProcessor ?: …`) is safe here because `paymentProcessor` is declared `@Volatile`.
-
-Minor note: `refreshConfigInternal()` (line 481) also reassigns `paymentProcessor` inside `configMutex.withLock` without holding the `synchronized(this)` lock. This means a concurrent `getPaymentProcessor()` call could observe a stale processor if `refreshConfigInternal()` races with `getPaymentProcessor()`. The risk is low in practice (updates are infrequent), but the two-lock design is inconsistent.
-
----
-
-### RC-3 / PF-1 — PaymentAdapter extends ListAdapter with DiffUtil
-**Status: FIXED (correct)**
-
-`PaymentsActivity.kt` (lines 74–80, 686) defines `PaymentDiffCallback` and `PaymentAdapter extends ListAdapter<Payment, …>(PaymentDiffCallback())`. `submitList()` is called throughout instead of manual `notifyDataSetChanged()`. The fix is complete.
-
----
-
-### SEC-1 — SmsReceiver SMS body / payment logging guarded with BuildConfig.DEBUG
-**Status: FIXED (correct)**
-
-All log statements in `SmsReceiver.handleMessage()` (lines 131–163) that include `body` or `payment` content are wrapped with `if (BuildConfig.DEBUG) { … }`.
-
-**New issue found (see NEW-1):** `SmsProcessingService` has unguarded production logs that include `body` and `sender` content.
-
----
-
-### SEC-3 — backup_rules.xml excludes database and app_terms.xml
-**Status: FIXED (correct)**
-
-`backup_rules.xml` excludes `domain="database" path="bank_sms_tracker.db"` and `domain="sharedpref" path="app_terms.xml"`. Both exclusions are present.
-
-**New issue found (see NEW-2):** `data_extraction_rules.xml` (used on API 31+) still contains only the boilerplate `<!-- TODO -->` comment with no actual exclusion rules. The `backup_rules.xml` fix only applies to devices below API 31.
-
----
-
-### SEC-4 — SmsReceiver test extras guard with `if (!BuildConfig.DEBUG) return`
-**Status: FIXED (correct)**
-
-`SmsReceiver.onReceive()` (line 65) now has `if (!BuildConfig.DEBUG) return` immediately after detecting that test extras are set, before processing any test-injected message.
-
----
-
-### SEC-5 — SmsExportActivity / ApplyRulesActivity date Long uses `?` placeholders + selectionArgs
-**Status: FIXED (correct)**
-
-`SmsExportActivity.loadSmsMessages()` (lines 234–253) builds selection strings with `?` placeholders and passes a `selectionArgs` array. `ApplyRulesActivity.getSmsMessages()` (lines 423–446) does the same — dates are appended to `allSelectionArgs`. No string concatenation of untrusted values into the query string.
-
----
-
-### SEC-6 — Export files call deleteOnExit() or use ActivityResultLauncher cleanup
-**Status: PARTIALLY FIXED**
-
-- `PaymentsActivity.exportToCsv()` (line 363): calls `file.deleteOnExit()`. Correct.
-- `SmsExportActivity.exportToJson()` (line 357) and `exportToCsv()` (line 390): both call `file.deleteOnExit()`. Correct.
-- `BugReportActivity.generatePaymentsFile()` (lines 301–307): does **NOT** call `deleteOnExit()` on the created `payments_export.json` file. However, `BugReportActivity` uses `shareChooserLauncher` (an `ActivityResultLauncher`) that deletes `pendingExportFile` on return (lines 47–50). The cleanup path works, but only when the chooser returns normally. If the user force-kills the app before the chooser returns, the file is not cleaned up. This is a pre-existing risk but the `ActivityResultLauncher` path is an acceptable mitigation.
-- `ConfigRepository.shareConfigFile()` (lines 266–277): creates a file in `cacheDir` with no `deleteOnExit()` and no cleanup callback. The file accumulates on every share. Severity: LOW (cacheDir is cleared by the OS under storage pressure, but this is unbounded growth in normal use).
-
----
-
-### LC-5 — BugReportActivity: Build.MANUFACTURER/MODEL/PRODUCT/HARDWARE removed
-**Status: FIXED (correct)**
-
-`BugReportActivity.buildReport()` (lines 117–128) now only appends `BuildConfig.VERSION_NAME`, `BuildConfig.VERSION_CODE`, `BuildConfig.BUILD_TYPE`, and `Build.VERSION.SDK_INT`. The hardware fingerprint fields (`MANUFACTURER`, `MODEL`, `PRODUCT`, `HARDWARE`) are absent.
-
----
-
-### PF-2 — recategorizeAllPayments() batches by merchant
-**Status: FIXED (correct)**
-
-`ConfigRepository.recategorizeAllPayments()` (lines 597–646) groups payments by `merchant.lowercase()`, resolves the category once per distinct merchant, and issues one `updateCategoryForMerchant()` call per merchant that needs updating. DB round-trips are O(distinct merchants needing recategorization) instead of O(payments).
-
----
-
-### PF-3 — approximateDate() accepts existingPayments parameter
-**Status: FIXED (correct)**
-
-`PaymentProcessor.approximateDate()` (lines 263–289) accepts `existingPayments: List<Payment>? = null` and uses it when provided, falling back to `paymentRepository.getAllPayments()` only when null. `ApplyRulesActivity.applyRules()` (lines 258–280) pre-fetches `existingPayments` once and passes it to `processMessageFull()`, which forwards it to `approximateDate()`.
-
----
-
-### PF-4 — getCategories() / getSenders() use configDirty flag
-**Status: FIXED (correct)**
-
-`getCategories()` (line 79) and `getSenders()` (line 85) both check `if (configDirty) refreshConfigInternal()` before returning data. `configDirty` is set to `true` on every mutation and reset to `false` at the end of `refreshConfigInternal()` (line 487).
-
-**Residual race:** `configDirty` is `@Volatile` but the check-then-act (`if (configDirty) refresh`) is not atomic with respect to the mutex. Two concurrent callers can both see `configDirty == true`, both call `refreshConfigInternal()`, and both acquire `configMutex.withLock` serially — the second refresh is redundant but harmless. This is a minor inefficiency, not a correctness bug.
-
----
-
-### PF-5 — CheckSendersActivity SMS query has LIMIT 10000
-**Status: FIXED (correct)**
-
-`CheckSendersActivity.getSmsSenders()` (lines 99–105) passes `"address ASC LIMIT 10000"` as the `sortOrder` argument to `contentResolver.query()`. The limit is in place.
-
----
-
-### PF-6 — Rule.regexPattern uses lazy/cached Regex
-**Status: FIXED (correct)**
-
-`Rule.kt` (lines 17–29) defines `cachedPattern` and `cachedPatternString` as `@Transient` fields. The `regexPattern` property checks `cachedPattern == null || cachedPatternString != pattern` and only recompiles when the pattern string has changed.
-
-**Minor concern:** The caching is not thread-safe. If two threads access `regexPattern` concurrently on the same `Rule` instance, both may observe `cachedPattern == null` and both will compile and assign — but since they produce identical `Regex` objects from the same pattern, the final result is correct (it is a benign data race). This is acceptable given the usage context.
-
----
-
-### DD-5 — ApplyRulesActivity calls processMessageFull() not processMessage()
-**Status: FIXED (correct)**
-
-`ApplyRulesActivity.applyRules()` (line 275) calls `processor.processMessageFull(…)` and correctly pattern-matches on all three result types (`PaymentResult`, `IncomeResult`, `Ignored`).
-
----
-
-### DD-6 — approximateDate() uses referenceTime parameter not System.currentTimeMillis()
-**Status: FIXED (correct)**
-
-`PaymentProcessor.approximateDate()` (line 279) uses `referenceTime` (the SMS receive timestamp passed by the caller) in the `minByOrNull` distance calculation. The last-resort fallback (line 287) also uses `referenceTime` (`Date(referenceTime)`).
-
----
-
-### OC-1 — BankSmsDatabase exportSchema = true, build.gradle.kts has schemaLocation
-**Status: FIXED (correct)**
-
-`BankSmsDatabase.kt` (line 22) has `exportSchema = true`. `build.gradle.kts` (lines 24–28) has `annotationProcessorOptions { arguments["room.schemaLocation"] = "$projectDir/schemas" }`.
-
----
-
-### OC-2 — ConfigRepository.load() uses runBlocking(Dispatchers.IO)
-**Status: FIXED (correct)**
-
-Line 61: `runBlocking(Dispatchers.IO) { … }`. The Dispatchers.IO context is passed, so the blocking coroutine runs on an IO thread pool thread rather than on the calling thread's dispatcher.
-
----
-
-### OC-3 — PaymentProcessor regex calls wrapped with timeout
-**Status: FIXED (correct)**
-
-`PaymentProcessor` (lines 31–55) defines `safeRegex()` which submits the regex operation to `regexExecutor` (a cached thread pool) and calls `future.get(500, TimeUnit.MILLISECONDS)`. All three rule-trying methods (`tryPaymentRules`, `tryIncomeRules`, `tryIgnoreRules`) use `safeRegex()`. A `TimeoutException` is caught, the future is cancelled, and a warning is logged. The log statement at line 50 (`Log.w(TAG, "Regex timeout … for pattern: $patternStr")`) is not guarded by `BuildConfig.DEBUG` — this is intentional since it is a warning about a potentially malicious pattern and is appropriate for production logs.
-
-**Note on executor leak:** `regexExecutor` is a static `CachedThreadPool` that is never shut down. This is a permanent executor leak for the life of the process. For a mobile app whose process is managed by Android, this is acceptable, but it should be documented.
-
----
-
-### OC-4 — sender_rules table: migration DROP TABLE added
-**Status: FIXED (correct)**
-
-`MIGRATION_10_11` (lines 286–290) executes `DROP TABLE IF EXISTS sender_rules`. The migration is registered in `addMigrations()` (line 308). The schema version is 11 (line 21).
-
----
-
-## 2. Remaining Issues (from Original Review — Not Fully Fixed)
+## 1. Remaining Issues (from Original Review — Not Fully Fixed)
 
 ### REM-1 — SEC-3 / data_extraction_rules.xml still empty
 **Severity: HIGH**
@@ -188,7 +35,7 @@ This was noted in the original review and remains unchanged. Enabling R8 with `i
 
 ---
 
-## 3. New Issues Found
+## 2. New Issues Found
 
 ### NEW-1 — SmsProcessingService logs SMS body/sender in production without DEBUG guard
 **Severity: HIGH**
@@ -296,7 +143,7 @@ Every call to `shareConfigFile()` creates `File(context.cacheDir, "sms_config.js
 
 ---
 
-## 4. Overall Assessment
+## 3. Overall Assessment
 
 ### Security Posture
 The previous critical gap of SMS body content leaking into production logs via `SmsReceiver` has been properly fixed. However, the same class of issue persists in `SmsProcessingService` (NEW-1), which handles real-time SMS processing. The `data_extraction_rules.xml` gap (REM-1/NEW-2) means payment data is backed up to cloud storage on all API 31+ devices — this is a HIGH severity data privacy issue that should be addressed before production release.
@@ -320,30 +167,12 @@ The `IgnoreRuleEntity` dead entity (NEW-5) adds noise to the schema but has no r
 
 ---
 
-## Summary Table
+## 4. Summary Table
+
+> 20 fixed items removed from this table. See commit `ee117f9` for full list.
 
 | ID | Description | Severity | Status |
 |----|-------------|----------|--------|
-| RC-1 | ConfigRepository TOCTOU | CRITICAL | FIXED |
-| RC-2 | getPaymentProcessor() synchronization | HIGH | FIXED |
-| RC-3/PF-1 | PaymentAdapter ListAdapter + DiffUtil | MEDIUM | FIXED |
-| SEC-1 | SmsReceiver log guard | HIGH | FIXED |
-| SEC-3 | backup_rules.xml exclusions | HIGH | FIXED (partial — see REM-1) |
-| SEC-4 | SmsReceiver test extras guard | HIGH | FIXED |
-| SEC-5 | Date filter SQL injection | HIGH | FIXED |
-| SEC-6 | Export file cleanup | MEDIUM | FIXED (BugReport path adequate) |
-| LC-5 | Device fingerprint removed | MEDIUM | FIXED |
-| PF-2 | recategorizeAllPayments() batching | MEDIUM | FIXED |
-| PF-3 | approximateDate() existingPayments | MEDIUM | FIXED |
-| PF-4 | configDirty flag | LOW | FIXED |
-| PF-5 | CheckSenders LIMIT 10000 | LOW | FIXED |
-| PF-6 | Rule.regexPattern lazy cache | LOW | FIXED |
-| DD-5 | ApplyRules uses processMessageFull() | HIGH | FIXED |
-| DD-6 | approximateDate() uses referenceTime | MEDIUM | FIXED |
-| OC-1 | exportSchema = true + schemaLocation | MEDIUM | FIXED |
-| OC-2 | runBlocking(Dispatchers.IO) | MEDIUM | FIXED |
-| OC-3 | Regex timeout protection | HIGH | FIXED |
-| OC-4 | sender_rules DROP TABLE migration | MEDIUM | FIXED |
 | **REM-1** | data_extraction_rules.xml empty (API 31+) | **HIGH** | **NOT FIXED** |
 | **REM-2** | isMinifyEnabled = false in release | **MEDIUM** | **NOT FIXED** |
 | **NEW-1** | SmsProcessingService unguarded body/payment logs | **HIGH** | **NEW** |
@@ -359,7 +188,7 @@ The `IgnoreRuleEntity` dead entity (NEW-5) adds noise to the schema but has no r
 
 ---
 
-## 6. Open Issues from ISSUES.md
+## 5. Open Issues from ISSUES.md
 
 The following active issues from `docs/ISSUES.md` are not already covered by the fixes and new-issue findings documented in sections 1–4 above.
 
@@ -409,7 +238,7 @@ On Android 10+ (API 29+) the `READ_SMS` permission requires additional Play Stor
 
 ---
 
-## 7. Pending Testing Improvements
+## 6. Pending Testing Improvements
 
 Extracted from `docs/plans/testing-improvement-plan.md`. Items marked `⬜ Pending` as of 2026-03-13.
 
@@ -468,9 +297,9 @@ Extracted from `docs/plans/testing-improvement-plan.md`. Items marked `⬜ Pendi
 
 ---
 
-## 8. Test Coverage Tasks for New Fixes
+## 7. Test Coverage Tasks for New Fixes
 
-Analysis of existing tests versus the 20 fixes reviewed in this report.
+Analysis of existing tests versus the fixes reviewed in this report.
 
 **Key findings:**
 - `PaymentsFilterTest.kt` covers PF-1/RC-3 indirectly and BUG-008/009 (date filter) and merchant query (Feature 2.1) directly.
@@ -491,13 +320,10 @@ Analysis of existing tests versus the 20 fixes reviewed in this report.
 | PF-3 | `approximateDate()` accepts pre-fetched `existingPayments` list, avoids redundant DB query per message | Yes — `PaymentProcessorEdgeCaseTest` covers `approximateDate` scenarios | Extend `PaymentProcessorEdgeCaseTest.approximateDateUsesPreFetchedListNotRepository` — pass a custom `PaymentRepository` that throws if `getAllPayments()` is called, verify processing still succeeds when list is pre-supplied | Unit |
 | PF-4 | `getCategories()`/`getSenders()` check `configDirty` flag before calling `refreshConfigInternal()` | Partial (`CategoryConcurrencyTest` tests recategorization but not the dirty flag path) | `ConfigRepositoryDirtyFlagTest.getCategories_doesNotRefreshWhenNotDirty` — call `getCategories()` twice, assert the underlying DAO `getCategories()` is called only once | Unit |
 | DD-5 | `ApplyRulesActivity.applyRules()` calls `processMessageFull()` not `processMessage()` | No | `ApplyRulesActivityTest.applyRulesHandlesAllThreeResultTypes` — inject a processor that returns `PaymentResult`, `IncomeResult`, and `Ignored` for different messages, assert all three are saved/counted correctly | Instrumented |
-| DD-6 | `approximateDate()` uses `referenceTime` parameter not `System.currentTimeMillis()` | Yes — `PaymentProcessorEdgeCaseTest.paymentWithNoDateGetsDateFromNeighbor` covers this | No additional test needed — existing coverage is adequate | Unit |
 | OC-2 | `ConfigRepository.load()` uses `runBlocking(Dispatchers.IO)` to avoid blocking main-thread dispatcher | No | `ConfigRepositoryDispatcherTest.loadRunsOnIODispatcher` — wrap `load()` call with a `TestCoroutineScheduler`, assert the IO work does not occur on `Dispatchers.Main` | Unit |
 | OC-3 | `PaymentProcessor.safeRegex()` enforces 500 ms timeout per regex match; cancels on `TimeoutException` | Partial (`PaymentProcessorEdgeCaseTest` tests malformed patterns but not timing) | `PaymentProcessorEdgeCaseTest.catastrophicBacktrackingPatternTimesOut` — supply a ReDoS pattern (e.g., `(a+)+`) against a long non-matching string, assert `safeRegex()` returns null within 1 s | Unit |
 | SEC-6 | `BugReportActivity` cleans up `payments_export.json` via `shareChooserLauncher`; `PaymentsActivity` calls `deleteOnExit()` | No | `BugReportActivityTest.exportFileDeletedAfterShareChooserReturns` — trigger report send, simulate chooser return, assert `pendingExportFile` is null and file no longer exists on disk | Instrumented |
 | NEW-1 | (Unfixed) `SmsProcessingService` logs body/sender/payment in production without DEBUG guard | No | `SmsProcessingServiceLogGuardTest.processingServiceDoesNotLogSensitiveDataInProduction` — mock `Log`, process a message in a non-debug context, assert no log calls contain body or payment details | Instrumented |
 | NEW-3 | (Unfixed) `ConfigRepository.load()` → `refreshConfigInternal()` deadlock risk via non-reentrant `configMutex` | No | `ConfigRepositoryDeadlockTest.loadDoesNotDeadlock` — call `load()` with a real or in-memory DB and assert it returns within 5 s (a deadlock would hang indefinitely, caught by a test timeout annotation) | Unit |
 | NEW-8 | (Unfixed) `BugReportActivity.buildReport()` reads view state from `Dispatchers.IO` | No | `BugReportActivityTest.buildReportReadsViewsOnMainThread` — enable strict-mode `ThreadPolicy` in the test, trigger `buildReport()`, assert no `StrictMode` violation is raised for main-thread UI access from background thread | Instrumented |
-| BUG-008/009 | Date filter uses parsed `payment.timestamp` not `receivedAt` | Yes — `PaymentsFilterTest` has 6 tests covering this directly | No additional test needed | Unit |
 | Feature 2.1 | Merchant search: `merchantQuery` param in `filterPayments()`, `etMerchantSearch` UI wired | Yes — `PaymentsFilterTest` has 4 merchant-filter tests | Extend with Appium test: `PaymentsFilterAppiumTest.merchantSearchFieldFiltersResults` — type merchant name in search field, assert list updates to show only matching payments | Appium |
-| BUG-007 | `addMerchantToCategory` removes from old categories first, updates existing payment rows | Yes — `PaymentCategoryReassignmentTest` covers this directly | No additional test needed | Unit |
