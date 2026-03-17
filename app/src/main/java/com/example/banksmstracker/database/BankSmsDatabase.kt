@@ -15,17 +15,15 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         SenderAddressEntity::class,
         RuleEntity::class,
         PaymentEntity::class,
-        IgnoreRuleEntity::class,
         IncomeEntity::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = true
 )
 abstract class BankSmsDatabase : RoomDatabase() {
 
     abstract fun configDao(): ConfigDao
     abstract fun paymentDao(): PaymentDao
-    abstract fun ignoreRuleDao(): IgnoreRuleDao
     abstract fun incomeDao(): IncomeDao
     abstract fun ruleDao(): RuleDao
 
@@ -289,6 +287,21 @@ abstract class BankSmsDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 11 to 12: Drop legacy ignore_rules table.
+         *
+         * The ignore_rules table was migrated to the unified rules table in migration 7→8 with
+         * ruleType = 'ignore'. The table was kept "for backward compatibility" but no code paths
+         * write new ignore rules to it — all rule inserts go through RuleDao. Dropping the table
+         * removes the dead schema and allows IgnoreRuleEntity to be removed from the @Database
+         * entities list.
+         */
+        private val MIGRATION_11_12 = object : Migration(11, 12) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS ignore_rules")
+            }
+        }
+
         fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
@@ -305,7 +318,8 @@ abstract class BankSmsDatabase : RoomDatabase() {
                     MIGRATION_7_8,
                     MIGRATION_8_9,
                     MIGRATION_9_10,
-                    MIGRATION_10_11
+                    MIGRATION_10_11,
+                    MIGRATION_11_12
                 )
                 .build()
                 .also { INSTANCE = it }

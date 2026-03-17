@@ -246,12 +246,15 @@ class SmsExportActivity : BaseActivity() {
             }
         }.ifEmpty { null }
 
+        // Use "date DESC" without LIMIT — LIMIT in sortOrder is a SQLite extension not
+        // guaranteed on all OEM content-provider implementations. The hard cap is enforced
+        // below in Kotlin after cursor processing.
         val cursor: Cursor? = contentResolver.query(
             uri,
             arrayOf("address", "body", "date", "type"),
             selection,
             selectionArgs.takeIf { it.isNotEmpty() }?.toTypedArray(),
-            "date DESC LIMIT 5000"
+            "date DESC"
         )
 
         cursor?.use {
@@ -271,6 +274,13 @@ class SmsExportActivity : BaseActivity() {
                     messages.add(SmsMessage(address, body, date, type))
                 }
             }
+        }
+
+        // Safety cap: prevent processing an unbounded number of messages.
+        val cap = 5000
+        if (messages.size > cap) {
+            android.util.Log.w("SmsExportActivity", "SMS result truncated from ${messages.size} to $cap messages")
+            return messages.take(cap).toMutableList()
         }
 
         return messages

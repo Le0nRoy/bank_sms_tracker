@@ -41,3 +41,4 @@ Thumbs.db
 # Allure Python venv (project-local)
 .venv/
 /docs/task-reports/
+/docs/reports/fixes/

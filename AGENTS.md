@@ -13,8 +13,9 @@
   - `SmsReceiver` processes incoming SMS, bootstrapping `PaymentProcessor` from `ConfigRepository` (`app/src/main/java/com/example/banksmstracker/parser/SmsReceiver.kt`).
   - `PatternListActivity` — launched from `RegexBuilderActivity` via "Browse Patterns" button; shows all saved regex patterns for a sender with span highlighting; returns selected pattern via `setResult()` (`app/src/main/java/com/example/banksmstracker/ui/PatternListActivity.kt`).
 - **Persistence**
-  - Configuration + payments live in a Room database (`app/src/main/java/com/example/banksmstracker/database/*`).
+  - Configuration + payments live in a Room database (`app/src/main/java/com/example/banksmstracker/database/*`). **Current schema version: 12.**
   - `ConfigRepository` is the single source of truth; always use its suspend helpers to read/update categories or senders.
+  - `IgnoreRuleDao` has been removed. Ignore rules are stored in the `rules` table with `ruleType='ignore'` and accessed via `RuleDao`. The `ignore_rules` table was dropped in migration 11→12.
 - **Domain model**
   - Configuration lives in `SmsConfig` (`data/` package) and is loaded from `assets/default_rules.json`.
   - `PaymentProcessor` parses/categorises messages using regex rules supplied by the config and persists via `PaymentRepository`.

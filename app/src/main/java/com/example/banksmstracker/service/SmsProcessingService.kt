@@ -14,6 +14,7 @@ import android.os.IBinder
 import android.telephony.SmsMessage
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.example.banksmstracker.BuildConfig
 import com.example.banksmstracker.BankSmsTrackerApp
 import com.example.banksmstracker.R
 import com.example.banksmstracker.data.MessageProcessResult
@@ -158,18 +159,20 @@ class SmsProcessingService : Service() {
                 NotificationHelper.sendUnmatchedSmsNotification(applicationContext, sender, body)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error processing SMS from $sender: ${e.message}\nBody: $body")
+            Log.e(TAG, "Error processing SMS from $sender: ${e.message}")
         }
     }
 
     private fun logProcessingResult(result: MessageProcessResult, sender: String, body: String) {
-        when (result) {
-            is MessageProcessResult.PaymentResult ->
-                Log.d(TAG, "SMS from $sender processed as payment: ${result.payment}")
-            is MessageProcessResult.IncomeResult ->
-                Log.d(TAG, "SMS from $sender processed as income: ${result.income}")
-            is MessageProcessResult.Ignored ->
-                Log.d(TAG, "SMS from $sender ignored by rule '${result.ruleName}': $body")
+        if (BuildConfig.DEBUG) {
+            when (result) {
+                is MessageProcessResult.PaymentResult ->
+                    Log.d(TAG, "SMS from $sender processed as payment: ${result.payment}")
+                is MessageProcessResult.IncomeResult ->
+                    Log.d(TAG, "SMS from $sender processed as income: ${result.income}")
+                is MessageProcessResult.Ignored ->
+                    Log.d(TAG, "SMS from $sender ignored by rule '${result.ruleName}': $body")
+            }
         }
     }
 

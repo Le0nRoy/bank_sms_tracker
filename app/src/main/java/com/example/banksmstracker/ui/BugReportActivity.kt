@@ -90,7 +90,15 @@ class BugReportActivity : BaseActivity() {
         }
     }
 
-    private suspend fun buildReport(): String = withContext(Dispatchers.IO) {
+    private suspend fun buildReport(): String {
+        // Capture all view state on the main thread before switching to IO.
+        val bugDescription = etBugDescription.text.toString().trim()
+        val includeDeviceInfo = cbIncludeDeviceInfo.isChecked
+        val includeConfig = cbIncludeConfig.isChecked
+        val includePaymentStats = cbIncludePaymentStats.isChecked
+        val includeFilterState = cbIncludeFilterState.isChecked
+
+        return withContext(Dispatchers.IO) {
         val report = StringBuilder()
 
         report.append("=".repeat(50))
@@ -101,20 +109,19 @@ class BugReportActivity : BaseActivity() {
         report.append("\n\n")
 
         // User description
-        val description = etBugDescription.text.toString().trim()
         report.append(getString(R.string.user_description_header).trimStart())
         report.append("\n")
         report.append("-".repeat(30))
         report.append("\n")
-        if (description.isNotEmpty()) {
-            report.append(description)
+        if (bugDescription.isNotEmpty()) {
+            report.append(bugDescription)
         } else {
             report.append(getString(R.string.no_description_provided))
         }
         report.append("\n\n")
 
         // Device info
-        if (cbIncludeDeviceInfo.isChecked) {
+        if (includeDeviceInfo) {
             report.append(getString(R.string.device_info_header).trimStart())
             report.append("\n")
             report.append("-".repeat(30))
@@ -128,7 +135,7 @@ class BugReportActivity : BaseActivity() {
         }
 
         // Config summary
-        if (cbIncludeConfig.isChecked) {
+        if (includeConfig) {
             report.append(getString(R.string.config_summary_header).trimStart())
             report.append("\n")
             report.append("-".repeat(30))
@@ -174,7 +181,7 @@ class BugReportActivity : BaseActivity() {
         }
 
         // Payment stats
-        if (cbIncludePaymentStats.isChecked) {
+        if (includePaymentStats) {
             report.append(getString(R.string.payment_stats_header).trimStart())
             report.append("\n")
             report.append("-".repeat(30))
@@ -214,7 +221,7 @@ class BugReportActivity : BaseActivity() {
         }
 
         // Filter state
-        if (cbIncludeFilterState.isChecked) {
+        if (includeFilterState) {
             report.append(getString(R.string.filter_state_header).trimStart())
             report.append("\n")
             report.append("-".repeat(30))
@@ -249,6 +256,7 @@ class BugReportActivity : BaseActivity() {
         report.append("=".repeat(50))
 
         report.toString()
+        } // end withContext(Dispatchers.IO)
     }
 
     private fun sendReport() {

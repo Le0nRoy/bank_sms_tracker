@@ -20,8 +20,8 @@ import com.example.banksmstracker.R
 import com.example.banksmstracker.data.IgnoreRule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.database.BankSmsDatabase
-import com.example.banksmstracker.database.IgnoreRuleDao
-import com.example.banksmstracker.database.IgnoreRuleEntity
+import com.example.banksmstracker.database.RuleDao
+import com.example.banksmstracker.database.RuleEntity
 import com.example.banksmstracker.repository.ConfigRepository
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +34,7 @@ class IgnoreRulesActivity : BaseActivity() {
     private lateinit var tvEmptyState: TextView
     private lateinit var fabAdd: FloatingActionButton
     private lateinit var spinnerFilterSender: Spinner
-    private lateinit var ignoreRuleDao: IgnoreRuleDao
+    private lateinit var ruleDao: RuleDao
     private lateinit var adapter: IgnoreRuleAdapter
 
     private var ignoreRules: List<IgnoreRule> = emptyList()
@@ -57,7 +57,7 @@ class IgnoreRulesActivity : BaseActivity() {
         spinnerFilterSender = findViewById(R.id.spinnerFilterSender)
 
         val database = BankSmsDatabase.getInstance(this)
-        ignoreRuleDao = database.ignoreRuleDao()
+        ruleDao = database.ruleDao()
 
         fabAdd.setOnClickListener {
             if (senders.isEmpty()) {
@@ -112,9 +112,9 @@ class IgnoreRulesActivity : BaseActivity() {
         lifecycleScope.launch {
             ignoreRules = withContext(Dispatchers.IO) {
                 val entities = if (selectedFilterSenderId != null) {
-                    ignoreRuleDao.getIgnoreRulesBySender(selectedFilterSenderId!!)
+                    ruleDao.getRulesBySenderAndType(selectedFilterSenderId!!, "ignore")
                 } else {
-                    ignoreRuleDao.getAllIgnoreRules()
+                    ruleDao.getAllRulesByType("ignore")
                 }
                 entities.map { entity ->
                     IgnoreRule(
@@ -215,8 +215,8 @@ class IgnoreRulesActivity : BaseActivity() {
     private fun addIgnoreRule(senderId: Long, pattern: String, description: String?) {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                ignoreRuleDao.insertIgnoreRule(
-                    IgnoreRuleEntity(senderId = senderId, pattern = pattern, description = description)
+                ruleDao.insertRule(
+                    RuleEntity(senderId = senderId, pattern = pattern, description = description, ruleType = "ignore")
                 )
             }
             loadIgnoreRules()
@@ -227,13 +227,14 @@ class IgnoreRulesActivity : BaseActivity() {
     private fun updateIgnoreRule(rule: IgnoreRule) {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                ignoreRuleDao.updateIgnoreRule(
-                    IgnoreRuleEntity(
+                ruleDao.updateRule(
+                    RuleEntity(
                         id = rule.id ?: 0,
                         senderId = rule.senderId,
                         pattern = rule.pattern,
                         description = rule.description,
-                        enabled = rule.enabled
+                        enabled = rule.enabled,
+                        ruleType = "ignore"
                     )
                 )
             }
@@ -248,7 +249,7 @@ class IgnoreRulesActivity : BaseActivity() {
             .setPositiveButton(R.string.confirm) { _, _ ->
                 lifecycleScope.launch {
                     withContext(Dispatchers.IO) {
-                        rule.id?.let { ignoreRuleDao.deleteIgnoreRuleById(it) }
+                        rule.id?.let { ruleDao.deleteRuleById(it) }
                     }
                     loadIgnoreRules()
                     Toast.makeText(this@IgnoreRulesActivity, R.string.ignore_rule_deleted, Toast.LENGTH_SHORT).show()

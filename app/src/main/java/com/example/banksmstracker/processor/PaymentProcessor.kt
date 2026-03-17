@@ -29,7 +29,7 @@ class PaymentProcessor(
     companion object {
         private const val TAG = "PaymentProcessor"
         private const val REGEX_TIMEOUT_MS = 500L
-        private val regexExecutor = Executors.newCachedThreadPool()
+        private val regexExecutor = Executors.newSingleThreadExecutor()
 
         private fun MatchResult.namedGroup(name: String): String? = try {
             groups[name]?.value
@@ -307,5 +307,13 @@ class PaymentProcessor(
         } else {
             payment
         }
+    }
+
+    /**
+     * Shuts down the shared regex executor. Should be called when the processor is
+     * no longer needed (e.g., from Application.onTerminate or ConfigRepository.shutdown).
+     */
+    fun shutdown() {
+        regexExecutor.shutdown()
     }
 }

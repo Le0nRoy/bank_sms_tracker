@@ -10,6 +10,11 @@ class BankSmsTrackerApp : android.app.Application() {
         applyTheme()
     }
 
+    override fun onTerminate() {
+        ConfigRepository.shutdown()
+        super.onTerminate()
+    }
+
     private fun applyTheme() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val themeMode = prefs.getInt(KEY_THEME_MODE, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)

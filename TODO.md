@@ -384,6 +384,7 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 - [ ] Implement custom `EditText` or `SpannableStringBuilder` approach
 - [ ] Regex transformation hidden from user (internal state only)
 - [ ] Full multiline support in token view
+- [ ] Button to switch between regex-free and regex-full editors
 
 ---
 

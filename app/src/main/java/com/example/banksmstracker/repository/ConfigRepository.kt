@@ -69,7 +69,7 @@ object ConfigRepository {
                 if (seedIfEmpty && isConfigEmpty()) {
                     seedFromAssets(application)
                 }
-                refreshConfigInternal()
+                refreshConfigUnlocked()
             }
         }
     }
@@ -266,7 +266,9 @@ object ConfigRepository {
     suspend fun shareConfigFile(context: Context, fileName: String = "sms_config.json"): Pair<File, Uri> {
         val json = exportConfigJson()
         val file = withContext(Dispatchers.IO) {
-            File(context.cacheDir, fileName).also { it.writeText(json) }
+            // NEW-10: register for deletion on JVM exit so the cache file does not persist
+            //         indefinitely across app process restarts.
+            File(context.cacheDir, fileName).also { it.deleteOnExit(); it.writeText(json) }
         }
         val uri = FileProvider.getUriForFile(
             context,
@@ -470,23 +472,25 @@ object ConfigRepository {
             }
     }
 
-    private suspend fun refreshConfigInternal() = withContext(Dispatchers.IO) {
-        configMutex.withLock {
-            val categories = configDao.getCategories().toDomainCategories()
-            val senders = configDao.getSenders().toDomainSenders()
-            _config = SmsConfig(
-                senders = senders.toMutableList(),
-                categories = categories.toMutableList()
-            )
-            paymentProcessor = com.example.banksmstracker.processor.PaymentProcessor(
-                senders = config.senders,
-                categories = config.categories,
-                paymentRepository = paymentRepository
-            )
-            // PF-4: mark config as clean after a successful refresh.
-            configDirty = false
-        }
+    // NEW-3: body extracted so load() (which already holds configMutex) can call this
+    //        without attempting a non-reentrant re-acquisition of the mutex.
+    private suspend fun refreshConfigUnlocked() = withContext(Dispatchers.IO) {
+        val categories = configDao.getCategories().toDomainCategories()
+        val senders = configDao.getSenders().toDomainSenders()
+        _config = SmsConfig(
+            senders = senders.toMutableList(),
+            categories = categories.toMutableList()
+        )
+        paymentProcessor = com.example.banksmstracker.processor.PaymentProcessor(
+            senders = config.senders,
+            categories = config.categories,
+            paymentRepository = paymentRepository
+        )
+        // PF-4: mark config as clean after a successful refresh.
+        configDirty = false
     }
+
+    private suspend fun refreshConfigInternal() = configMutex.withLock { refreshConfigUnlocked() }
 
     private suspend fun isConfigEmpty(): Boolean = withContext(Dispatchers.IO) {
         configDao.getCategoriesCount() == 0 && configDao.getSendersCount() == 0
@@ -564,6 +568,14 @@ object ConfigRepository {
         }
     }
 
+    /**
+     * Shuts down the regex executor inside the current PaymentProcessor, if any.
+     * Call this from Application.onTerminate() to avoid leaking the thread pool.
+     */
+    fun shutdown() {
+        paymentProcessor?.shutdown()
+    }
+
     internal fun reset() {
         _config = null
         paymentProcessor = null
@@ -604,6 +616,15 @@ object ConfigRepository {
         // Key = merchant string (case-folded for grouping), Value = resolved category name.
         val merchantToNewCategory = mutableMapOf<String, String?>()
 
+        // NEW-4: pre-compile each unique regex pattern once rather than re-compiling
+        //        inside the inner loop for every payment-merchant pair.
+        val compiledRegexCache: Map<String, Regex> = config.categories
+            .flatMap { it.merchants }
+            .filter { it.isRegex }
+            .map { it.pattern }
+            .distinct()
+            .associateWith { pattern -> Regex(pattern, setOf(RegexOption.IGNORE_CASE)) }
+
         var count = 0
         for (payment in allPayments) {
             val merchant = payment.merchant ?: continue
@@ -614,7 +635,7 @@ object ConfigRepository {
                     .firstOrNull { cat ->
                         cat.merchants.any { m ->
                             if (m.isRegex) {
-                                Regex(m.pattern, setOf(RegexOption.IGNORE_CASE)).containsMatchIn(merchant)
+                                compiledRegexCache.getValue(m.pattern).containsMatchIn(merchant)
                             } else {
                                 m.pattern.equals(merchant, ignoreCase = true)
                             }

@@ -437,12 +437,15 @@ class ApplyRulesActivity : BaseActivity() {
             }
         }
 
+        // LIMIT 5000 is a safety cap against OOM/ANR when querying by specific sender addresses.
+        // ApplyRulesActivity always pre-filters by address, so the result set should be small;
+        // the limit is an additional guard for devices with very high SMS volumes.
         val cursor: Cursor? = contentResolver.query(
             uri,
             arrayOf("address", "body", "date"),
             dateFilter,
             allSelectionArgs.toTypedArray(),
-            "date DESC"
+            "date DESC LIMIT 5000"
         )
 
         cursor?.use {
@@ -461,6 +464,11 @@ class ApplyRulesActivity : BaseActivity() {
             }
         }
 
+        val totalMessages = messages.values.sumOf { it.size }
+        if (totalMessages > 1000) {
+            android.util.Log.w(TAG, "SMS query returned $totalMessages messages, processing all")
+        }
+
         return messages
     }
 
@@ -469,5 +477,6 @@ class ApplyRulesActivity : BaseActivity() {
         const val EXTRA_SENDER_ADDRESS = "extra_sender_address"
         private const val KEY_START_DATE = "key_start_date"
         private const val KEY_END_DATE = "key_end_date"
+        private const val TAG = "ApplyRulesActivity"
     }
 }
