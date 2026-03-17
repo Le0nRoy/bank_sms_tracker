@@ -360,6 +360,28 @@
     <string name="terms_section_title">Privacy</string>
     <string name="view_privacy_notice">View Privacy Notice</string>
 
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_welcome_title">Welcome to Bank SMS Tracker</string>
+    <string name="onboarding_welcome_message">This app monitors your bank SMS messages to automatically track your spending and income.\n\nAll data is stored locally on your device.</string>
+    <string name="onboarding_sms_title">SMS Permission</string>
+    <string name="onboarding_sms_message">To receive and read bank SMS messages, the app needs SMS access.\n\nWithout this permission, the app cannot automatically detect new transactions.</string>
+    <string name="onboarding_sms_permissions_list">Permissions needed:\n• Receive SMS\n• Read SMS</string>
+    <string name="onboarding_notifications_title">Notifications</string>
+    <string name="onboarding_notifications_message">When a bank SMS cannot be matched to any known rule, the app can alert you so you can configure a new pattern.\n\nThis is optional — you can skip this step.</string>
+    <string name="onboarding_service_title">Background Service</string>
+    <string name="onboarding_service_message">The background service ensures bank SMS messages are processed even when the app is not open.\n\nThis is strongly recommended for reliable tracking.</string>
+    <string name="onboarding_service_note">You can enable or disable this later in Settings.</string>
+    <string name="onboarding_grant_permission">Grant Permission</string>
+    <string name="onboarding_start_service">Start Background Service</string>
+    <string name="onboarding_permission_granted">Permission granted</string>
+    <string name="onboarding_permission_denied">Permission denied — you can grant it later in system Settings</string>
+    <string name="onboarding_service_started">Background service started</string>
+    <string name="onboarding_notification_unavailable">Notifications permission is not required on this Android version</string>
+    <string name="warning_sms_permission_denied">SMS permission denied — cannot receive bank messages. Grant it in system Settings.</string>
+
     <!-- Background Service -->
     <string name="sms_monitor_channel_name">SMS Monitoring</string>
     <string name="sms_monitor_channel_desc">Keeps the app running to reliably receive bank SMS messages</string>

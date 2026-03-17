@@ -1,12 +1,16 @@
 package com.example.banksmstracker.ui
 
+import android.Manifest
 import android.app.AlertDialog
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.Switch
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.core.os.LocaleListCompat
 import com.example.banksmstracker.BankSmsTrackerApp
 import com.example.banksmstracker.R
@@ -94,12 +98,14 @@ class SettingsActivity : BaseActivity() {
 
     private fun setupNotificationSection() {
         val prefs = getSharedPreferences(BankSmsTrackerApp.PREFS_NAME, MODE_PRIVATE)
+        val notificationsEnabled = hasNotificationPermission()
 
         val switchUnmatched = findViewById<Switch>(R.id.switchUnmatchedSmsNotifications)
         switchUnmatched.isChecked = prefs.getBoolean(
             NotificationHelper.KEY_NOTIFICATIONS_UNMATCHED_SMS,
             true
         )
+        switchUnmatched.isEnabled = notificationsEnabled
         switchUnmatched.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(NotificationHelper.KEY_NOTIFICATIONS_UNMATCHED_SMS, isChecked)
                 .apply()
@@ -107,6 +113,7 @@ class SettingsActivity : BaseActivity() {
 
         val switchSound = findViewById<Switch>(R.id.switchNotificationsSound)
         switchSound.isChecked = prefs.getBoolean(NotificationHelper.KEY_NOTIFICATIONS_SOUND, true)
+        switchSound.isEnabled = notificationsEnabled
         switchSound.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(NotificationHelper.KEY_NOTIFICATIONS_SOUND, isChecked).apply()
         }
@@ -116,10 +123,19 @@ class SettingsActivity : BaseActivity() {
             NotificationHelper.KEY_NOTIFICATIONS_VIBRATION,
             true
         )
+        switchVibration.isEnabled = notificationsEnabled
         switchVibration.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(NotificationHelper.KEY_NOTIFICATIONS_VIBRATION, isChecked)
                 .apply()
         }
+    }
+
+    private fun hasNotificationPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun setupPrivacySection() {
