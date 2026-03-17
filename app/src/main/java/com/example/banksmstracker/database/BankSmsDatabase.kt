@@ -18,8 +18,8 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         IgnoreRuleEntity::class,
         IncomeEntity::class
     ],
-    version = 10,
-    exportSchema = false
+    version = 11,
+    exportSchema = true
 )
 abstract class BankSmsDatabase : RoomDatabase() {
 
@@ -275,6 +275,20 @@ abstract class BankSmsDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 10 to 11: Drop legacy sender_rules table.
+         *
+         * The sender_rules table was migrated to the unified rules table in migration 7→8 and kept
+         * "for backward compatibility". No code paths write to sender_rules any longer — all rule
+         * inserts go through RuleDao which targets the rules table. Dropping the table removes the
+         * dead weight and makes the schema match Room's entity list.
+         */
+        private val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS sender_rules")
+            }
+        }
+
         fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
@@ -290,7 +304,8 @@ abstract class BankSmsDatabase : RoomDatabase() {
                     MIGRATION_6_7,
                     MIGRATION_7_8,
                     MIGRATION_8_9,
-                    MIGRATION_9_10
+                    MIGRATION_9_10,
+                    MIGRATION_10_11
                 )
                 .build()
                 .also { INSTANCE = it }

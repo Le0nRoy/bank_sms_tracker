@@ -12,6 +12,10 @@ import com.example.banksmstracker.util.Constants
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class UnparsedMessageException(message: String) : Exception("Cannot parse message: $message")
 
@@ -24,11 +28,30 @@ class PaymentProcessor(
 ) {
     companion object {
         private const val TAG = "PaymentProcessor"
+        private const val REGEX_TIMEOUT_MS = 500L
+        private val regexExecutor = Executors.newCachedThreadPool()
 
         private fun MatchResult.namedGroup(name: String): String? = try {
             groups[name]?.value
         } catch (e: IllegalArgumentException) {
             null
+        }
+
+        /**
+         * Runs [block] on a worker thread and returns null if it does not complete within
+         * [REGEX_TIMEOUT_MS] ms. Protects against ReDoS from user-supplied patterns (OC-3).
+         */
+        private fun <T> safeRegex(patternStr: String, block: () -> T?): T? {
+            val future = regexExecutor.submit(Callable { block() })
+            return try {
+                future.get(REGEX_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+            } catch (e: TimeoutException) {
+                future.cancel(true)
+                Log.w(TAG, "Regex timeout (>${REGEX_TIMEOUT_MS}ms) for pattern: $patternStr")
+                null
+            } catch (e: Exception) {
+                null
+            }
         }
     }
 
@@ -78,7 +101,7 @@ class PaymentProcessor(
 
         for (rule in paymentRules) {
             val pattern = rule.regexPattern
-            val match = pattern.find(message) ?: continue
+            val match = safeRegex(rule.pattern) { pattern.find(message) } ?: continue
 
             val amount = match.namedGroup(Constants.RegexGroups.AMOUNT)?.toDoubleOrNull()
             val currency = match.namedGroup(Constants.RegexGroups.CURRENCY) ?: ""
@@ -115,7 +138,7 @@ class PaymentProcessor(
 
         for (rule in incomeRules) {
             val pattern = rule.regexPattern
-            val match = pattern.find(message) ?: continue
+            val match = safeRegex(rule.pattern) { pattern.find(message) } ?: continue
 
             val amount = match.namedGroup(Constants.RegexGroups.AMOUNT)?.toDoubleOrNull()
             val currency = match.namedGroup(Constants.RegexGroups.CURRENCY) ?: ""
@@ -151,8 +174,10 @@ class PaymentProcessor(
 
         for (rule in ignoreRules) {
             val pattern = rule.regexPattern
-            // Ignore rules don't expect any groups - just check if the pattern matches
-            if (pattern.containsMatchIn(message)) {
+            // Ignore rules don't expect any groups - just check if the pattern matches.
+            // safeRegex returns null on timeout, which we treat as non-match (OC-3).
+            val matched = safeRegex(rule.pattern) { pattern.containsMatchIn(message) } ?: false
+            if (matched) {
                 Log.d(TAG, "Message matched ignore rule: ${rule.description ?: rule.pattern}")
                 return MessageProcessResult.Ignored(rule.description ?: rule.pattern)
             }
@@ -174,14 +199,15 @@ class PaymentProcessor(
     suspend fun processMessage(
         message: String,
         address: String,
-        smsReceivedAt: Long = System.currentTimeMillis()
+        smsReceivedAt: Long = System.currentTimeMillis(),
+        existingPayments: List<Payment>? = null
     ): Payment {
         val result = getMessageResult(message, address)
 
         return when (result) {
             is MessageProcessResult.PaymentResult -> {
                 val categorizedPayment = assignCategory(result.payment)
-                val datedPayment = approximateDate(categorizedPayment, smsReceivedAt)
+                val datedPayment = approximateDate(categorizedPayment, smsReceivedAt, existingPayments)
                 val inserted = paymentRepository.savePayment(datedPayment, message, address)
                 if (!inserted) {
                     Log.d(TAG, "Duplicate payment skipped for sender $address")
@@ -190,7 +216,6 @@ class PaymentProcessor(
             }
             is MessageProcessResult.IncomeResult -> {
                 Log.d(TAG, "Income detected from $address: ${result.income}")
-                // For now, return a dummy payment to maintain API compatibility
                 // Income handling should be done via processMessageFull()
                 throw UnparsedMessageException("Income message - use processMessageFull()")
             }
@@ -208,14 +233,15 @@ class PaymentProcessor(
     suspend fun processMessageFull(
         message: String,
         address: String,
-        smsReceivedAt: Long = System.currentTimeMillis()
+        smsReceivedAt: Long = System.currentTimeMillis(),
+        existingPayments: List<Payment>? = null
     ): MessageProcessResult {
         val result = getMessageResult(message, address)
 
         return when (result) {
             is MessageProcessResult.PaymentResult -> {
                 val categorizedPayment = assignCategory(result.payment)
-                val datedPayment = approximateDate(categorizedPayment, smsReceivedAt)
+                val datedPayment = approximateDate(categorizedPayment, smsReceivedAt, existingPayments)
                 val inserted = paymentRepository.savePayment(datedPayment, message, address)
                 if (!inserted) {
                     Log.d(TAG, "Duplicate payment skipped for sender $address")
@@ -234,21 +260,31 @@ class PaymentProcessor(
         }
     }
 
-    private suspend fun approximateDate(payment: Payment, smsReceivedAt: Long): Payment {
+    private suspend fun approximateDate(
+        payment: Payment,
+        referenceTime: Long,
+        existingPayments: List<Payment>? = null
+    ): Payment {
         if (payment.timestamp.isNotBlank()) return payment
 
-        // Try nearest neighbour by insertion id (sequential = chronological)
-        val allDated = paymentRepository.getAllPayments()
+        // Use the pre-fetched list when provided to avoid repeated full table scans (PF-3).
+        val allDated = (existingPayments ?: paymentRepository.getAllPayments())
             .filter { it.timestamp.isNotBlank() && it.id != null }
-        val neighbor = allDated.maxByOrNull { it.id!! }
+
+        // Find the neighbor whose parsed timestamp is closest to referenceTime (DD-6).
+        // This ensures historical SMS get a contextual date rather than always the newest.
+        val fmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val neighbor = allDated.minByOrNull { p ->
+            val parsed = runCatching { fmt.parse(p.timestamp.substringBefore(" ").ifEmpty { p.timestamp })?.time }.getOrNull()
+            if (parsed != null) kotlin.math.abs(parsed - referenceTime) else Long.MAX_VALUE
+        }
 
         return if (neighbor != null) {
             val approxDate = neighbor.timestamp.substringBefore(" ").ifEmpty { neighbor.timestamp }
             payment.copy(timestamp = approxDate)
         } else {
-            // Last resort: format device receive time as a date string
-            val fmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            payment.copy(timestamp = fmt.format(Date(smsReceivedAt)))
+            // Last resort: format SMS receive time as a date string
+            payment.copy(timestamp = fmt.format(Date(referenceTime)))
         }
     }
 

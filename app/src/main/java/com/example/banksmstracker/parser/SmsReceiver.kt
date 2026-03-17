@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Build
 import android.telephony.SmsMessage
 import android.util.Log
+import com.example.banksmstracker.BuildConfig
 import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.IncomeEntity
@@ -61,6 +62,7 @@ class SmsReceiver : BroadcastReceiver() {
         val testBody = intent.getStringExtra(EXTRA_TEST_BODY)
 
         if (!testSender.isNullOrBlank() && !testBody.isNullOrBlank()) {
+            if (!BuildConfig.DEBUG) return
             val pendingResult = goAsync()
             if (pendingResult != null) {
                 // Async mode - running from actual broadcast
@@ -126,30 +128,38 @@ class SmsReceiver : BroadcastReceiver() {
             val result = paymentProcessor.processMessageFull(body, sender, smsReceivedAt)
             when (result) {
                 is MessageProcessResult.PaymentResult -> {
-                    Log.d(
-                        TAG,
-                        "SMS from $sender processed as payment.\nMessage: $body\nParsed: ${result.payment}"
-                    )
+                    if (BuildConfig.DEBUG) {
+                        Log.d(
+                            TAG,
+                            "SMS from $sender processed as payment.\nMessage: $body\nParsed: ${result.payment}"
+                        )
+                    }
                 }
                 is MessageProcessResult.IncomeResult -> {
                     saveIncome(result, body, sender)
-                    Log.d(
-                        TAG,
-                        "SMS from $sender processed as income.\nMessage: $body\nParsed: ${result.income}"
-                    )
+                    if (BuildConfig.DEBUG) {
+                        Log.d(
+                            TAG,
+                            "SMS from $sender processed as income.\nMessage: $body\nParsed: ${result.income}"
+                        )
+                    }
                 }
                 is MessageProcessResult.Ignored -> {
-                    Log.d(
-                        TAG,
-                        "SMS from $sender ignored by rule: ${result.ruleName}\nMessage: $body"
-                    )
+                    if (BuildConfig.DEBUG) {
+                        Log.d(
+                            TAG,
+                            "SMS from $sender ignored by rule: ${result.ruleName}\nMessage: $body"
+                        )
+                    }
                 }
             }
         } catch (e: Exception) {
-            Log.e(
-                TAG,
-                "Error processing SMS from $sender:\n${e.message}\nMessage: $body"
-            )
+            if (BuildConfig.DEBUG) {
+                Log.e(
+                    TAG,
+                    "Error processing SMS from $sender:\n${e.message}\nMessage: $body"
+                )
+            }
         }
     }
 
@@ -172,7 +182,7 @@ class SmsReceiver : BroadcastReceiver() {
 
         val db = BankSmsDatabase.getInstance(context)
         val insertedId = db.incomeDao().insertIncome(incomeEntity)
-        if (insertedId == -1L) {
+        if (insertedId == -1L && BuildConfig.DEBUG) {
             Log.d(TAG, "Duplicate income skipped for sender $sender")
         }
     }

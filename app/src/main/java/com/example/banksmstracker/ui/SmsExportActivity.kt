@@ -231,15 +231,18 @@ class SmsExportActivity : BaseActivity() {
         }
 
         // Build selection with only date filters (address filtering done in Kotlin for flexibility)
+        val selectionArgs = mutableListOf<String>()
         val selection = buildString {
             var hasCondition = false
             startDate?.let {
-                append("date >= $it")
+                append("date >= ?")
+                selectionArgs.add(it.toString())
                 hasCondition = true
             }
             endDate?.let {
                 if (hasCondition) append(" AND ")
-                append("date <= $it")
+                append("date <= ?")
+                selectionArgs.add(it.toString())
             }
         }.ifEmpty { null }
 
@@ -247,7 +250,7 @@ class SmsExportActivity : BaseActivity() {
             uri,
             arrayOf("address", "body", "date", "type"),
             selection,
-            null,
+            selectionArgs.takeIf { it.isNotEmpty() }?.toTypedArray(),
             "date DESC LIMIT 5000"
         )
 
@@ -351,6 +354,7 @@ class SmsExportActivity : BaseActivity() {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "sms_export_$timestamp.json"
         val file = File(cacheDir, fileName)
+        file.deleteOnExit()
 
         val jsonArray = JSONArray()
         val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.getDefault())
@@ -384,6 +388,7 @@ class SmsExportActivity : BaseActivity() {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "sms_export_$timestamp.csv"
         val file = File(cacheDir, fileName)
+        file.deleteOnExit()
 
         val sb = StringBuilder()
         val isoFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())

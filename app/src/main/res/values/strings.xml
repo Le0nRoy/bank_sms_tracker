@@ -276,7 +276,7 @@
     <string name="app_version_label">App Version: %1$s (%2$d)</string>
     <string name="build_type_label">Build Type: %1$s</string>
     <string name="device_model_label">Device: %1$s %2$s</string>
-    <string name="android_version_label">Android Version: %1$s (API %2$d)</string>
+    <string name="android_version_label">Android API Level: %1$d</string>
     <string name="product_label">Product: %1$s</string>
     <string name="hardware_label">Hardware: %1$s</string>
     <string name="config_summary_header">\n\nCONFIGURATION SUMMARY:</string>

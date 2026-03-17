@@ -15,6 +15,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.banksmstracker.R
+import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.processor.MessageIgnoredException
 import com.example.banksmstracker.repository.ConfigRepository
@@ -250,7 +251,16 @@ class ApplyRulesActivity : BaseActivity() {
                     return@launch
                 }
 
+                // Fetch existing payments once before the loop to avoid repeated full table
+                // scans inside approximateDate() for each untimestamped SMS (PF-3).
+                val database = BankSmsDatabase.getInstance(this@ApplyRulesActivity)
+                val paymentRepository = RoomPaymentRepository(database.paymentDao())
+                val existingPayments = withContext(Dispatchers.IO) {
+                    paymentRepository.getAllPayments()
+                }
+
                 var parsedCount = 0
+                var incomeCount = 0
                 var failedCount = 0
                 var ignoredCount = 0
 
@@ -259,11 +269,34 @@ class ApplyRulesActivity : BaseActivity() {
 
                     for (smsWithDate in messages) {
                         try {
-                            val payment = withContext(Dispatchers.IO) {
-                                processor.processMessage(smsWithDate.body, sender, smsWithDate.date)
+                            // Use processMessageFull() to handle income results instead of
+                            // throwing UnparsedMessageException for them (DD-5).
+                            val result = withContext(Dispatchers.IO) {
+                                processor.processMessageFull(
+                                    smsWithDate.body,
+                                    sender,
+                                    smsWithDate.date,
+                                    existingPayments
+                                )
                             }
-                            parsedCount++
-                            addSuccessItem(payment)
+                            when (result) {
+                                is MessageProcessResult.PaymentResult -> {
+                                    parsedCount++
+                                    addSuccessItem(result.payment)
+                                }
+                                is MessageProcessResult.IncomeResult -> {
+                                    incomeCount++
+                                    addIgnoredItem(
+                                        sender,
+                                        smsWithDate.body,
+                                        "Income: +${result.income.amount} ${result.income.currency}"
+                                    )
+                                }
+                                is MessageProcessResult.Ignored -> {
+                                    ignoredCount++
+                                    addIgnoredItem(sender, smsWithDate.body, result.ruleName)
+                                }
+                            }
                         } catch (e: MessageIgnoredException) {
                             ignoredCount++
                             addIgnoredItem(sender, smsWithDate.body, e.ruleName)
@@ -391,13 +424,16 @@ class ApplyRulesActivity : BaseActivity() {
         val selectionArgs = configuredSenders.toTypedArray()
 
         // Build date filter
+        val allSelectionArgs = mutableListOf(*selectionArgs)
         val dateFilter = buildString {
             append("address IN ($placeholders)")
             if (startDate != null) {
-                append(" AND date >= $startDate")
+                append(" AND date >= ?")
+                allSelectionArgs.add(startDate.toString())
             }
             if (endDate != null) {
-                append(" AND date <= $endDate")
+                append(" AND date <= ?")
+                allSelectionArgs.add(endDate.toString())
             }
         }
 
@@ -405,7 +441,7 @@ class ApplyRulesActivity : BaseActivity() {
             uri,
             arrayOf("address", "body", "date"),
             dateFilter,
-            selectionArgs,
+            allSelectionArgs.toTypedArray(),
             "date DESC"
         )
 

@@ -101,7 +101,7 @@ class CheckSendersActivity : BaseActivity() {
             arrayOf("DISTINCT address"),
             null,
             null,
-            "address ASC"
+            "address ASC LIMIT 10000"
         )
 
         cursor?.use {

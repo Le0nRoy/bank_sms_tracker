@@ -18,7 +18,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.banksmstracker.BuildConfig
 import com.example.banksmstracker.R
@@ -68,6 +70,14 @@ class PaymentsActivity : BaseActivity() {
 
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val adapter = PaymentAdapter()
+
+    private class PaymentDiffCallback : DiffUtil.ItemCallback<Payment>() {
+        override fun areItemsTheSame(oldItem: Payment, newItem: Payment): Boolean =
+            oldItem.id != null && oldItem.id == newItem.id
+
+        override fun areContentsTheSame(oldItem: Payment, newItem: Payment): Boolean =
+            oldItem == newItem
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -350,6 +360,7 @@ class PaymentsActivity : BaseActivity() {
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val fileName = "payments_$timestamp.csv"
                 val file = File(cacheDir, fileName)
+                file.deleteOnExit()
                 file.writeText(csvContent)
 
                 val uri = FileProvider.getUriForFile(
@@ -672,14 +683,7 @@ class PaymentsActivity : BaseActivity() {
     }
 
     // RecyclerView Adapter
-    inner class PaymentAdapter : RecyclerView.Adapter<PaymentAdapter.PaymentViewHolder>() {
-
-        private var payments: List<Payment> = emptyList()
-
-        fun submitList(list: List<Payment>) {
-            payments = list
-            notifyDataSetChanged()
-        }
+    inner class PaymentAdapter : ListAdapter<Payment, PaymentAdapter.PaymentViewHolder>(PaymentDiffCallback()) {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PaymentViewHolder {
             val view = LayoutInflater.from(parent.context)
@@ -688,10 +692,8 @@ class PaymentsActivity : BaseActivity() {
         }
 
         override fun onBindViewHolder(holder: PaymentViewHolder, position: Int) {
-            holder.bind(payments[position])
+            holder.bind(getItem(position))
         }
-
-        override fun getItemCount(): Int = payments.size
 
         inner class PaymentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             private val tvMerchant: TextView = itemView.findViewById(R.id.tvMerchant)

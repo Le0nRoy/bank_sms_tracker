@@ -270,7 +270,7 @@
     <string name="app_version_label">Версия приложения: %1$s (%2$d)</string>
     <string name="build_type_label">Тип сборки: %1$s</string>
     <string name="device_model_label">Устройство: %1$s %2$s</string>
-    <string name="android_version_label">Версия Android: %1$s (API %2$d)</string>
+    <string name="android_version_label">Уровень API Android: %1$d</string>
     <string name="product_label">Продукт: %1$s</string>
     <string name="hardware_label">Оборудование: %1$s</string>
     <string name="config_summary_header">\n\nСВОДКА КОНФИГУРАЦИИ:</string>

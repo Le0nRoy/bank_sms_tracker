@@ -9,6 +9,8 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.banksmstracker.BuildConfig
@@ -39,6 +41,13 @@ class BugReportActivity : BaseActivity() {
     private lateinit var btnSendReport: Button
 
     private var currentReport: String = ""
+    private var pendingExportFile: File? = null
+
+    private val shareChooserLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            pendingExportFile?.delete()
+            pendingExportFile = null
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,13 +123,7 @@ class BugReportActivity : BaseActivity() {
             report.append("\n")
             report.append(getString(R.string.build_type_label, BuildConfig.BUILD_TYPE))
             report.append("\n")
-            report.append(getString(R.string.device_model_label, Build.MANUFACTURER, Build.MODEL))
-            report.append("\n")
-            report.append(getString(R.string.android_version_label, Build.VERSION.RELEASE, Build.VERSION.SDK_INT))
-            report.append("\n")
-            report.append(getString(R.string.product_label, Build.PRODUCT))
-            report.append("\n")
-            report.append(getString(R.string.hardware_label, Build.HARDWARE))
+            report.append(getString(R.string.android_version_label, Build.VERSION.SDK_INT))
             report.append("\n\n")
         }
 
@@ -258,7 +261,8 @@ class BugReportActivity : BaseActivity() {
 
         if (cbAttachPaymentsData.isChecked) {
             lifecycleScope.launch {
-                val paymentsUri = generatePaymentsFile()
+                val (paymentsUri, exportFile) = generatePaymentsFile()
+                pendingExportFile = exportFile
                 val shareIntent = if (paymentsUri != null) {
                     Intent(Intent.ACTION_SEND_MULTIPLE).apply {
                         type = "text/plain"
@@ -277,7 +281,7 @@ class BugReportActivity : BaseActivity() {
                         putExtra(Intent.EXTRA_TEXT, currentReport)
                     }
                 }
-                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_report_title)))
+                shareChooserLauncher.launch(Intent.createChooser(shareIntent, getString(R.string.share_report_title)))
             }
         } else {
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -289,16 +293,17 @@ class BugReportActivity : BaseActivity() {
         }
     }
 
-    private suspend fun generatePaymentsFile(): android.net.Uri? = withContext(Dispatchers.IO) {
+    private suspend fun generatePaymentsFile(): Pair<android.net.Uri?, File?> = withContext(Dispatchers.IO) {
         try {
             val db = BankSmsDatabase.getInstance(this@BugReportActivity)
             val payments = RoomPaymentRepository(db.paymentDao()).getAllPayments()
             val json = Json.encodeToString(payments)
             val file = File(cacheDir, "payments_export.json")
             file.writeText(json)
-            FileProvider.getUriForFile(this@BugReportActivity, "$packageName.fileprovider", file)
+            val uri = FileProvider.getUriForFile(this@BugReportActivity, "$packageName.fileprovider", file)
+            Pair(uri, file)
         } catch (e: Exception) {
-            null
+            Pair(null, null)
         }
     }
 }

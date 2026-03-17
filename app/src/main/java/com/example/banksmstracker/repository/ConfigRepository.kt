@@ -45,31 +45,44 @@ object ConfigRepository {
     @Volatile
     private var paymentProcessor: com.example.banksmstracker.processor.PaymentProcessor? = null
 
+    // PF-4: dirty flag — set to true on any mutation so that getCategories() / getSenders()
+    //        only call refreshConfigInternal() when the DB has actually changed.
+    @Volatile
+    private var configDirty = true
+
     val config: SmsConfig
         get() = _config ?: throw IllegalStateException("Config not initialized")
 
     fun load(application: Application, seedIfEmpty: Boolean = true) {
-        if (_config != null) return
-        database = BankSmsDatabase.getInstance(application)
-        configDao = database.configDao()
-        ruleDao = database.ruleDao()
-        paymentRepository = RoomPaymentRepository(database.paymentDao())
+        // RC-1: entire guard + init body moved inside configMutex to prevent TOCTOU race.
+        // OC-2: switched to runBlocking(Dispatchers.IO) so DB I/O does not run on the
+        //        main-thread dispatcher and the calling thread is not blocked on a UI-thread
+        //        coroutine dispatcher.
+        runBlocking(Dispatchers.IO) {
+            configMutex.withLock {
+                if (_config != null) return@withLock
+                database = BankSmsDatabase.getInstance(application)
+                configDao = database.configDao()
+                ruleDao = database.ruleDao()
+                paymentRepository = RoomPaymentRepository(database.paymentDao())
 
-        runBlocking {
-            if (seedIfEmpty && isConfigEmpty()) {
-                seedFromAssets(application)
+                if (seedIfEmpty && isConfigEmpty()) {
+                    seedFromAssets(application)
+                }
+                refreshConfigInternal()
             }
-            refreshConfigInternal()
         }
     }
 
     suspend fun getCategories(): List<Category> = withContext(Dispatchers.IO) {
-        refreshConfigInternal()
+        // PF-4: only refresh when something has changed since the last read.
+        if (configDirty) refreshConfigInternal()
         config.categories.map { it.copy(merchants = it.merchants.toMutableList()) }
     }
 
     suspend fun getSenders(): List<Sender> = withContext(Dispatchers.IO) {
-        refreshConfigInternal()
+        // PF-4: only refresh when something has changed since the last read.
+        if (configDirty) refreshConfigInternal()
         config.senders.map { sender ->
             sender.copy(
                 addresses = sender.addresses.toMutableList(),
@@ -80,6 +93,7 @@ object ConfigRepository {
 
     suspend fun addCategory(): Category = withContext(Dispatchers.IO) {
         val id = configDao.insertCategory(CategoryEntity(name = ""))
+        configDirty = true
         refreshConfigInternal()
         config.categories.first { it.id == id }
     }
@@ -104,6 +118,7 @@ object ConfigRepository {
                     )
                 }
         }
+        configDirty = true
         refreshConfigInternal()
         recategorizeAllPayments()
     }
@@ -113,11 +128,13 @@ object ConfigRepository {
             configDao.deleteMerchantsForCategory(categoryId)
             configDao.deleteCategory(CategoryEntity(id = categoryId, name = ""))
         }
+        configDirty = true
         refreshConfigInternal()
     }
 
     suspend fun addSender(): Sender = withContext(Dispatchers.IO) {
         val senderId = configDao.insertSender(SenderEntity(name = ""))
+        configDirty = true
         refreshConfigInternal()
         config.senders.first { it.id == senderId }
     }
@@ -152,6 +169,7 @@ object ConfigRepository {
                     )
                 }
         }
+        configDirty = true
         refreshConfigInternal()
     }
 
@@ -161,15 +179,20 @@ object ConfigRepository {
             ruleDao.deleteRulesForSender(senderId)
             configDao.deleteSender(SenderEntity(id = senderId, name = ""))
         }
+        configDirty = true
         refreshConfigInternal()
     }
 
+    // RC-2: synchronized block prevents two threads from both seeing null and creating
+    //        two separate PaymentProcessor instances.
     fun getPaymentProcessor(): com.example.banksmstracker.processor.PaymentProcessor =
-        paymentProcessor ?: com.example.banksmstracker.processor.PaymentProcessor(
-            senders = config.senders,
-            categories = config.categories,
-            paymentRepository = paymentRepository
-        ).also { paymentProcessor = it }
+        synchronized(this) {
+            paymentProcessor ?: com.example.banksmstracker.processor.PaymentProcessor(
+                senders = config.senders,
+                categories = config.categories,
+                paymentRepository = paymentRepository
+            ).also { paymentProcessor = it }
+        }
 
     /**
      * Validation result for duplicate checks.
@@ -386,6 +409,7 @@ object ConfigRepository {
             }
         }
 
+        configDirty = true
         refreshConfigInternal()
 
         return ImportResult.Success(
@@ -459,6 +483,8 @@ object ConfigRepository {
                 categories = config.categories,
                 paymentRepository = paymentRepository
             )
+            // PF-4: mark config as clean after a successful refresh.
+            configDirty = false
         }
     }
 
@@ -541,6 +567,7 @@ object ConfigRepository {
     internal fun reset() {
         _config = null
         paymentProcessor = null
+        configDirty = true
         BankSmsDatabase.resetInstance()
     }
 
@@ -555,6 +582,7 @@ object ConfigRepository {
         // Reset in-memory state - caller must call load() again
         _config = null
         paymentProcessor = null
+        configDirty = true
     }
 
     /**
@@ -567,29 +595,53 @@ object ConfigRepository {
      * Returns the number of payments that were re-categorized.
      */
     suspend fun recategorizeAllPayments(): Int = withContext(Dispatchers.IO) {
-        var count = 0
         val allPayments = paymentRepository.getAllPayments()
 
+        // PF-2: instead of one UPDATE per payment (N+1), group payments by the
+        // (merchant, newCategory) pair and issue one UPDATE … WHERE merchant = ? per
+        // distinct merchant.  This reduces DB round-trips from O(payments) to
+        // O(distinct merchants that need recategorization).
+        // Key = merchant string (case-folded for grouping), Value = resolved category name.
+        val merchantToNewCategory = mutableMapOf<String, String?>()
+
+        var count = 0
         for (payment in allPayments) {
             val merchant = payment.merchant ?: continue
-            val newCategory = config.categories
-                .filter { it.enabled }
-                .firstOrNull { cat ->
-                    cat.merchants.any { m ->
-                        if (m.isRegex) {
-                            Regex(m.pattern, setOf(RegexOption.IGNORE_CASE)).containsMatchIn(merchant)
-                        } else {
-                            m.pattern.equals(merchant, ignoreCase = true)
+
+            val newCategory = merchantToNewCategory.getOrPut(merchant.lowercase()) {
+                config.categories
+                    .filter { it.enabled }
+                    .firstOrNull { cat ->
+                        cat.merchants.any { m ->
+                            if (m.isRegex) {
+                                Regex(m.pattern, setOf(RegexOption.IGNORE_CASE)).containsMatchIn(merchant)
+                            } else {
+                                m.pattern.equals(merchant, ignoreCase = true)
+                            }
                         }
-                    }
-                }?.name
+                    }?.name
+            }
 
             if (newCategory != payment.categoryId) {
-                val paymentId = payment.id ?: continue
-                paymentRepository.updatePaymentCategory(paymentId, newCategory)
                 count++
             }
         }
+
+        // Batch: one UPDATE per distinct merchant whose category changed.
+        val merchantsToUpdate = allPayments
+            .filter { it.merchant != null }
+            .groupBy { it.merchant!!.lowercase() }
+            .filter { (key, paymentsForMerchant) ->
+                val newCat = merchantToNewCategory[key]
+                paymentsForMerchant.any { it.categoryId != newCat }
+            }
+
+        for ((key, paymentsForMerchant) in merchantsToUpdate) {
+            val representativeMerchant = paymentsForMerchant.first().merchant!!
+            val newCategory = merchantToNewCategory[key]
+            paymentRepository.updateCategoryForMerchant(representativeMerchant, newCategory)
+        }
+
         count
     }
 }

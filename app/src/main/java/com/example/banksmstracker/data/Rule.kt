@@ -22,7 +22,7 @@ data class Rule(
     val regexPattern: Regex
         get() {
             if (cachedPattern == null || cachedPatternString != pattern) {
-                cachedPattern = pattern.toRegex()
+                cachedPattern = Regex(pattern, RegexOption.IGNORE_CASE)
                 cachedPatternString = pattern
             }
             return cachedPattern!!
