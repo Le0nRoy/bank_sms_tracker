@@ -25,6 +25,10 @@ class SmsReceiverE2ETest {
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     private val TAG = "SmsReceiverE2ETest"
 
+    private val testRulePattern =
+        "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3}) card (?<card>\\d+)" +
+            " (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
+
     private fun buildSmsIntent(sender: String, body: String): Intent =
         Intent("android.provider.Telephony.SMS_RECEIVED").apply {
             putExtra(SmsReceiver.EXTRA_TEST_SENDER, sender)
@@ -48,7 +52,7 @@ class SmsReceiverE2ETest {
             addresses = mutableListOf("BANK"),
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = testRulePattern
                 )
             )
         )
@@ -116,7 +120,7 @@ class SmsReceiverE2ETest {
             addresses = mutableListOf("BANK"),
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = testRulePattern
                 )
             )
         )

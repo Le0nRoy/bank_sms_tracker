@@ -177,7 +177,8 @@ class ConfigPersistenceE2ETest {
         sender.addresses = mutableListOf("BANK123")
         sender.rules = mutableListOf(
             com.example.banksmstracker.data.Rule(
-                pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                pattern = "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3}) card (?<card>\\d+)" +
+                    " (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
             )
         )
         ConfigRepository.updateSender(sender)

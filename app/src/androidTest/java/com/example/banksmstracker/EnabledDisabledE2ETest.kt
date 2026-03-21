@@ -30,6 +30,10 @@ class EnabledDisabledE2ETest {
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
+    private val testRulePattern =
+        "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3}) card (?<card>\\d+)" +
+            " (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
+
     @BeforeEach
     fun setUp() {
         // First reset to close any existing database connection
@@ -66,7 +70,7 @@ class EnabledDisabledE2ETest {
             addresses = mutableListOf("DISABLED"),
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = testRulePattern
                 )
             ),
             enabled = false // Disabled sender
@@ -100,7 +104,7 @@ class EnabledDisabledE2ETest {
             addresses = mutableListOf("ENABLED"),
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = testRulePattern
                 )
             ),
             enabled = true // Enabled sender
@@ -133,7 +137,7 @@ class EnabledDisabledE2ETest {
             addresses = mutableListOf("TESTBANK"),
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})",
+                    pattern = testRulePattern,
                     enabled = false // Disabled rule
                 )
             ),
@@ -168,7 +172,7 @@ class EnabledDisabledE2ETest {
             addresses = mutableListOf("TESTBANK"),
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})",
+                    pattern = testRulePattern,
                     enabled = true // Enabled rule
                 )
             ),
@@ -202,7 +206,7 @@ class EnabledDisabledE2ETest {
             addresses = mutableListOf("TESTBANK"),
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = testRulePattern
                 )
             ),
             enabled = true
@@ -244,7 +248,7 @@ class EnabledDisabledE2ETest {
             addresses = mutableListOf("TESTBANK"),
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = testRulePattern
                 )
             ),
             enabled = true
@@ -291,7 +295,7 @@ class EnabledDisabledE2ETest {
                 ),
                 // Enabled rule that will match
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})",
+                    pattern = testRulePattern,
                     enabled = true
                 )
             ),
@@ -327,7 +331,7 @@ class EnabledDisabledE2ETest {
             addresses = mutableListOf("BANK123"),
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = testRulePattern
                 )
             ),
             enabled = false
@@ -338,7 +342,7 @@ class EnabledDisabledE2ETest {
             addresses = mutableListOf("BANK123"), // Same address
             rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = testRulePattern
                 )
             ),
             enabled = true

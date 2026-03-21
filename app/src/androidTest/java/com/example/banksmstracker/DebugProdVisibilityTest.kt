@@ -11,6 +11,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import com.example.banksmstracker.ui.BugReportActivity
 import com.example.banksmstracker.ui.MainActivity
+import com.example.banksmstracker.ui.OnboardingActivity
 import com.example.banksmstracker.ui.PaymentsActivity
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -34,10 +35,12 @@ class DebugProdVisibilityTest {
     private val appContext = ApplicationProvider.getApplicationContext<Context>()
 
     @BeforeEach
-    fun skipTermsDialog() {
-        // Pre-agree to terms so the dialog does not block activity launch
+    fun skipTermsAndOnboarding() {
+        // Pre-agree to terms and mark onboarding done so neither blocks activity launch
         appContext.getSharedPreferences(MainActivity.PREFS_TERMS, Context.MODE_PRIVATE)
-            .edit().putBoolean(MainActivity.KEY_TERMS_AGREED, true).apply()
+            .edit().putBoolean(MainActivity.KEY_TERMS_AGREED, true).commit()
+        appContext.getSharedPreferences(OnboardingActivity.PREFS_ONBOARDING, Context.MODE_PRIVATE)
+            .edit().putBoolean(OnboardingActivity.KEY_ONBOARDING_COMPLETED, true).commit()
     }
 
     @Test
@@ -70,9 +73,9 @@ class DebugProdVisibilityTest {
     @Test
     @DisplayName("Terms dialog is shown on first launch")
     fun termsDialogShownOnFirstLaunch() {
-        // Clear agreed flag so the dialog will appear
+        // Clear agreed flag so the dialog will appear (onboarding stays completed)
         appContext.getSharedPreferences(MainActivity.PREFS_TERMS, Context.MODE_PRIVATE)
-            .edit().remove(MainActivity.KEY_TERMS_AGREED).apply()
+            .edit().remove(MainActivity.KEY_TERMS_AGREED).commit()
 
         ActivityScenario.launch(MainActivity::class.java).use {
             // The terms dialog button should be visible

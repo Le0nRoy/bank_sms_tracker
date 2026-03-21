@@ -35,8 +35,10 @@ class SmsProcessingPipelineE2ETest {
     private lateinit var repository: InMemoryPaymentRepository
     private lateinit var smsReceiver: SmsReceiver
 
-    // Standard regex pattern with 6 capture groups
-    private val standardRegex = "Payment (\\d+\\.\\d{2}) (\\w+) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+    // Standard regex pattern with 6 named capture groups
+    private val standardRegex =
+        "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3}) card (?<card>\\d+)" +
+            " (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
 
     private fun buildSmsIntent(sender: String, body: String): Intent =
         Intent("android.provider.Telephony.SMS_RECEIVED").apply {
@@ -424,7 +426,10 @@ class SmsProcessingPipelineE2ETest {
                 addresses = mutableListOf("TESTBANK"),
                 rules = mutableListOf(
                     // Specific rule for GEL currency
-                    Rule(pattern = "GEL (\\d+\\.\\d{2}) (GEL) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"),
+                    Rule(
+                        pattern = "GEL (?<amount>\\d+\\.\\d{2}) (?<currency>GEL) card (?<card>\\d+)" +
+                            " (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
+                    ),
                     // General rule for any currency
                     Rule(pattern = standardRegex)
                 )
@@ -713,7 +718,9 @@ class SmsProcessingPipelineE2ETest {
         @Test
         @DisplayName("Unicode in message is preserved")
         fun unicodeInMessageIsPreserved() {
-            val unicodeRegex = "Payment (\\d+\\.\\d{2}) (\\w+) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+            val unicodeRegex =
+                "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3}) card (?<card>\\d+)" +
+                    " (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
             val sender =
                 Sender(
                     name = "TestBank",

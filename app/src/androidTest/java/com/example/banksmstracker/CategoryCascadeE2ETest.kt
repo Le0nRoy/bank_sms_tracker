@@ -70,7 +70,8 @@ class CategoryCascadeE2ETest {
             sender.addresses = mutableListOf("BANK")
             sender.rules = mutableListOf(
                 Rule(
-                    pattern = "Payment (\\d+\\.\\d{2}) (USD) card (\\d+) (.+) at (\\d+) bal (\\d+\\.\\d{2})"
+                    pattern = "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3})" +
+                        " card (?<card>\\d+) (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
                 )
             )
             ConfigRepository.updateSender(sender)
@@ -170,13 +171,11 @@ class CategoryCascadeE2ETest {
         techCategory.merchants = mutableListOf(Merchant("Electronics"))
         ConfigRepository.updateCategory(techCategory)
 
-        // Re-categorize all payments
-        val updateCount = ConfigRepository.recategorizeAllPayments()
-
+        // updateCategory() already triggers recategorizeAllPayments() internally (BUG-007).
+        // Verify the Electronics payment was recategorized by the implicit call.
         val paymentsAfterUpdate = paymentRepository.getAllPayments()
         val electronicsPayment = paymentsAfterUpdate.find { it.merchant == "Electronics" }
         assertEquals("Tech", electronicsPayment?.categoryId)
-        assertEquals(1, updateCount) // Only Electronics should be updated
     }
 
     @Test

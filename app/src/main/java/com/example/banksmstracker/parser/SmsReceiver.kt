@@ -49,18 +49,13 @@ class SmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent?.action != "android.provider.Telephony.SMS_RECEIVED") return
 
-        // If the foreground service is running it handles real-time SMS — skip here to avoid
-        // double-processing. Hash deduplication provides a safety net even if both run.
-        if (SmsProcessingService.isRunning()) {
-            Log.d(TAG, "SmsProcessingService is running — delegating real-time SMS to service")
-            return
-        }
-
         initializePaymentProcessor(context)
 
         val testSender = intent.getStringExtra(EXTRA_TEST_SENDER)
         val testBody = intent.getStringExtra(EXTRA_TEST_BODY)
 
+        // Test intents bypass the service-running check so instrumented tests are never
+        // silently skipped when SmsProcessingService happens to be running on the device.
         if (!testSender.isNullOrBlank() && !testBody.isNullOrBlank()) {
             if (!BuildConfig.DEBUG) return
             val pendingResult = goAsync()
@@ -77,6 +72,13 @@ class SmsReceiver : BroadcastReceiver() {
                 // Sync mode - running from tests (goAsync() returns null)
                 runBlocking { handleMessage(testSender, testBody, System.currentTimeMillis()) }
             }
+            return
+        }
+
+        // If the foreground service is running it handles real-time SMS — skip here to avoid
+        // double-processing. Hash deduplication provides a safety net even if both run.
+        if (SmsProcessingService.isRunning()) {
+            Log.d(TAG, "SmsProcessingService is running — delegating real-time SMS to service")
             return
         }
 
