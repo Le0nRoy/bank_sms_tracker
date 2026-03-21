@@ -14,8 +14,8 @@ import android.os.IBinder
 import android.telephony.SmsMessage
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.banksmstracker.BuildConfig
 import com.example.banksmstracker.BankSmsTrackerApp
+import com.example.banksmstracker.BuildConfig
 import com.example.banksmstracker.R
 import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.database.BankSmsDatabase

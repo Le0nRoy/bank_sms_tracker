@@ -95,6 +95,10 @@ class MainActivity : BaseActivity() {
             startActivity(Intent(this, PaymentsActivity::class.java))
         }
 
+        findViewById<Button>(R.id.btnIncomes).setOnClickListener {
+            startActivity(Intent(this, IncomesActivity::class.java))
+        }
+
         findViewById<Button>(R.id.btnRegexBuilder).setOnClickListener {
             startActivity(Intent(this, RegexBuilderActivity::class.java))
         }

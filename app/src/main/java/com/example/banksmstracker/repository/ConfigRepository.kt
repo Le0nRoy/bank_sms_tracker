@@ -185,14 +185,13 @@ object ConfigRepository {
 
     // RC-2: synchronized block prevents two threads from both seeing null and creating
     //        two separate PaymentProcessor instances.
-    fun getPaymentProcessor(): com.example.banksmstracker.processor.PaymentProcessor =
-        synchronized(this) {
-            paymentProcessor ?: com.example.banksmstracker.processor.PaymentProcessor(
-                senders = config.senders,
-                categories = config.categories,
-                paymentRepository = paymentRepository
-            ).also { paymentProcessor = it }
-        }
+    fun getPaymentProcessor(): com.example.banksmstracker.processor.PaymentProcessor = synchronized(this) {
+        paymentProcessor ?: com.example.banksmstracker.processor.PaymentProcessor(
+            senders = config.senders,
+            categories = config.categories,
+            paymentRepository = paymentRepository
+        ).also { paymentProcessor = it }
+    }
 
     /**
      * Validation result for duplicate checks.
@@ -268,7 +267,10 @@ object ConfigRepository {
         val file = withContext(Dispatchers.IO) {
             // NEW-10: register for deletion on JVM exit so the cache file does not persist
             //         indefinitely across app process restarts.
-            File(context.cacheDir, fileName).also { it.deleteOnExit(); it.writeText(json) }
+            File(context.cacheDir, fileName).also {
+                it.deleteOnExit()
+                it.writeText(json)
+            }
         }
         val uri = FileProvider.getUriForFile(
             context,

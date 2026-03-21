@@ -397,7 +397,7 @@ class PaymentProcessorWorkflowTest {
         }
 
         @Test
-        fun `getPaymentFromMessage should throw MessageIgnoredException for ignored messages`() {
+        fun `getMessageResult should return Ignored for ignored messages`() {
             val senders = listOf(
                 Sender(
                     id = 1,
@@ -411,9 +411,7 @@ class PaymentProcessorWorkflowTest {
             )
             val processor = PaymentProcessor(senders, emptyList(), mockRepository)
 
-            assertFailsWith<com.example.banksmstracker.processor.MessageIgnoredException> {
-                processor.getPaymentFromMessage(ignoreMessage, testAddress)
-            }
+            assertTrue(processor.getMessageResult(ignoreMessage, testAddress) is MessageProcessResult.Ignored)
         }
     }
 

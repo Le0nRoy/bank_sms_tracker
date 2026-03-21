@@ -108,14 +108,30 @@
                 style="?android:attr/buttonBarButtonStyle" />
 
             <!-- Section 5: Regex Pattern -->
-            <TextView
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/regex_pattern_label"
-                android:textStyle="bold"
-                android:textColor="@color/text_primary"
+                android:orientation="horizontal"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="4dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/regex_pattern_label"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+                <Switch
+                    android:id="@+id/switchRegexMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/regex_builder_show_regex_toggle"
+                    android:checked="false" />
+
+            </LinearLayout>
 
             <EditText
                 android:id="@+id/etRegexPattern"

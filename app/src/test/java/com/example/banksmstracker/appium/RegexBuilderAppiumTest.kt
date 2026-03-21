@@ -369,14 +369,14 @@ class RegexBuilderAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(15)
-    @DisplayName("Existing patterns spinner is displayed")
+    @DisplayName("Browse patterns button is displayed")
     fun existingPatternsSpinnerExists() {
         clickButton("btnRegexBuilder")
         mediumWait()
 
-        // Scroll down to see the spinner
-        val hasSpinner = elementExistsWithScroll("spinnerExistingPatterns")
-        assertTrue(hasSpinner, "Should have existing patterns spinner")
+        // Scroll down to see the browse patterns button
+        val hasBrowseButton = elementExistsWithScroll("btnBrowsePatterns")
+        assertTrue(hasBrowseButton, "Should have browse patterns button")
 
         navigateToMain()
     }

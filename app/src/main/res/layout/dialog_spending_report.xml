@@ -23,6 +23,12 @@
             android:textSize="13sp"
             android:textColor="@color/text_primary" />
 
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/barChart"
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_marginTop="16dp" />
+
     </LinearLayout>
 
 </ScrollView>

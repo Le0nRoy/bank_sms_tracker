@@ -29,10 +29,16 @@ import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
+import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.formatter.PercentFormatter
 import java.io.File
 import java.text.SimpleDateFormat
@@ -75,8 +81,7 @@ class PaymentsActivity : BaseActivity() {
         override fun areItemsTheSame(oldItem: Payment, newItem: Payment): Boolean =
             oldItem.id != null && oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: Payment, newItem: Payment): Boolean =
-            oldItem == newItem
+        override fun areContentsTheSame(oldItem: Payment, newItem: Payment): Boolean = oldItem == newItem
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -440,6 +445,7 @@ class PaymentsActivity : BaseActivity() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_spending_report, null)
         dialogView.findViewById<TextView>(R.id.tvReportText).text = reportText
         setupPieChart(dialogView.findViewById(R.id.pieChart), categoryTotals, totalAmount)
+        setupBarChart(dialogView.findViewById(R.id.barChart), categoryTotals)
 
         AlertDialog.Builder(this)
             .setTitle(R.string.spending_report)
@@ -449,8 +455,9 @@ class PaymentsActivity : BaseActivity() {
     }
 
     private fun buildDateRangeText(): String {
-        val actualStart = startDate ?: allPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.minOrNull()
-        val actualEnd = endDate ?: allPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.maxOrNull()
+        val actualStart =
+            startDate ?: filteredPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.minOrNull()
+        val actualEnd = endDate ?: filteredPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.maxOrNull()
         return when {
             actualStart != null && actualEnd != null ->
                 "${dateFormat.format(Date(actualStart))} - ${dateFormat.format(Date(actualEnd))}"
@@ -516,6 +523,27 @@ class PaymentsActivity : BaseActivity() {
             animateY(600)
             invalidate()
         }
+    }
+
+    private fun setupBarChart(chart: BarChart, categoryTotals: List<Pair<String, Double>>) {
+        val entries = categoryTotals.mapIndexed { index, (_, amount) ->
+            BarEntry(index.toFloat(), amount.toFloat())
+        }
+        val dataSet = BarDataSet(entries, "").apply {
+            setDrawValues(false)
+        }
+        chart.data = BarData(dataSet)
+        chart.xAxis.apply {
+            valueFormatter = IndexAxisValueFormatter(categoryTotals.map { it.first })
+            position = XAxis.XAxisPosition.BOTTOM
+            granularity = 1f
+            setDrawGridLines(false)
+            labelRotationAngle = -30f
+        }
+        chart.axisRight.isEnabled = false
+        chart.legend.isEnabled = false
+        chart.description.isEnabled = false
+        chart.invalidate()
     }
 
     private fun showPaymentDetail(payment: Payment) {

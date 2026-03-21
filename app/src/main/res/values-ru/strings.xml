@@ -211,6 +211,11 @@
     <string name="incomes">Доходы</string>
     <string name="no_incomes">Доходов пока нет</string>
     <string name="income_details">Детали дохода</string>
+    <string name="activity_incomes_title">Доходы</string>
+    <string name="income_total_label">Итого: %1$s %2$s</string>
+    <string name="income_no_entries">Нет записей о доходах</string>
+    <string name="btn_incomes_label">Доходы</string>
+    <string name="income_unknown_source">Неизвестный источник</string>
 
     <!-- Theme -->
     <string name="settings">Настройки</string>
@@ -359,4 +364,9 @@
     <string name="terms_agree">Понятно</string>
     <string name="terms_section_title">Конфиденциальность</string>
     <string name="view_privacy_notice">Просмотреть уведомление</string>
+
+    <!-- Regex Builder mode toggle -->
+    <string name="regex_builder_show_regex_toggle">Показать regex</string>
+    <string name="regex_builder_mode_template">Шаблон</string>
+    <string name="regex_builder_mode_regex">Regex</string>
 </resources>

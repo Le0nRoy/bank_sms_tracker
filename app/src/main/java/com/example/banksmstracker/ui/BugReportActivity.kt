@@ -99,163 +99,163 @@ class BugReportActivity : BaseActivity() {
         val includeFilterState = cbIncludeFilterState.isChecked
 
         return withContext(Dispatchers.IO) {
-        val report = StringBuilder()
+            val report = StringBuilder()
 
-        report.append("=".repeat(50))
-        report.append("\n")
-        report.append(getString(R.string.report_header))
-        report.append("\n")
-        report.append("=".repeat(50))
-        report.append("\n\n")
-
-        // User description
-        report.append(getString(R.string.user_description_header).trimStart())
-        report.append("\n")
-        report.append("-".repeat(30))
-        report.append("\n")
-        if (bugDescription.isNotEmpty()) {
-            report.append(bugDescription)
-        } else {
-            report.append(getString(R.string.no_description_provided))
-        }
-        report.append("\n\n")
-
-        // Device info
-        if (includeDeviceInfo) {
-            report.append(getString(R.string.device_info_header).trimStart())
+            report.append("=".repeat(50))
             report.append("\n")
-            report.append("-".repeat(30))
+            report.append(getString(R.string.report_header))
             report.append("\n")
-            report.append(getString(R.string.app_version_label, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE))
-            report.append("\n")
-            report.append(getString(R.string.build_type_label, BuildConfig.BUILD_TYPE))
-            report.append("\n")
-            report.append(getString(R.string.android_version_label, Build.VERSION.SDK_INT))
+            report.append("=".repeat(50))
             report.append("\n\n")
-        }
 
-        // Config summary
-        if (includeConfig) {
-            report.append(getString(R.string.config_summary_header).trimStart())
+            // User description
+            report.append(getString(R.string.user_description_header).trimStart())
             report.append("\n")
             report.append("-".repeat(30))
             report.append("\n")
-            try {
-                val senders = ConfigRepository.getSenders()
-                val categories = ConfigRepository.getCategories()
+            if (bugDescription.isNotEmpty()) {
+                report.append(bugDescription)
+            } else {
+                report.append(getString(R.string.no_description_provided))
+            }
+            report.append("\n\n")
 
-                report.append(getString(R.string.senders_count_label, senders.size))
+            // Device info
+            if (includeDeviceInfo) {
+                report.append(getString(R.string.device_info_header).trimStart())
                 report.append("\n")
-                senders.forEach { sender ->
-                    val status = if (sender.enabled) {
-                        getString(
-                            R.string.enabled_status
-                        )
-                    } else {
-                        getString(R.string.disabled_status)
-                    }
-                    report.append("  - ${sender.name} ($status)\n")
-                    report.append("    ${getString(R.string.addresses_count, sender.addresses.size)}\n")
-                    report.append("    ${getString(R.string.rules_count, sender.rules.size)}\n")
-                }
+                report.append("-".repeat(30))
+                report.append("\n")
+                report.append(getString(R.string.app_version_label, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE))
+                report.append("\n")
+                report.append(getString(R.string.build_type_label, BuildConfig.BUILD_TYPE))
+                report.append("\n")
+                report.append(getString(R.string.android_version_label, Build.VERSION.SDK_INT))
+                report.append("\n\n")
+            }
 
+            // Config summary
+            if (includeConfig) {
+                report.append(getString(R.string.config_summary_header).trimStart())
                 report.append("\n")
-                report.append(getString(R.string.categories_count_label, categories.size))
+                report.append("-".repeat(30))
                 report.append("\n")
-                categories.forEach { category ->
-                    val status = if (category.enabled) {
-                        getString(
-                            R.string.enabled_status
-                        )
-                    } else {
-                        getString(R.string.disabled_status)
+                try {
+                    val senders = ConfigRepository.getSenders()
+                    val categories = ConfigRepository.getCategories()
+
+                    report.append(getString(R.string.senders_count_label, senders.size))
+                    report.append("\n")
+                    senders.forEach { sender ->
+                        val status = if (sender.enabled) {
+                            getString(
+                                R.string.enabled_status
+                            )
+                        } else {
+                            getString(R.string.disabled_status)
+                        }
+                        report.append("  - ${sender.name} ($status)\n")
+                        report.append("    ${getString(R.string.addresses_count, sender.addresses.size)}\n")
+                        report.append("    ${getString(R.string.rules_count, sender.rules.size)}\n")
                     }
-                    report.append("  - ${category.name} ($status)\n")
-                    report.append("    ${getString(R.string.merchants_count, category.merchants.size)}\n")
+
+                    report.append("\n")
+                    report.append(getString(R.string.categories_count_label, categories.size))
+                    report.append("\n")
+                    categories.forEach { category ->
+                        val status = if (category.enabled) {
+                            getString(
+                                R.string.enabled_status
+                            )
+                        } else {
+                            getString(R.string.disabled_status)
+                        }
+                        report.append("  - ${category.name} ($status)\n")
+                        report.append("    ${getString(R.string.merchants_count, category.merchants.size)}\n")
+                    }
+                } catch (e: Exception) {
+                    report.append(getString(R.string.error_loading_config, e.message ?: ""))
+                    report.append("\n")
                 }
-            } catch (e: Exception) {
-                report.append(getString(R.string.error_loading_config, e.message ?: ""))
                 report.append("\n")
             }
-            report.append("\n")
-        }
 
-        // Payment stats
-        if (includePaymentStats) {
-            report.append(getString(R.string.payment_stats_header).trimStart())
-            report.append("\n")
-            report.append("-".repeat(30))
-            report.append("\n")
-            try {
-                val database = BankSmsDatabase.getInstance(this@BugReportActivity)
-                val paymentRepository = RoomPaymentRepository(database.paymentDao())
-                val payments = paymentRepository.getAllPayments()
-
-                report.append(getString(R.string.total_payments_count, payments.size))
+            // Payment stats
+            if (includePaymentStats) {
+                report.append(getString(R.string.payment_stats_header).trimStart())
                 report.append("\n")
-                if (payments.isNotEmpty()) {
-                    val categorized = payments.count { it.categoryId != null }
-                    val uncategorized = payments.size - categorized
-                    report.append(getString(R.string.categorized_count, categorized))
-                    report.append("\n")
-                    report.append(getString(R.string.uncategorized_count, uncategorized))
-                    report.append("\n")
+                report.append("-".repeat(30))
+                report.append("\n")
+                try {
+                    val database = BankSmsDatabase.getInstance(this@BugReportActivity)
+                    val paymentRepository = RoomPaymentRepository(database.paymentDao())
+                    val payments = paymentRepository.getAllPayments()
 
-                    val currencies = payments.map { it.currency }.distinct()
-                    report.append(getString(R.string.currencies_label, currencies.joinToString(", ")))
+                    report.append(getString(R.string.total_payments_count, payments.size))
                     report.append("\n")
+                    if (payments.isNotEmpty()) {
+                        val categorized = payments.count { it.categoryId != null }
+                        val uncategorized = payments.size - categorized
+                        report.append(getString(R.string.categorized_count, categorized))
+                        report.append("\n")
+                        report.append(getString(R.string.uncategorized_count, uncategorized))
+                        report.append("\n")
 
-                    val totalByCurrency = payments.groupBy { it.currency }
-                        .mapValues { (_, list) -> list.sumOf { it.amount } }
-                    report.append(getString(R.string.totals_label))
-                    report.append("\n")
-                    totalByCurrency.forEach { (currency, total) ->
-                        report.append("  ${getString(R.string.currency_total, "%.2f".format(total), currency)}\n")
+                        val currencies = payments.map { it.currency }.distinct()
+                        report.append(getString(R.string.currencies_label, currencies.joinToString(", ")))
+                        report.append("\n")
+
+                        val totalByCurrency = payments.groupBy { it.currency }
+                            .mapValues { (_, list) -> list.sumOf { it.amount } }
+                        report.append(getString(R.string.totals_label))
+                        report.append("\n")
+                        totalByCurrency.forEach { (currency, total) ->
+                            report.append("  ${getString(R.string.currency_total, "%.2f".format(total), currency)}\n")
+                        }
                     }
+                } catch (e: Exception) {
+                    report.append(getString(R.string.error_with_message, e.message ?: ""))
+                    report.append("\n")
                 }
-            } catch (e: Exception) {
-                report.append(getString(R.string.error_with_message, e.message ?: ""))
                 report.append("\n")
             }
-            report.append("\n")
-        }
 
-        // Filter state
-        if (includeFilterState) {
-            report.append(getString(R.string.filter_state_header).trimStart())
-            report.append("\n")
-            report.append("-".repeat(30))
-            report.append("\n")
-            try {
-                val prefs = getSharedPreferences(
-                    PaymentsActivity.PREFS_FILTER_STATE,
-                    android.content.Context.MODE_PRIVATE
-                )
-                val category = prefs.getString(PaymentsActivity.KEY_FILTER_CATEGORY, null)
-                val sender = prefs.getString(PaymentsActivity.KEY_FILTER_SENDER, null)
-                val startDate = prefs.getLong(PaymentsActivity.KEY_FILTER_START_DATE, -1L).takeIf { it >= 0 }
-                val endDate = prefs.getLong(PaymentsActivity.KEY_FILTER_END_DATE, -1L).takeIf { it >= 0 }
-                val merchant = prefs.getString(PaymentsActivity.KEY_FILTER_MERCHANT, null)
-                val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            // Filter state
+            if (includeFilterState) {
+                report.append(getString(R.string.filter_state_header).trimStart())
+                report.append("\n")
+                report.append("-".repeat(30))
+                report.append("\n")
+                try {
+                    val prefs = getSharedPreferences(
+                        PaymentsActivity.PREFS_FILTER_STATE,
+                        android.content.Context.MODE_PRIVATE
+                    )
+                    val category = prefs.getString(PaymentsActivity.KEY_FILTER_CATEGORY, null)
+                    val sender = prefs.getString(PaymentsActivity.KEY_FILTER_SENDER, null)
+                    val startDate = prefs.getLong(PaymentsActivity.KEY_FILTER_START_DATE, -1L).takeIf { it >= 0 }
+                    val endDate = prefs.getLong(PaymentsActivity.KEY_FILTER_END_DATE, -1L).takeIf { it >= 0 }
+                    val merchant = prefs.getString(PaymentsActivity.KEY_FILTER_MERCHANT, null)
+                    val dateFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-                report.append("  Category: ${category ?: "(all)"}\n")
-                report.append("  Sender: ${sender ?: "(all)"}\n")
-                report.append("  Start: ${startDate?.let { dateFmt.format(Date(it)) } ?: "(none)"}\n")
-                report.append("  End: ${endDate?.let { dateFmt.format(Date(it)) } ?: "(none)"}\n")
-                report.append("  Merchant: ${merchant ?: "(all)"}\n")
-            } catch (e: Exception) {
-                report.append(getString(R.string.error_with_message, e.message ?: ""))
+                    report.append("  Category: ${category ?: "(all)"}\n")
+                    report.append("  Sender: ${sender ?: "(all)"}\n")
+                    report.append("  Start: ${startDate?.let { dateFmt.format(Date(it)) } ?: "(none)"}\n")
+                    report.append("  End: ${endDate?.let { dateFmt.format(Date(it)) } ?: "(none)"}\n")
+                    report.append("  Merchant: ${merchant ?: "(all)"}\n")
+                } catch (e: Exception) {
+                    report.append(getString(R.string.error_with_message, e.message ?: ""))
+                    report.append("\n")
+                }
                 report.append("\n")
             }
+
+            report.append("=".repeat(50))
+            report.append(getString(R.string.end_of_report))
             report.append("\n")
-        }
+            report.append("=".repeat(50))
 
-        report.append("=".repeat(50))
-        report.append(getString(R.string.end_of_report))
-        report.append("\n")
-        report.append("=".repeat(50))
-
-        report.toString()
+            report.toString()
         } // end withContext(Dispatchers.IO)
     }
 

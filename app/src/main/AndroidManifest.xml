@@ -56,6 +56,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.IncomesActivity"
+            android:label="@string/activity_incomes_title"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.RegexBuilderActivity"
             android:label="@string/regex_builder"
             android:exported="false" />

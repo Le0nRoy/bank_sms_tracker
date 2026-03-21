@@ -341,6 +341,25 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         assertTrue(elementExists("btnCategories"), "Should be back on main screen")
     }
 
+    @Test
+    @Order(17)
+    @Tag("smoke")
+    @DisplayName("Navigate to Incomes screen")
+    fun navigateToIncomesScreen() {
+        findById("btnIncomes").click()
+        mediumWait()
+
+        assertTrue(
+            elementExists("recyclerIncomes") || elementExists("tvEmptyState") || elementExists("tvIncomeTotal"),
+            "Should be on Incomes screen"
+        )
+
+        driver.navigate().back()
+        mediumWait()
+
+        assertTrue(elementExists("btnCategories"), "Should be back on main screen")
+    }
+
     private fun handlePermissionDialogIfPresent() {
         try {
             val allowButton = driver.findElement(

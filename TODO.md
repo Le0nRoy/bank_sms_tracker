@@ -268,8 +268,8 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 - [x] IncomeEntity database entity
 - [x] IncomeDao with CRUD operations
 - [x] Database migration v6→v7 (incomes table)
-- [ ] Income processing rules (future)
-- [ ] Income UI screen (future)
+- [x] Income processing rules (INCOME rule type in PaymentProcessor; default_rules.json has salary/deposit/transfer rules)
+- [ ] Income UI screen (IncomesActivity — list view of recorded income entries)
 
 ### 5.11 Theme Toggle
 - [x] Light/Dark/System theme options
@@ -318,6 +318,37 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 
 ---
 
+## Phase 8: Background Service & Real-time Processing
+
+### 8.1 Background Service
+- [x] Implement foreground service for permanent background operation
+- [x] Add service lifecycle management (start on boot, survive app close)
+- [x] Create persistent notification for service status
+
+### 8.2 Real-time SMS Monitoring
+- [x] Watch for all incoming SMS messages in real time
+- [x] Parse messages immediately on receipt (background service)
+- [x] Handle messages from both configured and unknown senders
+
+### 8.3 Notification System
+- [x] Send notification for messages from configured senders without applicable regex
+- [x] Allow quick action to open regex builder from notification
+- [x] Notification preferences (enable/disable, sound, vibration)
+
+### 8.4 Onboarding & Permissions
+- [x] Create onboarding screen flow for first-time users
+- [x] Request all required permissions at first start
+- [x] Explain why each permission is needed (SMS, storage, notifications)
+- [x] Graceful degradation when permissions denied
+
+### 8.5 Bank API Integration
+- [ ] Research available banking APIs (Open Banking, PSD2, etc.)
+- [ ] Design abstraction layer for multiple bank APIs
+- [ ] Implement support for common bank APIs
+- [ ] Fallback to SMS parsing when API unavailable
+
+---
+
 ## Phase 9: PROMPT.md Batch (2026-03-13)
 
 > **Plan:** [docs/plans/2026-03-13-prompt-features.md](docs/plans/2026-03-13-prompt-features.md)
@@ -351,25 +382,23 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 ## Phase 9 Maintenance
 
 ### 9.M1 Remove Dead Code
-- [ ] Delete `SenderRuleEntity` class from `database/Entities.kt` (legacy, replaced by `RuleEntity`; remove ConfigDao methods that use it: `insertRule`, `updateRule`, `deleteRule` for `SenderRuleEntity`)
-- [ ] Delete `PaymentProcessor.getPaymentFromMessage()` (`processor/PaymentProcessor.kt:164`) — never called; `processMessageFull()` used instead
-- [ ] Remove unused `SmsAddressMatcher.matchesAny(Collection<String>)` overload (`util/SmsAddressMatcher.kt:44`) — only `Set<String>` overload is used in production
-- [ ] Prune unused `RuleDao` methods (nearly all — `getAllRules`, `getRulesByType`, `getEnabledRules*`, `getRuleById`, `insertRules` batch, `updateRule`, `deleteRule`, `deleteRuleById`, `deleteRulesForSenderByType`, `getRulesCount*`, `updateRuleType`)
-- [ ] Prune unused `IncomeDao` methods (`getAllIncomes`, `getIncomesByDateRange`, `getIncomesBySender`, `getDistinctSenderAddresses`, `updateIncome`, `deleteIncomeById`, `getIncomeCount`, `getTotalIncomeByDateRange`)
-- [ ] Prune unused `IgnoreRuleDao` methods (`getEnabledIgnoreRules`, `getIgnoreRuleById`, `deleteIgnoreRule`, `deleteIgnoreRulesForSender`, `getIgnoreRulesCount`)
-- [ ] Prune unused `ConfigDao` entity methods (`updateMerchant`, `deleteMerchant`, `updateAddress`, `deleteAddress`)
-
-> **Note:** DAO pruning should be deferred until after Phase 9.3 merchant model changes (tasks 1.2/1.3) — some methods may become useful then.
+- [x] `SenderRuleEntity` already removed from `database/Entities.kt`
+- [x] Delete `PaymentProcessor.getPaymentFromMessage()` — migrate tests to `getMessageResult()`
+- [x] `SmsAddressMatcher.matchesAny(Collection<String>)` overload already removed
+- [x] `RuleDao` already pruned to only used methods
+- [x] `IncomeDao` already pruned to only `insertIncome`
+- [x] `IgnoreRuleDao` already pruned to only used methods
+- [x] `ConfigDao` `updateMerchant`/`deleteMerchant`/`updateAddress`/`deleteAddress` already removed
 
 ---
 
-## Phase 9 Future Items (do NOT implement now)
+## Phase 9 Future Items
 
 ### 9.F1 Spending Report Diagrams (Task 2.5)
-**Plan:** Bar chart/pie chart visualization of spending by category. Candidate libraries: MPAndroidChart, Vico. Add after basic report is stable; requires chart library integration.
-- [ ] Research chart library (MPAndroidChart or Vico)
-- [ ] Design bar chart / pie chart for category breakdown
-- [ ] Integrate into spending report dialog
+**Plan:** Bar chart/pie chart visualization of spending by category using Vico library.
+- [x] Research chart library (Vico chosen — Compose-friendly, active maintenance)
+- [x] Design bar chart / pie chart for category breakdown
+- [x] Integrate into spending report dialog
 
 ### 9.F2 Central Bank API for Currency Rates (Task 2.6)
 **Plan:** Integrate APIs from central banks (e.g., National Bank of Georgia, ECB) to retrieve exchange rates. Use rates to normalize multi-currency payments to a base currency. Needs abstraction layer per bank, fallback to static rates when offline.
@@ -379,43 +408,12 @@ Full custom token-view approach (drag-and-drop, separate token model) remains a 
 - [ ] Apply rates to normalize multi-currency payments
 
 ### 9.F3 Regex-Free Text Box in Regex Builder (Task 4.5)
-**Plan:** Fully WYSIWYG editor where user sees only words and colored preset chips. Regex transformations are invisible (internal state vs. display state). Requires custom EditText subclass with token model; significant UI work.
-- [ ] Design token model: words + preset chips as separate objects
-- [ ] Implement custom `EditText` or `SpannableStringBuilder` approach
-- [ ] Regex transformation hidden from user (internal state only)
-- [ ] Full multiline support in token view
-- [ ] Button to switch between regex-free and regex-full editors
-
----
-
-## Phase 8: Background Service & Real-time Processing
-
-### 8.1 Background Service
-- [x] Implement foreground service for permanent background operation
-- [x] Add service lifecycle management (start on boot, survive app close)
-- [x] Create persistent notification for service status
-
-### 8.2 Real-time SMS Monitoring
-- [x] Watch for all incoming SMS messages in real time
-- [x] Parse messages immediately on receipt (background service)
-- [x] Handle messages from both configured and unknown senders
-
-### 8.3 Notification System
-- [ ] Send notification for messages from configured senders without applicable regex
-- [ ] Allow quick action to open regex builder from notification
-- [ ] Notification preferences (enable/disable, sound, vibration)
-
-### 8.4 Onboarding & Permissions
-- [ ] Create onboarding screen flow for first-time users
-- [ ] Request all required permissions at first start
-- [ ] Explain why each permission is needed (SMS, storage, notifications)
-- [ ] Graceful degradation when permissions denied
-
-### 8.5 Bank API Integration
-- [ ] Research available banking APIs (Open Banking, PSD2, etc.)
-- [ ] Design abstraction layer for multiple bank APIs
-- [ ] Implement support for common bank APIs
-- [ ] Fallback to SMS parsing when API unavailable
+**Plan:** Chip-based WYSIWYG editor where user sees only words and colored preset chips; regex is internal state only.
+- [x] Design token model: words + preset chips rendered via SpannableStringBuilder
+- [x] Implement chip-based display with hidden regex state
+- [x] Regex transformation hidden from user (internal state only)
+- [x] Full multiline support in token view
+- [x] Toggle between regex-free and regex-full editor views
 
 ---
 

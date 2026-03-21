@@ -304,13 +304,19 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
         clickButton("btnCategories")
         mediumWait()
 
-        var foundGroceries = false
-        val allCategoryNames = findAllById("nameEditText")
-        for (field in allCategoryNames) {
-            if (field.text == "Groceries") {
-                foundGroceries = true
-                break
-            }
+        // Scroll through the list to find the Groceries category by text
+        val foundGroceries = try {
+            driver.findElement(
+                AppiumBy.androidUIAutomator(
+                    "new UiScrollable(new UiSelector().scrollable(true))" +
+                        ".scrollIntoView(new UiSelector()" +
+                        ".resourceId(\"com.example.banksmstracker:id/nameEditText\")" +
+                        ".text(\"Groceries\"))"
+                )
+            )
+            true
+        } catch (e: Exception) {
+            false
         }
         assertTrue(foundGroceries, "Groceries category should persist")
 

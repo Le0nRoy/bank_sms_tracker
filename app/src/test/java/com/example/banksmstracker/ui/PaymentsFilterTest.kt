@@ -289,6 +289,50 @@ class PaymentsFilterTest {
     }
 
     @Test
+    fun `filter returns empty list when no payments match category`() {
+        val payments = listOf(
+            makePayment("01/03/2026 10:00:00", categoryId = "Food"),
+            makePayment("02/03/2026 10:00:00", categoryId = "Transport")
+        )
+        val result = filterPayments(payments, "Utilities", null, null, null)
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun `filter returns empty list when input list is empty`() {
+        val result = filterPayments(emptyList(), "Food", null, null, null)
+        assertEquals(0, result.size)
+    }
+
+    @Test
+    fun `category filter is case-sensitive`() {
+        val payments = listOf(
+            makePayment("01/03/2026 10:00:00", categoryId = "food"),
+            makePayment("02/03/2026 10:00:00", categoryId = "Food")
+        )
+        val result = filterPayments(payments, "Food", null, null, null)
+        assertEquals(1, result.size)
+        assertEquals("Food", result[0].categoryId)
+    }
+
+    @Test
+    fun `category filter null includes payments with null category`() {
+        val payments = listOf(
+            makePayment("01/03/2026 10:00:00", categoryId = null),
+            makePayment("02/03/2026 10:00:00", categoryId = "Food")
+        )
+        val result = filterPayments(payments, null, null, null, null)
+        assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `parseTransactionTimestamp parses date-only format without time`() {
+        val result = parseTransactionTimestamp("15/03/2026")
+        val withTime = parseTransactionTimestamp("15/03/2026 00:00:00")
+        assertEquals(withTime, result)
+    }
+
+    @Test
     fun `payment with blank timestamp is excluded when date filter active`() {
         // timestamp = "" means no parseable date — payment must be excluded from date-filtered results.
         val payment = Payment(

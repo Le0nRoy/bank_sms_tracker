@@ -18,6 +18,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ScrollView
 import android.widget.Spinner
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -73,9 +74,13 @@ class RegexBuilderActivity : BaseActivity() {
     private lateinit var btnClearSampleSms: Button
     private lateinit var btnClearRegexPattern: Button
 
+    // Mode toggle
+    private lateinit var switchRegexMode: Switch
+
     // Scroll container
     private lateinit var scrollView: ScrollView
 
+    private var modeIsRegex: Boolean = false
     private var senders: List<Sender> = emptyList()
     private var smsMessages: List<SmsMessage> = emptyList()
     private var selectedSenderForFilter: Sender? = null
@@ -127,6 +132,9 @@ class RegexBuilderActivity : BaseActivity() {
         // Initialize clear buttons
         btnClearSampleSms = findViewById(R.id.btnClearSampleSms)
         btnClearRegexPattern = findViewById(R.id.btnClearRegexPattern)
+
+        // Initialize mode toggle
+        switchRegexMode = findViewById(R.id.switchRegexMode)
 
         // Initialize scroll container for auto-scroll on focus
         scrollView = findViewById(R.id.scrollViewRegexBuilder)
@@ -186,14 +194,32 @@ class RegexBuilderActivity : BaseActivity() {
             if (hasFocus) scrollView.post { scrollView.smoothScrollTo(0, v.top) }
         }
 
-        // Render placeholder chips as colored spans
+        // Render placeholder chips as colored spans (template mode only)
         etRegexPattern.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {
-                s?.let { applyPlaceholderSpans(it, this@RegexBuilderActivity) }
+                if (!modeIsRegex) {
+                    s?.let { applyPlaceholderSpans(it, this@RegexBuilderActivity) }
+                }
             }
         })
+
+        switchRegexMode.setOnCheckedChangeListener { _, isChecked ->
+            val currentText = etRegexPattern.text.toString()
+            modeIsRegex = isChecked
+            if (isChecked) {
+                // Template → Regex: convert template back to raw regex
+                val rawRegex = templateToRegex(encodeNewlines(currentText))
+                etRegexPattern.setText(rawRegex)
+            } else {
+                // Regex → Template: convert raw regex to human-readable template
+                val template = decodeNewlines(regexToTemplate(currentText))
+                etRegexPattern.setText(template)
+                etRegexPattern.text?.let { applyPlaceholderSpans(it, this@RegexBuilderActivity) }
+            }
+            updatePresetVisibility()
+        }
 
         // Setup preset button listeners
         setupPresetListeners()
@@ -207,6 +233,17 @@ class RegexBuilderActivity : BaseActivity() {
         btnPresetDate.setOnClickListener { insertPresetAtCursor("⟨date⟩") }
         btnPresetTime.setOnClickListener { insertPresetAtCursor("⟨time⟩") }
         btnPresetBalance.setOnClickListener { insertPresetAtCursor("⟨balance⟩") }
+    }
+
+    private fun updatePresetVisibility() {
+        val visibility = if (modeIsRegex) View.GONE else View.VISIBLE
+        btnPresetAmount.visibility = visibility
+        btnPresetCurrency.visibility = visibility
+        btnPresetCard.visibility = visibility
+        btnPresetMerchant.visibility = visibility
+        btnPresetDate.visibility = visibility
+        btnPresetTime.visibility = visibility
+        btnPresetBalance.visibility = visibility
     }
 
     private fun insertPresetAtCursor(preset: String) {
@@ -531,7 +568,11 @@ class RegexBuilderActivity : BaseActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_SELECT_PATTERN && resultCode == RESULT_OK) {
             val rawPattern = data?.getStringExtra(PatternListActivity.EXTRA_SELECTED_PATTERN) ?: return
-            etRegexPattern.setText(decodeNewlines(regexToTemplate(decodePattern(rawPattern))))
+            if (modeIsRegex) {
+                etRegexPattern.setText(decodePattern(rawPattern))
+            } else {
+                etRegexPattern.setText(decodeNewlines(regexToTemplate(decodePattern(rawPattern))))
+            }
         }
     }
 
@@ -540,8 +581,13 @@ class RegexBuilderActivity : BaseActivity() {
     private fun decodePattern(stored: String): String = stored.replace("\\s", " ")
 
     private fun saveRegexToSender() {
+        val rawText = etRegexPattern.text.toString().trim().replace("\r", "")
         val regexPattern = encodePattern(
-            templateToRegex(encodeNewlines(etRegexPattern.text.toString().trim()).replace("\r", ""))
+            if (modeIsRegex) {
+                rawText
+            } else {
+                templateToRegex(encodeNewlines(rawText))
+            }
         )
 
         if (regexPattern.isBlank()) {
@@ -642,7 +688,12 @@ class RegexBuilderActivity : BaseActivity() {
     private fun testRegex() {
         hideKeyboard()
         val sampleSms = etSampleSms.text.toString()
-        val regexPattern = etRegexPattern.text.toString()
+        val rawText = etRegexPattern.text.toString()
+        val regexPattern = if (modeIsRegex) {
+            rawText
+        } else {
+            templateToRegex(encodeNewlines(rawText))
+        }
 
         if (sampleSms.isBlank()) {
             tvResults.text = getString(R.string.error_empty_sms)

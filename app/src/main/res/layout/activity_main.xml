@@ -115,12 +115,29 @@
             android:layout_marginBottom="8dp"
             android:layout_marginStart="4dp" />
 
-        <Button
-            android:id="@+id/btnPayments"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/payments"
-            android:layout_marginBottom="8dp" />
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <Button
+                android:id="@+id/btnPayments"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/payments"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/btnIncomes"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/btn_incomes_label"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

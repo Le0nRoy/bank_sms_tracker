@@ -147,6 +147,52 @@ class RegexTemplateUtilsTest {
         assertEquals(original, roundTripped)
     }
 
+    @Test
+    fun `round-trip templateToRegex then regexToTemplate for all six groups`() {
+        for ((name, preset) in PRESET_REGEXES) {
+            val template = "⟨$name⟩"
+            val roundTripped = regexToTemplate(templateToRegex(template))
+            assertEquals(template, roundTripped, "round-trip failed for group: $name (preset was $preset)")
+        }
+    }
+
+    @Test
+    fun `round-trip regexToTemplate then templateToRegex for currency group`() {
+        val original = "(?<currency>[A-Z]{3})"
+        assertEquals(original, templateToRegex(regexToTemplate(original)))
+    }
+
+    @Test
+    fun `round-trip regexToTemplate then templateToRegex for card group`() {
+        val original = "(?<card>.+?)"
+        assertEquals(original, templateToRegex(regexToTemplate(original)))
+    }
+
+    @Test
+    fun `round-trip regexToTemplate then templateToRegex for date group`() {
+        val original = "(?<date>\\d{2}/\\d{2}/\\d{4})"
+        assertEquals(original, templateToRegex(regexToTemplate(original)))
+    }
+
+    @Test
+    fun `round-trip regexToTemplate then templateToRegex for time group`() {
+        val original = "(?<time>\\d{2}:\\d{2}:\\d{2})"
+        assertEquals(original, templateToRegex(regexToTemplate(original)))
+    }
+
+    @Test
+    fun `round-trip regexToTemplate then templateToRegex for balance group`() {
+        val original = "(?<balance>\\d+(?:[.]\\d{2}))"
+        assertEquals(original, templateToRegex(regexToTemplate(original)))
+    }
+
+    @Test
+    fun `regexToTemplate with multiple groups across decoded newlines`() {
+        val regex = "(?<amount>\\d+(?:[.]\\d{2}))\\n(?<currency>[A-Z]{3})\\n(?<merchant>.+?)"
+        val decoded = decodeNewlines(regexToTemplate(regex))
+        assertEquals("⟨amount⟩\n⟨currency⟩\n⟨merchant⟩", decoded)
+    }
+
     // ── decodeNewlines / encodeNewlines ─────────────────────────────────────────
 
     @Test
@@ -178,6 +224,12 @@ class RegexTemplateUtilsTest {
     fun `newlines round-trip encode then decode preserves pattern`() {
         val original = "Line1\nLine2\nLine3"
         assertEquals(original, decodeNewlines(encodeNewlines(original)))
+    }
+
+    @Test
+    fun `newlines round-trip decode then encode preserves stored pattern`() {
+        val stored = "Line1\\nLine2\\nLine3"
+        assertEquals(stored, encodeNewlines(decodeNewlines(stored)))
     }
 
     @Test

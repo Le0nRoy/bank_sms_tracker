@@ -2,13 +2,14 @@ package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Merchant
+import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.InMemoryPaymentRepository
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -47,7 +48,7 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             assertFailsWith<UnparsedMessageException> {
-                processor.getPaymentFromMessage("", "TESTBANK")
+                processor.getMessageResult("", "TESTBANK")
             }
         }
 
@@ -62,7 +63,7 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             assertFailsWith<UnparsedMessageException> {
-                processor.getPaymentFromMessage("   ", "TESTBANK")
+                processor.getMessageResult("   ", "TESTBANK")
             }
         }
 
@@ -72,7 +73,7 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(emptyList(), emptyList(), repository)
 
             assertFailsWith<UnparsedMessageException> {
-                processor.getPaymentFromMessage("100.00 USD *1234 Amazon 01/01/2024 500.00", "ANYBANK")
+                processor.getMessageResult("100.00 USD *1234 Amazon 01/01/2024 500.00", "ANYBANK")
             }
         }
 
@@ -87,7 +88,7 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             assertFailsWith<UnparsedMessageException> {
-                processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "TESTBANK")
+                processor.getMessageResult("100.00 USD *1234 Amazon", "TESTBANK")
             }
         }
 
@@ -101,8 +102,9 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD *1234 Amazon", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertNull(payment.categoryId)
         }
     }
@@ -123,7 +125,7 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             assertFailsWith<UnparsedMessageException> {
-                processor.getPaymentFromMessage("100.00 USD", "TESTBANK")
+                processor.getMessageResult("100.00 USD", "TESTBANK")
             }
         }
 
@@ -140,8 +142,9 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("100.00 USD *1234 Amazon 01/01/2024 500.00 extra", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD *1234 Amazon 01/01/2024 500.00 extra", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals(100.00, payment.amount)
         }
 
@@ -164,8 +167,9 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             // Should fall through to second rule
-            val payment = processor.getPaymentFromMessage("50.00 USD *1234 Store 01/01 100", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("50.00 USD *1234 Store 01/01 100", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals(50.00, payment.amount)
         }
     }
@@ -185,8 +189,8 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             // lowercase address should match uppercase
-            val payment = processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "testbank")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD *1234 Amazon", "testbank")
+            assertIs<MessageProcessResult.PaymentResult>(result)
         }
 
         @Test
@@ -200,7 +204,7 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             assertFailsWith<UnparsedMessageException> {
-                processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "UNKNOWN")
+                processor.getMessageResult("100.00 USD *1234 Amazon", "UNKNOWN")
             }
         }
 
@@ -215,9 +219,9 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             // All addresses should work
-            assertNotNull(processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "BANK1"))
-            assertNotNull(processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "BANK2"))
-            assertNotNull(processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "BANK3"))
+            assertIs<MessageProcessResult.PaymentResult>(processor.getMessageResult("100.00 USD *1234 Amazon", "BANK1"))
+            assertIs<MessageProcessResult.PaymentResult>(processor.getMessageResult("100.00 USD *1234 Amazon", "BANK2"))
+            assertIs<MessageProcessResult.PaymentResult>(processor.getMessageResult("100.00 USD *1234 Amazon", "BANK3"))
         }
     }
 
@@ -238,9 +242,10 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), listOf(category), repository)
 
             // "AMAZON" should match "Amazon" in category
-            val payment = processor.getPaymentFromMessage("100.00 USD *1234 AMAZON", "TESTBANK")
-            assertNotNull(payment)
-            // Category assignment happens in processMessage, not getPaymentFromMessage
+            val result = processor.getMessageResult("100.00 USD *1234 AMAZON", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
+            // Category assignment happens in processMessage, not getMessageResult
             assertNull(payment.categoryId)
         }
 
@@ -293,8 +298,9 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("999999999.99 USD *1234 Store", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("999999999.99 USD *1234 Store", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals(999999999.99, payment.amount)
         }
 
@@ -308,8 +314,9 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("0.01 USD *1234 Store", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("0.01 USD *1234 Store", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals(0.01, payment.amount)
         }
 
@@ -323,8 +330,9 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("0.00 USD *1234 Store", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("0.00 USD *1234 Store", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals(0.00, payment.amount)
         }
 
@@ -343,8 +351,9 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             val longMerchant = "A".repeat(200)
-            val payment = processor.getPaymentFromMessage("100.00 USD *1234 $longMerchant 01/01/2024", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD *1234 $longMerchant 01/01/2024", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals(longMerchant, payment.merchant)
         }
     }
@@ -366,8 +375,9 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("100.00 USD 1234 Store 01/01 500", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD 1234 Store 01/01 500", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals(100.00, payment.amount)
             assertEquals("USD", payment.currency)
         }
@@ -385,8 +395,8 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("100.00 USD *1234 Store Name Here", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD *1234 Store Name Here", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
         }
 
         @Test
@@ -403,8 +413,9 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("100.00 USD 1234 Store", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD 1234 Store", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals(100.00, payment.amount)
         }
     }
@@ -425,7 +436,7 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(disabledSender), emptyList(), repository)
 
             assertFailsWith<UnparsedMessageException> {
-                processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "DISABLEDBANK")
+                processor.getMessageResult("100.00 USD *1234 Amazon", "DISABLEDBANK")
             }
         }
 
@@ -442,7 +453,7 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
             assertFailsWith<UnparsedMessageException> {
-                processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "TESTBANK")
+                processor.getMessageResult("100.00 USD *1234 Amazon", "TESTBANK")
             }
         }
 
@@ -484,8 +495,8 @@ class PaymentProcessorEdgeCaseTest {
             val processor = PaymentProcessor(listOf(disabledSender, enabledSender), emptyList(), repository)
 
             // Should match the enabled sender
-            val payment = processor.getPaymentFromMessage("100.00 USD *1234 Amazon", "BANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD *1234 Amazon", "BANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
         }
     }
 
@@ -621,8 +632,9 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("100.00 USD 1234 Store1", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD 1234 Store1", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals("Store1", payment.merchant)
         }
 
@@ -646,8 +658,9 @@ class PaymentProcessorEdgeCaseTest {
             )
             val processor = PaymentProcessor(listOf(sender), emptyList(), repository)
 
-            val payment = processor.getPaymentFromMessage("100.00 USD 1234 Store", "TESTBANK")
-            assertNotNull(payment)
+            val result = processor.getMessageResult("100.00 USD 1234 Store", "TESTBANK")
+            assertIs<MessageProcessResult.PaymentResult>(result)
+            val payment = result.payment
             assertEquals("USD", payment.currency)
         }
     }

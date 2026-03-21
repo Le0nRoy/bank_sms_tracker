@@ -1,10 +1,12 @@
 package com.example.banksmstracker.processor
 
+import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.serializer.ConfigLoader
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -50,9 +52,9 @@ class PaymentParserTest {
     @ParameterizedTest(name = "Parsing SMS case {index}: {0}")
     @MethodSource("smsTestCases")
     fun testPaymentParsing(testCase: SmsTestCase) {
-        val payment = processor.getPaymentFromMessage(testCase.rawMessage, testCase.address)
-
-        assertNotNull(payment, "Parsing failed for case ${testCase.id}")
+        val result = processor.getMessageResult(testCase.rawMessage, testCase.address)
+        assertIs<MessageProcessResult.PaymentResult>(result, "Parsing failed for case ${testCase.id}")
+        val payment = result.payment
 
         assertEquals(testCase.expected.amount, payment.amount, "Amount mismatch in case ${testCase.id}")
         assertEquals(testCase.expected.currency, payment.currency, "Currency mismatch in case ${testCase.id}")
@@ -69,7 +71,7 @@ class PaymentParserTest {
         val address = "some address"
 
         assertFailsWith<UnparsedMessageException> {
-            processor.getPaymentFromMessage(message, address)
+            processor.getMessageResult(message, address)
         }
     }
 

@@ -2,12 +2,14 @@ package com.example.banksmstracker.processor
 
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Merchant
+import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.data.Rule
 import com.example.banksmstracker.data.Sender
 import com.example.banksmstracker.repository.PaymentRepository
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
@@ -46,7 +48,7 @@ class PaymentProcessorEnabledTest {
         val processor = PaymentProcessor(senders, categories, mockRepository)
 
         assertFailsWith<UnparsedMessageException> {
-            processor.getPaymentFromMessage(testMessage, testAddress)
+            processor.getMessageResult(testMessage, testAddress)
         }
     }
 
@@ -64,10 +66,12 @@ class PaymentProcessorEnabledTest {
         val categories = emptyList<Category>()
 
         val processor = PaymentProcessor(senders, categories, mockRepository)
-        val payment = processor.getPaymentFromMessage(testMessage, testAddress)
+        val result = processor.getMessageResult(testMessage, testAddress)
+        assertIs<MessageProcessResult.PaymentResult>(result)
+        val payment = result.payment
 
-        assertEquals(100.50, payment?.amount)
-        assertEquals("USD", payment?.currency)
+        assertEquals(100.50, payment.amount)
+        assertEquals("USD", payment.currency)
     }
 
     @Test
@@ -86,7 +90,7 @@ class PaymentProcessorEnabledTest {
         val processor = PaymentProcessor(senders, categories, mockRepository)
 
         assertFailsWith<UnparsedMessageException> {
-            processor.getPaymentFromMessage(testMessage, testAddress)
+            processor.getMessageResult(testMessage, testAddress)
         }
     }
 
@@ -104,9 +108,11 @@ class PaymentProcessorEnabledTest {
         val categories = emptyList<Category>()
 
         val processor = PaymentProcessor(senders, categories, mockRepository)
-        val payment = processor.getPaymentFromMessage(testMessage, testAddress)
+        val result = processor.getMessageResult(testMessage, testAddress)
+        assertIs<MessageProcessResult.PaymentResult>(result)
+        val payment = result.payment
 
-        assertEquals(100.50, payment?.amount)
+        assertEquals(100.50, payment.amount)
     }
 
     @Test
@@ -179,9 +185,11 @@ class PaymentProcessorEnabledTest {
         val categories = emptyList<Category>()
 
         val processor = PaymentProcessor(senders, categories, mockRepository)
-        val payment = processor.getPaymentFromMessage(testMessage, testAddress)
+        val result = processor.getMessageResult(testMessage, testAddress)
+        assertIs<MessageProcessResult.PaymentResult>(result)
+        val payment = result.payment
 
-        assertEquals(100.50, payment?.amount)
+        assertEquals(100.50, payment.amount)
     }
 
     // Simple test repository implementation

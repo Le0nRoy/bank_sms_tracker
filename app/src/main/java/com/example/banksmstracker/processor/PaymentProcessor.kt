@@ -185,17 +185,6 @@ class PaymentProcessor(
         return null
     }
 
-    /**
-     * Legacy method for backward compatibility.
-     * Use getMessageResult() for the full workflow.
-     */
-    fun getPaymentFromMessage(message: String, address: String): Payment? =
-        when (val result = getMessageResult(message, address)) {
-            is MessageProcessResult.PaymentResult -> result.payment
-            is MessageProcessResult.IncomeResult -> null
-            is MessageProcessResult.Ignored -> throw MessageIgnoredException(result.ruleName)
-        }
-
     suspend fun processMessage(
         message: String,
         address: String,
@@ -275,7 +264,9 @@ class PaymentProcessor(
         // This ensures historical SMS get a contextual date rather than always the newest.
         val fmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val neighbor = allDated.minByOrNull { p ->
-            val parsed = runCatching { fmt.parse(p.timestamp.substringBefore(" ").ifEmpty { p.timestamp })?.time }.getOrNull()
+            val parsed = runCatching {
+                fmt.parse(p.timestamp.substringBefore(" ").ifEmpty { p.timestamp })?.time
+            }.getOrNull()
             if (parsed != null) kotlin.math.abs(parsed - referenceTime) else Long.MAX_VALUE
         }
 

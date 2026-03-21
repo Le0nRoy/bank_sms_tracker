@@ -217,6 +217,11 @@
     <string name="incomes">Incomes</string>
     <string name="no_incomes">No incomes yet</string>
     <string name="income_details">Income Details</string>
+    <string name="activity_incomes_title">Incomes</string>
+    <string name="income_total_label">Total: %1$s %2$s</string>
+    <string name="income_no_entries">No income recorded yet</string>
+    <string name="btn_incomes_label">Incomes</string>
+    <string name="income_unknown_source">Unknown source</string>
 
     <!-- Theme -->
     <string name="settings">Settings</string>
@@ -396,4 +401,9 @@
     <string name="notifications_vibration_label">Vibration</string>
     <string name="unmatched_sms_channel_desc">Alerts when a bank SMS cannot be matched to any payment rule</string>
     <string name="unmatched_sms_notification_title">Unmatched SMS from %1$s</string>
+
+    <!-- Regex Builder mode toggle -->
+    <string name="regex_builder_show_regex_toggle">Show regex</string>
+    <string name="regex_builder_mode_template">Template</string>
+    <string name="regex_builder_mode_regex">Regex</string>
 </resources>
