@@ -181,6 +181,7 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | `rules` | Unified regex patterns for all rule types (PAYMENT, INCOME, IGNORE) |
 | `payments` | Parsed and categorized transactions |
 | `incomes` | Parsed income transactions |
+| `exchange_rates` | Cached USD→GEL rates keyed by date + currency (DB v13) |
 | `sender_rules` | Legacy payment rules — dropped in MIGRATION_10_11 (DB v11) |
 | `ignore_rules` | Legacy ignore rules (retained for migration compatibility) |
 
@@ -197,7 +198,7 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | Config Export | ✅ | Export configuration as JSON via share intent |
 | UI: Categories | ✅ | Add/edit/delete categories and merchants |
 | UI: Senders | ✅ | Add/edit senders, addresses, and unified rules |
-| Room Persistence | ✅ | SQLite database v11 for all data |
+| Room Persistence | ✅ | SQLite database v13 for all data |
 
 ### 6.2 Extended Features (Implemented)
 
@@ -221,6 +222,11 @@ BankSMSTracker is an Android application that parses SMS messages from configure
 | Debug/Prod Split | ✅ | Export/SMS features hidden in release builds |
 | Allure Reporting | ✅ | `@Epic`/`@Feature`/`@Step` on Appium tests |
 | Date Approximation | ✅ | Fill missing payment timestamp from nearest neighbor |
+| Multi-select Category Filter | ✅ | Checkbox dialog on Payments screen filters list + report; includes "Uncategorized only" option |
+| USD/GEL Conversion | ✅ | NBG API exchange rates with in-memory + DB two-level cache (`exchange_rates` table) |
+| Merchant Display Names | ✅ | Optional display name per merchant; toggle in Payments between raw/display names |
+| Full Incomes Interface | ✅ | Sender filter, date range, source search, income report with pie/bar chart |
+| Process SMS Type Filter | ✅ | Result-type filter row (All/Payments/Incomes/Failed/Ignored) in `ApplyRulesActivity` |
 
 ### 6.3 Planned Features
 

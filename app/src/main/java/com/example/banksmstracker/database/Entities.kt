@@ -164,3 +164,17 @@ data class IncomeEntity(
     val receivedAt: Long? = null,
     val ruleId: Long? = null
 )
+
+/**
+ * Cached exchange rate fetched from the National Bank of Georgia API.
+ * Primary key is (date, currency) so each currency has one rate per day.
+ */
+@Entity(
+    tableName = "exchange_rates",
+    primaryKeys = ["date", "currency"]
+)
+data class ExchangeRateEntity(
+    val date: String,      // "yyyy-MM-dd"
+    val currency: String,  // e.g. "USD"
+    val rateToGel: Double
+)

@@ -4,11 +4,10 @@ buildCache {
     }
     remote<HttpBuildCache> {
         url = uri("http://localhost:5071/cache/")
-        // Enable with: ./gradlew <task> -PbuildCacheRemote=true
-        // Requires gradle-cache service: docker compose up -d gradle-cache
-        isEnabled = providers.gradleProperty("buildCacheRemote").map { it.toBoolean() }.getOrElse(false)
-        isPush = providers.gradleProperty("buildCacheRemote").map { it.toBoolean() }.getOrElse(false)
-        isAllowUntrustedServer = false
+        // Always enabled — `make build` ensures the container is running first.
+        // If the server is unreachable Gradle warns and falls back to local cache.
+        isEnabled = true
+        isPush = true
     }
 }
 

@@ -27,8 +27,11 @@ import com.example.banksmstracker.R
 import com.example.banksmstracker.data.Category
 import com.example.banksmstracker.data.Merchant
 import com.example.banksmstracker.data.Payment
+import com.example.banksmstracker.database.BankSmsDatabase
+import com.example.banksmstracker.database.ExchangeRateDao
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
+import com.example.banksmstracker.util.ExchangeRateCache
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
@@ -48,31 +51,47 @@ import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 class PaymentsActivity : BaseActivity() {
 
     private lateinit var recyclerPayments: RecyclerView
     private lateinit var tvEmptyState: TextView
     private lateinit var tvPaymentCount: TextView
-    private lateinit var spinnerCategory: Spinner
+    private lateinit var btnSelectCategories: Button
     private lateinit var spinnerSender: Spinner
     private lateinit var btnExportCsv: Button
     private lateinit var btnStartDate: Button
     private lateinit var btnEndDate: Button
     private lateinit var btnClearDates: Button
     private lateinit var btnSpendingReport: Button
+    private lateinit var btnToggleDisplayNames: Button
     private lateinit var etMerchantSearch: android.widget.EditText
 
     private lateinit var paymentRepository: RoomPaymentRepository
+    private lateinit var exchangeRateDao: ExchangeRateDao
+
     private var allPayments: List<Payment> = emptyList()
     private var filteredPayments: List<Payment> = emptyList()
-    private var categories: List<String> = emptyList()
+
+    /** All known category names (plus [UNCATEGORIZED_FILTER] sentinel for uncategorized). */
+    private var allCategoryItems: List<String> = emptyList()
+
+    /**
+     * Currently selected category filter items (names + optional [UNCATEGORIZED_FILTER]).
+     * Empty set = show all.
+     */
+    private var selectedCategories: MutableSet<String> = mutableSetOf()
+
     private var senderAddresses: List<String> = emptyList()
-    private var selectedCategory: String? = null
     private var selectedSender: String? = null
     private var startDate: Long? = null
     private var endDate: Long? = null
     private var merchantSearchQuery: String? = null
+
+    /** Map from raw merchant pattern → human-readable display name. */
+    private var merchantDisplayNames: Map<String, String> = emptyMap()
+    private var showDisplayNames: Boolean = false
 
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val adapter = PaymentAdapter()
@@ -80,7 +99,6 @@ class PaymentsActivity : BaseActivity() {
     private class PaymentDiffCallback : DiffUtil.ItemCallback<Payment>() {
         override fun areItemsTheSame(oldItem: Payment, newItem: Payment): Boolean =
             oldItem.id != null && oldItem.id == newItem.id
-
         override fun areContentsTheSame(oldItem: Payment, newItem: Payment): Boolean = oldItem == newItem
     }
 
@@ -91,7 +109,6 @@ class PaymentsActivity : BaseActivity() {
         initViews()
         setupRecyclerView()
 
-        // Restore saved state if available
         if (savedInstanceState != null) {
             startDate = savedInstanceState.getLong(KEY_START_DATE, -1L).takeIf { it >= 0 }
             endDate = savedInstanceState.getLong(KEY_END_DATE, -1L).takeIf { it >= 0 }
@@ -118,13 +135,17 @@ class PaymentsActivity : BaseActivity() {
         recyclerPayments = findViewById(R.id.recyclerPayments)
         tvEmptyState = findViewById(R.id.tvEmptyState)
         tvPaymentCount = findViewById(R.id.tvPaymentCount)
-        spinnerCategory = findViewById(R.id.spinnerCategory)
+        btnSelectCategories = findViewById(R.id.btnSelectCategories)
         spinnerSender = findViewById(R.id.spinnerSender)
         btnExportCsv = findViewById(R.id.btnExportCsv)
         btnStartDate = findViewById(R.id.btnStartDate)
         btnEndDate = findViewById(R.id.btnEndDate)
         btnClearDates = findViewById(R.id.btnClearDates)
+        btnToggleDisplayNames = findViewById(R.id.btnToggleDisplayNames)
         etMerchantSearch = findViewById(R.id.etMerchantSearch)
+
+        btnSelectCategories.setOnClickListener { showCategorySelectionDialog() }
+
         etMerchantSearch.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -134,30 +155,28 @@ class PaymentsActivity : BaseActivity() {
             }
         })
 
+        btnToggleDisplayNames.setOnClickListener {
+            showDisplayNames = !showDisplayNames
+            btnToggleDisplayNames.text = if (showDisplayNames)
+                getString(R.string.toggle_display_names_on)
+            else
+                getString(R.string.toggle_display_names_off)
+            adapter.notifyDataSetChanged()
+        }
+
         if (!BuildConfig.DEBUG) {
             btnExportCsv.visibility = View.GONE
         } else {
-            btnExportCsv.setOnClickListener {
-                exportToCsv()
-            }
+            btnExportCsv.setOnClickListener { exportToCsv() }
         }
 
         btnSpendingReport = findViewById(R.id.btnSpendingReport)
-        btnSpendingReport.setOnClickListener {
-            showSpendingReport()
-        }
+        btnSpendingReport.setOnClickListener { showSpendingReport() }
 
-        btnStartDate.setOnClickListener {
-            showDatePicker(isStartDate = true)
-        }
-
-        btnEndDate.setOnClickListener {
-            showDatePicker(isStartDate = false)
-        }
-
+        btnStartDate.setOnClickListener { showDatePicker(isStartDate = true) }
+        btnEndDate.setOnClickListener { showDatePicker(isStartDate = false) }
         btnClearDates.setOnClickListener {
-            startDate = null
-            endDate = null
+            startDate = null; endDate = null
             btnStartDate.text = getString(R.string.start_date)
             btnEndDate.text = getString(R.string.end_date)
             applyFilter()
@@ -166,12 +185,8 @@ class PaymentsActivity : BaseActivity() {
 
     private fun showDatePicker(isStartDate: Boolean) {
         val calendar = Calendar.getInstance()
-
-        // Use current date or the existing selection
         val existingDate = if (isStartDate) startDate else endDate
-        if (existingDate != null) {
-            calendar.timeInMillis = existingDate
-        }
+        if (existingDate != null) calendar.timeInMillis = existingDate
 
         DatePickerDialog(
             this,
@@ -179,26 +194,19 @@ class PaymentsActivity : BaseActivity() {
                 val selectedCalendar = Calendar.getInstance().apply {
                     set(year, month, dayOfMonth)
                     if (isStartDate) {
-                        set(Calendar.HOUR_OF_DAY, 0)
-                        set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0)
-                        set(Calendar.MILLISECOND, 0)
+                        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
                     } else {
-                        set(Calendar.HOUR_OF_DAY, 23)
-                        set(Calendar.MINUTE, 59)
-                        set(Calendar.SECOND, 59)
-                        set(Calendar.MILLISECOND, 999)
+                        set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
+                        set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
                     }
                 }
                 val timestamp = selectedCalendar.timeInMillis
                 val dateText = dateFormat.format(Date(timestamp))
-
                 if (isStartDate) {
-                    startDate = timestamp
-                    btnStartDate.text = dateText
+                    startDate = timestamp; btnStartDate.text = dateText
                 } else {
-                    endDate = timestamp
-                    btnEndDate.text = dateText
+                    endDate = timestamp; btnEndDate.text = dateText
                 }
                 applyFilter()
             },
@@ -214,40 +222,35 @@ class PaymentsActivity : BaseActivity() {
     }
 
     private fun loadData(preserveScroll: Boolean = false) {
-        val savedScrollState = if (preserveScroll) {
+        val savedScrollState = if (preserveScroll)
             (recyclerPayments.layoutManager as? LinearLayoutManager)?.onSaveInstanceState()
-        } else {
-            null
-        }
+        else null
 
         lifecycleScope.launch {
-            // Initialize repository from ConfigRepository's database
             ConfigRepository.load(application)
-            val database = com.example.banksmstracker.database.BankSmsDatabase.getInstance(this@PaymentsActivity)
+            val database = BankSmsDatabase.getInstance(this@PaymentsActivity)
             paymentRepository = RoomPaymentRepository(database.paymentDao())
+            exchangeRateDao = database.exchangeRateDao()
 
-            // Load payments
-            allPayments = withContext(Dispatchers.IO) {
-                paymentRepository.getAllPayments()
-            }
+            allPayments = withContext(Dispatchers.IO) { paymentRepository.getAllPayments() }
 
-            // Load categories for filter
             val configCategories = ConfigRepository.getCategories()
-            categories = listOf(getString(R.string.all_categories)) +
-                configCategories.map { it.name }
 
-            // Load sender addresses for filter
+            merchantDisplayNames = configCategories
+                .flatMap { it.merchants }
+                .filter { !it.isRegex && it.displayName != null }
+                .associate { it.pattern to it.displayName!! }
+
+            // Category items: real category names + special sentinel for uncategorized
+            allCategoryItems = configCategories.map { it.name } +
+                listOf(UNCATEGORIZED_FILTER)
+
             senderAddresses = withContext(Dispatchers.IO) {
-                listOf(getString(R.string.all_senders)) +
-                    paymentRepository.getDistinctSenderAddresses()
+                listOf(getString(R.string.all_senders)) + paymentRepository.getDistinctSenderAddresses()
             }
 
-            // Set default date range only if not restored from savedInstanceState
-            if (startDate == null && endDate == null) {
-                setDefaultDateRange()
-            }
+            if (startDate == null && endDate == null) setDefaultDateRange()
 
-            setupCategorySpinner()
             setupSenderSpinner()
             applyFilter()
             savedScrollState?.let { recyclerPayments.layoutManager?.onRestoreInstanceState(it) }
@@ -256,54 +259,64 @@ class PaymentsActivity : BaseActivity() {
 
     private fun setDefaultDateRange() {
         val calendar = Calendar.getInstance()
-
-        // First day of current month
         calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
+        calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0); calendar.set(Calendar.MILLISECOND, 0)
         startDate = calendar.timeInMillis
         btnStartDate.text = dateFormat.format(Date(startDate!!))
 
-        // Last day of current month
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59)
-        calendar.set(Calendar.MILLISECOND, 999)
+        calendar.set(Calendar.HOUR_OF_DAY, 23); calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59); calendar.set(Calendar.MILLISECOND, 999)
         endDate = calendar.timeInMillis
         btnEndDate.text = dateFormat.format(Date(endDate!!))
     }
 
-    private fun setupCategorySpinner() {
-        val spinnerAdapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            categories
-        )
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerCategory.adapter = spinnerAdapter
+    // ── Category multi-select ─────────────────────────────────────────────────
 
-        spinnerCategory.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                selectedCategory = if (position == 0) null else categories[position]
+    private fun showCategorySelectionDialog() {
+        if (allCategoryItems.isEmpty()) return
+
+        val labels = allCategoryItems.map { item ->
+            if (item == UNCATEGORIZED_FILTER) getString(R.string.uncategorized_only) else item
+        }.toTypedArray()
+        val checked = BooleanArray(allCategoryItems.size) { selectedCategories.contains(allCategoryItems[it]) }
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.all_categories)
+            .setMultiChoiceItems(labels, checked) { _, which, isChecked ->
+                checked[which] = isChecked
+            }
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                selectedCategories = allCategoryItems
+                    .filterIndexed { i, _ -> checked[i] }
+                    .toMutableSet()
+                updateCategoryButtonLabel()
                 applyFilter()
             }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                selectedCategory = null
+            .setNeutralButton(R.string.clear) { _, _ ->
+                selectedCategories.clear()
+                updateCategoryButtonLabel()
                 applyFilter()
             }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun updateCategoryButtonLabel() {
+        val label = when {
+            selectedCategories.isEmpty() -> getString(R.string.all_categories)
+            selectedCategories.size == 1 -> {
+                val single = selectedCategories.first()
+                if (single == UNCATEGORIZED_FILTER) getString(R.string.uncategorized_only) else single
+            }
+            else -> getString(R.string.categories_n_selected, selectedCategories.size)
         }
+        btnSelectCategories.text = getString(R.string.categories_button_label, label)
     }
 
     private fun setupSenderSpinner() {
-        val spinnerAdapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_item,
-            senderAddresses
-        )
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, senderAddresses)
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerSender.adapter = spinnerAdapter
 
@@ -312,18 +325,18 @@ class PaymentsActivity : BaseActivity() {
                 selectedSender = if (position == 0) null else senderAddresses[position]
                 applyFilter()
             }
-
             override fun onNothingSelected(parent: AdapterView<*>?) {
-                selectedSender = null
-                applyFilter()
+                selectedSender = null; applyFilter()
             }
         }
     }
 
     private fun applyFilter() {
-        filteredPayments =
-            filterPayments(allPayments, selectedCategory, selectedSender, startDate, endDate, merchantSearchQuery)
-
+        filteredPayments = filterPayments(
+            allPayments,
+            selectedCategories.takeIf { it.isNotEmpty() },
+            selectedSender, startDate, endDate, merchantSearchQuery
+        )
         adapter.submitList(filteredPayments)
         updateUI()
         saveFilterState()
@@ -332,7 +345,7 @@ class PaymentsActivity : BaseActivity() {
     private fun saveFilterState() {
         val prefs = getSharedPreferences(PREFS_FILTER_STATE, Context.MODE_PRIVATE)
         prefs.edit()
-            .putString(KEY_FILTER_CATEGORY, selectedCategory)
+            .putString(KEY_FILTER_CATEGORIES, selectedCategories.joinToString(SEP))
             .putString(KEY_FILTER_SENDER, selectedSender)
             .putLong(KEY_FILTER_START_DATE, startDate ?: -1L)
             .putLong(KEY_FILTER_END_DATE, endDate ?: -1L)
@@ -348,115 +361,89 @@ class PaymentsActivity : BaseActivity() {
             tvEmptyState.visibility = View.GONE
             recyclerPayments.visibility = View.VISIBLE
         }
-
         val total = filteredPayments.sumOf { it.amount }
         val currency = filteredPayments.firstOrNull()?.currency ?: ""
-        tvPaymentCount.text =
-            getString(R.string.payments_summary, filteredPayments.size, "%.2f".format(total), currency)
+        tvPaymentCount.text = getString(R.string.payments_summary, filteredPayments.size, "%.2f".format(total), currency)
     }
 
     private fun exportToCsv() {
         lifecycleScope.launch {
             try {
-                val csvContent = withContext(Dispatchers.IO) {
-                    buildCsvContent(filteredPayments)
-                }
-
+                val csvContent = withContext(Dispatchers.IO) { buildCsvContent(filteredPayments) }
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val fileName = "payments_$timestamp.csv"
-                val file = File(cacheDir, fileName)
-                file.deleteOnExit()
+                val file = File(cacheDir, "payments_$timestamp.csv").also { it.deleteOnExit() }
                 file.writeText(csvContent)
-
-                val uri = FileProvider.getUriForFile(
-                    this@PaymentsActivity,
-                    "$packageName.fileprovider",
-                    file
-                )
-
-                Toast.makeText(
-                    this@PaymentsActivity,
-                    getString(R.string.csv_export_success, file.absolutePath),
-                    Toast.LENGTH_SHORT
-                ).show()
-
+                val uri = FileProvider.getUriForFile(this@PaymentsActivity, "$packageName.fileprovider", file)
+                Toast.makeText(this@PaymentsActivity, getString(R.string.csv_export_success, file.absolutePath), Toast.LENGTH_SHORT).show()
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/csv"
-                    putExtra(Intent.EXTRA_STREAM, uri)
+                    type = "text/csv"; putExtra(Intent.EXTRA_STREAM, uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 startActivity(Intent.createChooser(shareIntent, getString(R.string.share_csv)))
             } catch (e: Exception) {
-                Toast.makeText(
-                    this@PaymentsActivity,
-                    getString(R.string.csv_export_failed, e.message ?: ""),
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(this@PaymentsActivity, getString(R.string.csv_export_failed, e.message ?: ""), Toast.LENGTH_LONG).show()
             }
         }
     }
 
     private fun buildCsvContent(payments: List<Payment>): String {
         val sb = StringBuilder()
-        // Header
         sb.appendLine(getString(R.string.csv_header_payments))
-        // Data
-        for (payment in payments) {
-            sb.appendLine(
-                listOf(
-                    payment.amount.toString(),
-                    escapeCsv(payment.currency),
-                    escapeCsv(payment.card ?: ""),
-                    escapeCsv(payment.merchant ?: ""),
-                    escapeCsv(payment.timestamp),
-                    payment.balance?.toString() ?: "",
-                    escapeCsv(payment.categoryId ?: ""),
-                    escapeCsv(payment.senderAddress ?: "")
-                ).joinToString(",")
-            )
+        for (p in payments) {
+            sb.appendLine(listOf(
+                p.amount.toString(), escapeCsv(p.currency), escapeCsv(p.card ?: ""),
+                escapeCsv(p.merchant ?: ""), escapeCsv(p.timestamp), p.balance?.toString() ?: "",
+                escapeCsv(p.categoryId ?: ""), escapeCsv(p.senderAddress ?: "")
+            ).joinToString(","))
         }
         return sb.toString()
     }
 
     private fun escapeCsv(value: String): String =
-        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
-            "\"${value.replace("\"", "\"\"")}\""
-        } else {
-            value
-        }
+        if (value.contains(",") || value.contains("\"") || value.contains("\n"))
+            "\"${value.replace("\"", "\"\"")}\"" else value
+
+    // ── Spending report (uses filteredPayments directly — categories already applied) ──
 
     private fun showSpendingReport() {
-        val dateRangeText = buildDateRangeText()
-
         if (filteredPayments.isEmpty()) {
             AlertDialog.Builder(this)
                 .setTitle(R.string.spending_report)
-                .setMessage("Period: $dateRangeText\n\n${getString(R.string.no_spending_data)}")
+                .setMessage("${buildDateRangeText()}\n\n${getString(R.string.no_spending_data)}")
                 .setPositiveButton(android.R.string.ok, null)
                 .show()
             return
         }
 
-        val categoryTotals = buildCategoryTotals()
-        val totalAmount = filteredPayments.sumOf { it.amount }
-        val currency = filteredPayments.firstOrNull()?.currency ?: ""
-        val reportText = buildReportText(dateRangeText, categoryTotals, totalAmount, currency)
+        lifecycleScope.launch {
+            val hasUsd = filteredPayments.any { it.currency == "USD" }
+            val usdRate: Double? = if (hasUsd) {
+                withTimeoutOrNull(3_000L) {
+                    ExchangeRateCache.getUsdToGelRate(System.currentTimeMillis(), exchangeRateDao)
+                }
+            } else null
 
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_spending_report, null)
-        dialogView.findViewById<TextView>(R.id.tvReportText).text = reportText
-        setupPieChart(dialogView.findViewById(R.id.pieChart), categoryTotals, totalAmount)
-        setupBarChart(dialogView.findViewById(R.id.barChart), categoryTotals)
+            val dateRangeText = buildDateRangeText()
+            val categoryTotals = buildCategoryTotals()
+            val totalAmount = filteredPayments.sumOf { it.amount }
+            val currency = filteredPayments.firstOrNull()?.currency ?: ""
+            val reportText = buildReportText(dateRangeText, categoryTotals, totalAmount, currency, usdRate)
 
-        AlertDialog.Builder(this)
-            .setTitle(R.string.spending_report)
-            .setView(dialogView)
-            .setPositiveButton(android.R.string.ok, null)
-            .show()
+            val dialogView = LayoutInflater.from(this@PaymentsActivity).inflate(R.layout.dialog_spending_report, null)
+            dialogView.findViewById<TextView>(R.id.tvReportText).text = reportText
+            setupPieChart(dialogView.findViewById(R.id.pieChart), categoryTotals, totalAmount)
+            setupBarChart(dialogView.findViewById(R.id.barChart), categoryTotals)
+
+            AlertDialog.Builder(this@PaymentsActivity)
+                .setTitle(R.string.spending_report)
+                .setView(dialogView)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
+        }
     }
 
     private fun buildDateRangeText(): String {
-        val actualStart =
-            startDate ?: filteredPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.minOrNull()
+        val actualStart = startDate ?: filteredPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.minOrNull()
         val actualEnd = endDate ?: filteredPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.maxOrNull()
         return when {
             actualStart != null && actualEnd != null ->
@@ -467,92 +454,87 @@ class PaymentsActivity : BaseActivity() {
         }
     }
 
-    private fun buildCategoryTotals(): List<Pair<String, Double>> = filteredPayments
-        .groupBy { it.categoryId ?: getString(R.string.uncategorized) }
-        .mapValues { (_, payments) -> payments.sumOf { it.amount } }
-        .toList()
-        .sortedByDescending { it.second }
+    private fun buildCategoryTotals(): List<Pair<String, Double>> =
+        filteredPayments
+            .groupBy { it.categoryId ?: getString(R.string.uncategorized) }
+            .mapValues { (_, pmts) -> pmts.sumOf { it.amount } }
+            .toList()
+            .sortedByDescending { it.second }
 
     private fun buildReportText(
         dateRangeText: String,
         categoryTotals: List<Pair<String, Double>>,
         totalAmount: Double,
-        currency: String
+        currency: String,
+        usdRate: Double?
     ): String {
         val sb = StringBuilder()
         sb.appendLine("Period: $dateRangeText")
         sb.appendLine()
         sb.appendLine(getString(R.string.total_spending, "%.2f".format(totalAmount), currency))
+
+        if (usdRate != null) {
+            val gelTotal = filteredPayments.sumOf { p ->
+                if (p.currency == "USD") p.amount * usdRate
+                else if (p.currency == "GEL") p.amount
+                else 0.0
+            }
+            sb.appendLine(getString(R.string.total_in_gel, "%.2f".format(gelTotal)))
+            sb.appendLine(getString(R.string.usd_gel_rate, "%.4f".format(usdRate)))
+        }
+
         sb.appendLine()
         sb.appendLine(getString(R.string.by_category))
         categoryTotals.forEach { (category, amount) ->
-            val percentage = if (totalAmount > 0) (amount / totalAmount * 100).toInt() else 0
-            sb.appendLine("  $category: ${"%.2f".format(amount)} $currency ($percentage%)")
+            val pct = if (totalAmount > 0) (amount / totalAmount * 100).toInt() else 0
+            val line = "  $category: ${"%.2f".format(amount)} $currency ($pct%)"
+            if (usdRate != null && currency == "USD") {
+                sb.appendLine("$line  ${getString(R.string.gel_equivalent, "%.2f".format(amount * usdRate))}")
+            } else {
+                sb.appendLine(line)
+            }
         }
         return sb.toString()
     }
 
     private fun setupPieChart(chart: PieChart, categoryTotals: List<Pair<String, Double>>, totalAmount: Double) {
-        val entries = categoryTotals.map { (category, amount) ->
-            PieEntry(amount.toFloat(), category)
-        }
-
+        val entries = categoryTotals.map { (category, amount) -> PieEntry(amount.toFloat(), category) }
         val dataSet = PieDataSet(entries, "").apply {
-            colors = CHART_COLORS
-            valueTextSize = 11f
-            valueTextColor = Color.WHITE
-            sliceSpace = 2f
+            colors = CHART_COLORS; valueTextSize = 11f; valueTextColor = Color.WHITE; sliceSpace = 2f
         }
-
-        val data = PieData(dataSet).apply {
-            setValueFormatter(PercentFormatter(chart))
-        }
-
+        val data = PieData(dataSet).apply { setValueFormatter(PercentFormatter(chart)) }
         chart.apply {
-            this.data = data
-            description.isEnabled = false
-            isDrawHoleEnabled = true
-            holeRadius = 40f
-            setUsePercentValues(true)
-            setEntryLabelTextSize(10f)
-            setEntryLabelColor(Color.WHITE)
-            legend.isEnabled = false
-            setDrawCenterText(true)
+            this.data = data; description.isEnabled = false; isDrawHoleEnabled = true; holeRadius = 40f
+            setUsePercentValues(true); setEntryLabelTextSize(10f); setEntryLabelColor(Color.WHITE)
+            legend.isEnabled = false; setDrawCenterText(true)
             centerText = getString(R.string.total_spending, "%.0f".format(totalAmount), "")
-            setCenterTextSize(12f)
-            animateY(600)
-            invalidate()
+            setCenterTextSize(12f); animateY(600); invalidate()
         }
     }
 
     private fun setupBarChart(chart: BarChart, categoryTotals: List<Pair<String, Double>>) {
-        val entries = categoryTotals.mapIndexed { index, (_, amount) ->
-            BarEntry(index.toFloat(), amount.toFloat())
-        }
-        val dataSet = BarDataSet(entries, "").apply {
-            setDrawValues(false)
-        }
+        val entries = categoryTotals.mapIndexed { index, (_, amount) -> BarEntry(index.toFloat(), amount.toFloat()) }
+        val dataSet = BarDataSet(entries, "").apply { setDrawValues(false) }
         chart.data = BarData(dataSet)
         chart.xAxis.apply {
             valueFormatter = IndexAxisValueFormatter(categoryTotals.map { it.first })
-            position = XAxis.XAxisPosition.BOTTOM
-            granularity = 1f
-            setDrawGridLines(false)
-            labelRotationAngle = -30f
+            position = XAxis.XAxisPosition.BOTTOM; granularity = 1f
+            setDrawGridLines(false); labelRotationAngle = -30f
         }
-        chart.axisRight.isEnabled = false
-        chart.legend.isEnabled = false
-        chart.description.isEnabled = false
-        chart.invalidate()
+        chart.axisRight.isEnabled = false; chart.legend.isEnabled = false
+        chart.description.isEnabled = false; chart.invalidate()
     }
 
     private fun showPaymentDetail(payment: Payment) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_payment_detail, null)
 
-        dialogView.findViewById<TextView>(R.id.tvMerchant).text = payment.merchant ?: getString(R.string.unknown)
+        val displayMerchant = if (showDisplayNames)
+            merchantDisplayNames[payment.merchant] ?: payment.merchant ?: getString(R.string.unknown)
+        else payment.merchant ?: getString(R.string.unknown)
+
+        dialogView.findViewById<TextView>(R.id.tvMerchant).text = displayMerchant
         dialogView.findViewById<TextView>(R.id.tvAmount).text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
-        dialogView.findViewById<TextView>(R.id.tvCategory).text =
-            payment.categoryId ?: getString(R.string.uncategorized)
+        dialogView.findViewById<TextView>(R.id.tvCategory).text = payment.categoryId ?: getString(R.string.uncategorized)
         dialogView.findViewById<TextView>(R.id.tvCard).text = payment.card?.let { "****$it" } ?: "-"
         dialogView.findViewById<TextView>(R.id.tvTimestamp).text = payment.timestamp.ifBlank { "-" }
         dialogView.findViewById<TextView>(R.id.tvBalance).text =
@@ -563,42 +545,26 @@ class PaymentsActivity : BaseActivity() {
         val btnAddToCategory = dialogView.findViewById<Button>(R.id.btnAddToCategory)
         val btnCreateCategory = dialogView.findViewById<Button>(R.id.btnCreateCategory)
 
-        // Load categories for spinner
         lifecycleScope.launch {
             val configCategories = ConfigRepository.getCategories()
-            val categoryNames = listOf(getString(R.string.select_category_hint)) +
-                configCategories.map { it.name }
-
-            val spinnerAdapter = ArrayAdapter(
-                this@PaymentsActivity,
-                android.R.layout.simple_spinner_item,
-                categoryNames
-            )
+            val categoryNames = listOf(getString(R.string.select_category_hint)) + configCategories.map { it.name }
+            val spinnerAdapter = ArrayAdapter(this@PaymentsActivity, android.R.layout.simple_spinner_item, categoryNames)
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spinnerCategories.adapter = spinnerAdapter
 
             val dialog = AlertDialog.Builder(this@PaymentsActivity)
-                .setTitle(R.string.payment_details)
-                .setView(dialogView)
-                .setNegativeButton(R.string.cancel, null)
-                .create()
+                .setTitle(R.string.payment_details).setView(dialogView)
+                .setNegativeButton(R.string.cancel, null).create()
 
             btnAddToCategory.setOnClickListener {
-                val selectedPosition = spinnerCategories.selectedItemPosition
-                if (selectedPosition > 0 && payment.merchant != null) {
-                    val selectedCategory = configCategories[selectedPosition - 1]
-                    addMerchantToCategory(payment.merchant, selectedCategory, dialog)
-                } else {
-                    Toast.makeText(this@PaymentsActivity, R.string.no_sender_selected, Toast.LENGTH_SHORT).show()
-                }
+                val pos = spinnerCategories.selectedItemPosition
+                if (pos > 0 && payment.merchant != null)
+                    addMerchantToCategory(payment.merchant, configCategories[pos - 1], dialog)
+                else Toast.makeText(this@PaymentsActivity, R.string.no_sender_selected, Toast.LENGTH_SHORT).show()
             }
-
             btnCreateCategory.setOnClickListener {
-                if (payment.merchant != null) {
-                    showCreateCategoryDialog(payment.merchant, dialog)
-                }
+                if (payment.merchant != null) showCreateCategoryDialog(payment.merchant, dialog)
             }
-
             dialog.show()
         }
     }
@@ -607,121 +573,71 @@ class PaymentsActivity : BaseActivity() {
         lifecycleScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    // Remove the merchant from all categories that currently contain it.
                     val allCategories = ConfigRepository.getCategories()
                     for (cat in allCategories) {
-                        val hadMerchant = cat.merchants.any { m ->
-                            !m.isRegex && m.pattern.equals(merchant, ignoreCase = true)
-                        }
+                        val hadMerchant = cat.merchants.any { m -> !m.isRegex && m.pattern.equals(merchant, ignoreCase = true) }
                         if (hadMerchant) {
-                            val withoutMerchant = cat.merchants.filterNot { m ->
+                            ConfigRepository.updateCategory(cat.copy(merchants = cat.merchants.filterNot { m ->
                                 !m.isRegex && m.pattern.equals(merchant, ignoreCase = true)
-                            }.toMutableList()
-                            ConfigRepository.updateCategory(cat.copy(merchants = withoutMerchant))
+                            }.toMutableList()))
                         }
                     }
-
-                    // Add merchant to the chosen category (if not already there after the cleanup).
                     val refreshed = ConfigRepository.getCategories().first { it.id == category.id }
-                    if (!refreshed.merchants.any { m ->
-                            !m.isRegex && m.pattern.equals(merchant, ignoreCase = true)
-                        }
-                    ) {
+                    if (!refreshed.merchants.any { m -> !m.isRegex && m.pattern.equals(merchant, ignoreCase = true) }) {
                         ConfigRepository.updateCategory(
-                            refreshed.copy(
-                                merchants = (refreshed.merchants + Merchant(merchant)).toMutableList()
-                            )
+                            refreshed.copy(merchants = (refreshed.merchants + Merchant(merchant)).toMutableList())
                         )
                     }
-
-                    // Update categoryId on all existing payments with this merchant.
                     paymentRepository.updateCategoryForMerchant(merchant, category.name)
                 }
-
-                Toast.makeText(
-                    this@PaymentsActivity,
-                    getString(R.string.merchant_added_to_category, merchant, category.name),
-                    Toast.LENGTH_SHORT
-                ).show()
-
+                Toast.makeText(this@PaymentsActivity, getString(R.string.merchant_added_to_category, merchant, category.name), Toast.LENGTH_SHORT).show()
                 parentDialog.dismiss()
                 loadData(preserveScroll = true)
             } catch (e: Exception) {
-                Toast.makeText(
-                    this@PaymentsActivity,
-                    getString(R.string.error_with_message, e.message ?: ""),
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     private fun showCreateCategoryDialog(merchant: String, parentDialog: AlertDialog) {
-        val input = EditText(this).apply {
-            hint = getString(R.string.enter_category_name)
-            setPadding(48, 32, 48, 32)
-        }
-
+        val input = EditText(this).apply { hint = getString(R.string.enter_category_name); setPadding(48, 32, 48, 32) }
         AlertDialog.Builder(this)
-            .setTitle(R.string.create_new_category)
-            .setView(input)
+            .setTitle(R.string.create_new_category).setView(input)
             .setPositiveButton(R.string.confirm) { _, _ ->
-                val categoryName = input.text.toString().trim()
-                if (categoryName.isNotEmpty()) {
-                    createCategoryWithMerchant(categoryName, merchant, parentDialog)
-                }
+                val name = input.text.toString().trim()
+                if (name.isNotEmpty()) createCategoryWithMerchant(name, merchant, parentDialog)
             }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+            .setNegativeButton(R.string.cancel, null).show()
     }
 
     private fun createCategoryWithMerchant(categoryName: String, merchant: String, parentDialog: AlertDialog) {
         lifecycleScope.launch {
             try {
-                // Create new category
-                val newCategory = withContext(Dispatchers.IO) {
-                    ConfigRepository.addCategory()
-                }
-
-                // Update with name and merchant
-                val updatedCategory = newCategory.copy(
-                    name = categoryName,
-                    merchants = mutableListOf(Merchant(merchant))
-                )
+                val newCategory = withContext(Dispatchers.IO) { ConfigRepository.addCategory() }
                 withContext(Dispatchers.IO) {
-                    ConfigRepository.updateCategory(updatedCategory)
+                    ConfigRepository.updateCategory(
+                        newCategory.copy(name = categoryName, merchants = mutableListOf(Merchant(merchant)))
+                    )
                 }
-
-                Toast.makeText(
-                    this@PaymentsActivity,
-                    getString(R.string.category_created, categoryName),
-                    Toast.LENGTH_SHORT
-                ).show()
-
+                Toast.makeText(this@PaymentsActivity, getString(R.string.category_created, categoryName), Toast.LENGTH_SHORT).show()
                 parentDialog.dismiss()
                 loadData(preserveScroll = true)
             } catch (e: Exception) {
-                Toast.makeText(
-                    this@PaymentsActivity,
-                    getString(R.string.error_with_message, e.message ?: ""),
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // RecyclerView Adapter
+    // ── RecyclerView Adapter ───────────────────────────────────────────────────
+
     inner class PaymentAdapter : ListAdapter<Payment, PaymentAdapter.PaymentViewHolder>(PaymentDiffCallback()) {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PaymentViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_payment, parent, false)
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_payment, parent, false)
             return PaymentViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: PaymentViewHolder, position: Int) {
-            holder.bind(getItem(position))
-        }
+        override fun onBindViewHolder(holder: PaymentViewHolder, position: Int) = holder.bind(getItem(position))
 
         inner class PaymentViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
             private val tvMerchant: TextView = itemView.findViewById(R.id.tvMerchant)
@@ -731,21 +647,18 @@ class PaymentsActivity : BaseActivity() {
             private val tvCard: TextView = itemView.findViewById(R.id.tvCard)
 
             fun bind(payment: Payment) {
-                tvMerchant.text = payment.merchant ?: getString(R.string.unknown)
+                tvMerchant.text = if (showDisplayNames)
+                    merchantDisplayNames[payment.merchant] ?: payment.merchant ?: getString(R.string.unknown)
+                else payment.merchant ?: getString(R.string.unknown)
                 tvAmount.text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
                 tvCategory.text = payment.categoryId ?: getString(R.string.uncategorized)
                 tvTimestamp.text = payment.timestamp
-
                 if (!payment.card.isNullOrBlank()) {
-                    tvCard.visibility = View.VISIBLE
-                    tvCard.text = getString(R.string.card_display, payment.card)
+                    tvCard.visibility = View.VISIBLE; tvCard.text = getString(R.string.card_display, payment.card)
                 } else {
                     tvCard.visibility = View.GONE
                 }
-
-                itemView.setOnClickListener {
-                    showPaymentDetail(payment)
-                }
+                itemView.setOnClickListener { showPaymentDetail(payment) }
             }
         }
     }
@@ -754,22 +667,19 @@ class PaymentsActivity : BaseActivity() {
         private const val KEY_START_DATE = "key_start_date"
         private const val KEY_END_DATE = "key_end_date"
         const val PREFS_FILTER_STATE = "payments_filter_state"
-        const val KEY_FILTER_CATEGORY = "filter_category"
+        /** Replaces the old single KEY_FILTER_CATEGORY. Stored as pipe-separated values. */
+        const val KEY_FILTER_CATEGORIES = "filter_categories"
+        @Deprecated("Replaced by KEY_FILTER_CATEGORIES") const val KEY_FILTER_CATEGORY = "filter_category"
         const val KEY_FILTER_SENDER = "filter_sender"
         const val KEY_FILTER_START_DATE = "filter_start_date"
         const val KEY_FILTER_END_DATE = "filter_end_date"
         const val KEY_FILTER_MERCHANT = "filter_merchant"
+        private const val SEP = "\u001F"  // ASCII Unit Separator — safe in category names
 
         private val CHART_COLORS = listOf(
-            Color.rgb(64, 150, 220),
-            Color.rgb(255, 140, 50),
-            Color.rgb(90, 190, 100),
-            Color.rgb(230, 80, 80),
-            Color.rgb(160, 100, 210),
-            Color.rgb(255, 200, 50),
-            Color.rgb(80, 200, 200),
-            Color.rgb(200, 100, 150),
-            Color.rgb(130, 180, 80),
+            Color.rgb(64, 150, 220), Color.rgb(255, 140, 50), Color.rgb(90, 190, 100),
+            Color.rgb(230, 80, 80), Color.rgb(160, 100, 210), Color.rgb(255, 200, 50),
+            Color.rgb(80, 200, 200), Color.rgb(200, 100, 150), Color.rgb(130, 180, 80),
             Color.rgb(180, 130, 80)
         )
     }

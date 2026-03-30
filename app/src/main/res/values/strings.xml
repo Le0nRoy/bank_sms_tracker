@@ -406,4 +406,40 @@
     <string name="regex_builder_show_regex_toggle">Show regex</string>
     <string name="regex_builder_mode_template">Template</string>
     <string name="regex_builder_mode_regex">Regex</string>
+
+    <!-- Feature: Multi-category spending statistics (Feature 1) -->
+    <string name="select_categories_for_report">Select Categories for Report</string>
+
+    <!-- Feature: USD/GEL currency conversion (Feature 2) -->
+    <string name="gel_equivalent">≈ %1$s GEL</string>
+    <string name="usd_gel_rate">1 USD = %1$s GEL</string>
+    <string name="total_in_gel">Total (GEL equiv.): %1$s GEL</string>
+
+    <!-- Feature: Merchant display names (Feature 3) -->
+    <string name="merchant_display_name_hint">Display name (optional)</string>
+    <string name="toggle_display_names_on">Names: Display</string>
+    <string name="toggle_display_names_off">Names: Raw</string>
+
+    <!-- Feature: Uncategorized-only filter (Feature 4) -->
+    <string name="uncategorized_only">Uncategorized only</string>
+    <string name="categories_n_selected">%1$d categories</string>
+    <string name="categories_button_label">Categories: %1$s</string>
+
+    <!-- Feature: Income activity full interface (Feature 5) -->
+    <string name="income_report">Income Report</string>
+    <string name="by_source">By Source:</string>
+    <string name="search_source_hint">Search source…</string>
+    <string name="all_sources">All sources</string>
+    <string name="incomes_summary">%1$d incomes - Total: %2$s %3$s</string>
+    <string name="no_incomes_filtered">No incomes for selected filters</string>
+
+    <!-- Feature: Process SMS type filter (Feature 6) -->
+    <string name="filter_all_types">All</string>
+    <string name="filter_payments_type">Payments</string>
+    <string name="filter_incomes_type">Incomes</string>
+    <string name="filter_failed_type">Failed</string>
+    <string name="filter_ignored_type">Ignored</string>
+    <string name="summary_processed_full">%1$d payments, %2$d incomes, %3$d failed, %4$d ignored</string>
+    <string name="income_item_label">Income: +%1$s %2$s</string>
+    <string name="message_income">Income message</string>
 </resources>

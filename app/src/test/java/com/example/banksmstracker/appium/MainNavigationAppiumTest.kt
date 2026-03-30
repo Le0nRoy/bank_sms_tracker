@@ -159,7 +159,7 @@ class MainNavigationAppiumTest : AppiumBaseTest() {
         mediumWait()
 
         assertTrue(
-            elementExists("spinnerCategory") || elementExists("recyclerPayments"),
+            elementExists("btnSelectCategories") || elementExists("recyclerPayments"),
             "Should be on Payments screen"
         )
 

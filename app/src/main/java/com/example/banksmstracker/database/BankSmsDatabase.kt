@@ -15,9 +15,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         SenderAddressEntity::class,
         RuleEntity::class,
         PaymentEntity::class,
-        IncomeEntity::class
+        IncomeEntity::class,
+        ExchangeRateEntity::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = true
 )
 abstract class BankSmsDatabase : RoomDatabase() {
@@ -26,6 +27,7 @@ abstract class BankSmsDatabase : RoomDatabase() {
     abstract fun paymentDao(): PaymentDao
     abstract fun incomeDao(): IncomeDao
     abstract fun ruleDao(): RuleDao
+    abstract fun exchangeRateDao(): ExchangeRateDao
 
     companion object {
         @Volatile
@@ -302,6 +304,24 @@ abstract class BankSmsDatabase : RoomDatabase() {
             }
         }
 
+        /**
+         * Migration from version 12 to 13: Add exchange_rates table for persistent USD/GEL cache.
+         */
+        private val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS exchange_rates (
+                        date TEXT NOT NULL,
+                        currency TEXT NOT NULL,
+                        rateToGel REAL NOT NULL,
+                        PRIMARY KEY(date, currency)
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getInstance(context: Context): BankSmsDatabase = INSTANCE ?: synchronized(this) {
             INSTANCE ?: Room.databaseBuilder(
                 context.applicationContext,
@@ -319,7 +339,8 @@ abstract class BankSmsDatabase : RoomDatabase() {
                     MIGRATION_8_9,
                     MIGRATION_9_10,
                     MIGRATION_10_11,
-                    MIGRATION_11_12
+                    MIGRATION_11_12,
+                    MIGRATION_12_13
                 )
                 .build()
                 .also { INSTANCE = it }

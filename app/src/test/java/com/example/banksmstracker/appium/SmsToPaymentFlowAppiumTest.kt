@@ -158,9 +158,9 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
         clickButton("btnPayments")
         mediumWait()
 
-        // Verify we're on Payments screen by checking for the spinner or recycler
+        // Verify we're on Payments screen by checking for the category button or recycler
         assertTrue(
-            elementExists("spinnerCategory") || elementExists("recyclerPayments"),
+            elementExists("btnSelectCategories") || elementExists("recyclerPayments"),
             "Should be on Payments screen"
         )
 
@@ -185,20 +185,21 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(6)
-    @DisplayName("Payments screen has category filter")
+    @DisplayName("Payments screen has category filter button")
     fun paymentsHasCategoryFilter() {
         clickButton("btnPayments")
         mediumWait()
 
-        // Verify spinner exists
-        assertTrue(elementExists("spinnerCategory"), "Should have category filter spinner")
+        // Verify multi-select category button exists
+        assertTrue(elementExists("btnSelectCategories"), "Should have category filter button")
 
-        // Click on spinner to see options
-        findById("spinnerCategory").click()
+        // Click to open checkbox dialog
+        findById("btnSelectCategories").click()
         shortWait()
 
-        // Close spinner
-        driver.navigate().back()
+        // Dismiss dialog
+        if (textExists("Cancel")) findByText("Cancel").click()
+        else driver.navigate().back()
         shortWait()
 
         navigateToMain()
@@ -294,7 +295,7 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
         mediumWait()
 
         assertTrue(
-            elementExists("spinnerCategory") || elementExists("tvEmptyState"),
+            elementExists("btnSelectCategories") || elementExists("tvEmptyState"),
             "Payments screen should be functional"
         )
 
@@ -319,6 +320,24 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
             false
         }
         assertTrue(foundGroceries, "Groceries category should persist")
+
+        navigateToMain()
+    }
+
+    // ── PROMPT-3: ApplyRules result-type filter ───────────────────────────────
+
+    @Test
+    @Order(11)
+    @DisplayName("Apply Rules filter row hidden before processing")
+    fun applyRulesFilterRowHiddenBeforeProcessing() {
+        findById("btnApplyRules").click()
+        mediumWait()
+
+        // Filter scroll view should be GONE before any SMS is processed
+        assertTrue(
+            !elementExists("filterScrollView") || !elementExists("btnFilterAll"),
+            "Filter row should not be visible before processing"
+        )
 
         navigateToMain()
     }

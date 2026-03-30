@@ -75,13 +75,23 @@ abstract class AppiumBaseTest {
             setAppActivity(APP_ACTIVITY)
             if (APK_PATH != null) {
                 setApp(APK_PATH)
-                setNoReset(false)
+                // noReset=true skips `pm clear` (blocked on MIUI/HyperOS); fresh install gives
+                // fresh data anyway. enforceAppInstall forces reinstall even with noReset=true.
+                setNoReset(true)
+                setEnforceAppInstall(true)
             } else {
                 // App is pre-installed (e.g. via ./gradlew installDebug); just launch it
                 setNoReset(true)
             }
             setFullReset(false)
             setNewCommandTimeout(Duration.ofSeconds(300))
+            // Some devices (e.g. MIUI/HyperOS) deny WRITE_SECURE_SETTINGS to adb shell,
+            // preventing UiAutomator2 from clearing the hidden_api_policy global setting.
+            // This capability tells the driver to continue even if that step fails.
+            setIgnoreHiddenApiPolicyError(true)
+            // MIUI/HyperOS blocks ADB installs of io.appium.settings unless "Install via USB"
+            // is enabled in developer options. Skip device initialization to bypass that step.
+            setSkipDeviceInitialization(true)
         }
 
         driver = AndroidDriver(URI.create(APPIUM_SERVER_URL).toURL(), options)

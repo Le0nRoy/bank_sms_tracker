@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase PROMPT-3: Reporting, Conversion & Interface Enhancements**
+  - **Multi-select category filter** — `btnSelectCategories` opens a checkbox dialog on the Payments screen; selected categories filter both the payment list and spending report; includes an "Uncategorized only" option (`UNCATEGORIZED_FILTER` sentinel) combinable with named categories
+  - **USD/GEL exchange-rate conversion** — `ExchangeRateCache` fetches live rates from the National Bank of Georgia REST API; two-level cache (in-memory + Room `exchange_rates` table) survives app restarts; spending and income reports show GEL equivalent and exchange rate when USD payments present
+  - **Merchant display names** — `Merchant.displayName` editable in `CategoriesActivity` (separate field below the pattern); `btnToggleDisplayNames` in `PaymentsActivity` switches the list between raw merchant names and display names
+  - **Full Incomes interface** — `IncomesActivity` rewritten with sender spinner, date-range buttons (defaults to current month), source search, income total label, and income report (pie + bar chart with GEL conversion)
+  - **Process SMS result-type filter** — `ApplyRulesActivity` stores typed results (`SmsResultItem` sealed class: `PaymentItem`, `IncomeItem`, `IgnoredItem`, `FailedItem`); after processing, a `HorizontalScrollView` filter row appears with All / Payments / Incomes / Failed / Ignored buttons
+  - Database migration v12 → v13: new `exchange_rates` table (`date TEXT, currency TEXT, rateToGel REAL, PRIMARY KEY(date, currency)`)
+  - New Appium test class `IncomesAppiumTest` (11 tests, 5 smoke-tagged) covering all new Incomes screen elements
+  - Smoke suite expanded from 21 to 29 tests
+
+### Fixed
+- `IncomesActivity` was calling `ExchangeRateCache.getUsdToGelRate()` without the required `dao` parameter; fixed by initialising `exchangeRateDao` from `BankSmsDatabase` in `loadData()`
+- Appium tests referencing removed `spinnerCategory` ID updated to `btnSelectCategories` across `PaymentsFilterAppiumTest`, `SmsToPaymentFlowAppiumTest`, and `MainNavigationAppiumTest`
+
+### Database Migrations (continued)
+- v12 → v13: Added `exchange_rates` table for persistent USD/GEL exchange-rate cache
+
 - **Phase PROMPT-2: Merchant Model & Pattern Management**
   - `Merchant` data class with `pattern`, `displayName` (optional), and `isRegex` fields (Task 1.2)
   - Regex matching for merchants — `isRegex=true` enables regex pattern matching in addition to exact string matching (Task 1.3)
@@ -209,6 +226,9 @@ The app includes automatic database migrations:
 - v7 → v8: Unified rules table (payment + ignore rules consolidated)
 - v8 → v9: Made `payments.timestamp` NOT NULL; removed `receivedAt` column
 - v9 → v10: Extended `category_merchants` with `displayName` and `isRegex` columns; renamed `name` → `pattern`
+- v10 → v11: Unified payment + ignore rules into single `rules` table
+- v11 → v12: (see prior phase notes)
+- v12 → v13: Added `exchange_rates` table for persistent USD/GEL rate cache
 
 ---
 

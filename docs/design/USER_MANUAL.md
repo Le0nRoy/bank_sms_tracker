@@ -7,12 +7,13 @@
 3. [Managing Categories](#managing-categories)
 4. [Managing Senders](#managing-senders)
 5. [Viewing Payments](#viewing-payments)
-6. [Using the Regex Builder](#using-the-regex-builder)
-7. [Testing Rules](#testing-rules)
-8. [Processing SMS History](#processing-sms-history)
-9. [Import/Export Configuration](#importexport-configuration)
-10. [Settings](#settings)
-11. [Troubleshooting](#troubleshooting)
+6. [Viewing Incomes](#viewing-incomes)
+7. [Using the Regex Builder](#using-the-regex-builder)
+8. [Testing Rules](#testing-rules)
+9. [Processing SMS History](#processing-sms-history)
+10. [Import/Export Configuration](#importexport-configuration)
+11. [Settings](#settings)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -77,6 +78,10 @@ Merchants are automatically matched to categories based on name. For example:
 
 When a transaction mentions "McDonalds", it will automatically be categorized as "Food".
 
+Each merchant has two fields:
+- **Pattern** — the exact string (or regex if "Is regex" is enabled) matched against the merchant name in parsed SMS messages.
+- **Display Name** *(optional)* — a human-friendly label shown in the payment list when display names are toggled on. Leave blank to show the raw pattern.
+
 ### Enable/Disable Categories
 
 Toggle the switch next to a category to enable or disable it. Disabled categories won't be used for automatic categorization.
@@ -137,16 +142,21 @@ The Payments screen shows all parsed transactions with powerful filtering option
 
 ### Filtering Payments
 
-- **By Category** - Select a specific category or "All categories"
-- **By Sender** - Filter by bank sender address
-- **By Date Range** - Select start and end dates
+- **By Category** — Tap **Categories: All** to open a checkbox dialog. Select one or more categories, including **Uncategorized only** for payments with no assigned category. The selection applies to both the payment list and the spending report simultaneously.
+- **By Sender** — Filter by bank sender address using the spinner.
+- **By Date Range** — Tap **Start Date** / **End Date** to set a range. Tap **Clear** to remove it.
+- **By Merchant** — Type in the merchant search field to filter by name (case-insensitive substring match).
+
+### Display Names Toggle
+
+Tap **Show Display Names** / **Show Raw Names** to switch between the friendly display name set in Categories and the raw merchant string extracted from the SMS body.
 
 ### Spending Report
 
-Tap **Report** to see a breakdown of spending by category for the selected period. The report shows:
+Tap **Report** to see a breakdown of spending for the currently filtered payments. The report shows:
 - Total spending amount
-- Spending per category
-- Percentage breakdown
+- GEL equivalent and live exchange rate when USD payments are present (fetched from the National Bank of Georgia API and cached locally)
+- Per-category breakdown with percentage, pie chart, and bar chart
 
 ### Exporting to CSV
 
@@ -209,6 +219,25 @@ This is useful for debugging patterns without affecting your actual payment data
 
 ---
 
+## Viewing Incomes
+
+The Incomes screen shows all parsed income transactions (salary, transfers, refunds).
+
+### Filtering Incomes
+
+- **By Sender** — Select a bank sender from the spinner.
+- **By Date Range** — Tap **Start Date** / **End Date** (defaults to current month). Tap **Clear** to remove.
+- **By Source** — Type in the source search field to filter by income source name.
+
+### Income Report
+
+Tap **Report** to see a breakdown of incomes by source. The report shows:
+- Total income amount
+- GEL equivalent when USD incomes are present
+- Per-source breakdown with pie chart and bar chart
+
+---
+
 ## Processing SMS History
 
 Process historical SMS messages to import past transactions.
@@ -220,6 +249,15 @@ Process historical SMS messages to import past transactions.
 3. Select a date range (optional)
 4. Tap **Apply Rules**
 5. The app will process all matching messages
+
+### Result Filter
+
+After processing, a filter row appears above the results. Tap a button to show only a specific result type:
+- **All** — every processed message
+- **Payments** — successfully parsed payment transactions
+- **Incomes** — successfully parsed income transactions
+- **Failed** — messages that matched a sender but no rule extracted data
+- **Ignored** — messages matched by an IGNORE rule
 
 ### Notes
 

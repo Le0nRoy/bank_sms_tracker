@@ -40,7 +40,7 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
 
         // Verify we're on Payments screen
         assertTrue(
-            elementExists("spinnerCategory") || textExists("Payment") || textExists("PAYMENT"),
+            elementExists("btnSelectCategories") || textExists("Payment") || textExists("PAYMENT"),
             "Should be on Payments screen"
         )
 
@@ -162,21 +162,26 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
 
     @Test
     @Order(8)
-    @DisplayName("Category filter spinner still works")
-    fun categoryFilterSpinnerWorks() {
+    @DisplayName("Category filter button opens multi-select dialog")
+    fun categoryFilterButtonOpenDialog() {
         findById("btnPayments").click()
         mediumWait()
 
-        val hasCategorySpinner = elementExists("spinnerCategory")
-        assertTrue(hasCategorySpinner, "Should have category filter spinner")
+        assertTrue(elementExists("btnSelectCategories"), "Should have category filter button")
 
-        // Click to open spinner
-        findById("spinnerCategory").click()
+        findById("btnSelectCategories").click()
         mediumWait()
 
-        // Should show dropdown options
-        // Dismiss by tapping elsewhere or back
-        driver.navigate().back()
+        // Multi-select checkbox dialog should appear (OK / Cancel buttons)
+        val hasDialog = textExists("OK") || textExists("Cancel") || textExists("Categories")
+        assertTrue(hasDialog, "Should show category selection dialog")
+
+        // Dismiss dialog
+        if (textExists("Cancel")) {
+            findByText("Cancel").click()
+        } else {
+            driver.navigate().back()
+        }
         shortWait()
 
         navigateToMain()
@@ -324,6 +329,54 @@ class PaymentsFilterAppiumTest : AppiumBaseTest() {
         try {
             driver.hideKeyboard()
         } catch (e: Exception) { }
+
+        navigateToMain()
+    }
+
+    // ── PROMPT-3: Multi-select categories & display-name toggle ───────────────
+
+    @Test
+    @Order(16)
+    @Tag("smoke")
+    @DisplayName("Category select button exists on Payments screen")
+    fun categorySelectButtonExists() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        assertTrue(elementExists("btnSelectCategories"), "Should have category select button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(17)
+    @DisplayName("Toggle display names button exists on Payments screen")
+    fun toggleDisplayNamesButtonExists() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        assertTrue(elementExists("btnToggleDisplayNames"), "Should have toggle display names button")
+
+        navigateToMain()
+    }
+
+    @Test
+    @Order(18)
+    @DisplayName("Toggle display names button changes label on click")
+    fun toggleDisplayNamesChangesLabel() {
+        findById("btnPayments").click()
+        mediumWait()
+
+        val btn = findById("btnToggleDisplayNames")
+        val labelBefore = btn.text
+        btn.click()
+        shortWait()
+
+        val labelAfter = findById("btnToggleDisplayNames").text
+        assertTrue(
+            labelBefore != labelAfter,
+            "Toggle button label should change after click; before='$labelBefore' after='$labelAfter'"
+        )
 
         navigateToMain()
     }

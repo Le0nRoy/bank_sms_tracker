@@ -2,7 +2,7 @@
 # Run `make help` to see all available targets
 
 .PHONY: help build clean lint test test-unit test-android test-appium test-smoke test-all \
-        coverage install install-fresh run appium-start appium-stop appium-docker-start appium-docker-stop \
+        coverage install install-fresh update-adb update-apk restore-adb keystore-init gradle-cache-ensure run appium-start appium-stop appium-docker-start appium-docker-stop \
         cluster-start cluster-stop cluster-status \
         allure-install allure-report allure-serve
 
@@ -48,10 +48,20 @@ help: ## Show this help message
 # Build targets
 #------------------------------------------------------------------------------
 
-build: ## Build debug APK
+gradle-cache-ensure: ## Start gradle-cache container if not already running (no-op if Docker unavailable)
+	@if docker info >/dev/null 2>&1; then \
+		if ! docker ps --filter name=gradle-build-cache --filter status=running -q | grep -q .; then \
+			echo "$(BLUE)Starting gradle-cache container...$(NC)"; \
+			docker compose up -d gradle-cache; \
+		fi; \
+	else \
+		echo "$(YELLOW)Docker not available — building without remote cache$(NC)"; \
+	fi
+
+build: gradle-cache-ensure ## Build debug APK (auto-starts gradle-cache for remote caching)
 	./gradlew assembleDebug --no-daemon
 
-build-release: ## Build release APK
+build-release: gradle-cache-ensure ## Build release APK (auto-starts gradle-cache for remote caching)
 	./gradlew assembleRelease --no-daemon
 
 clean: ## Clean build artifacts
@@ -60,9 +70,54 @@ clean: ## Clean build artifacts
 install: ## Install debug APK on connected device/emulator
 	./gradlew installDebug --no-daemon
 
+keystore-init: ## Generate project-local debug keystore (run once; never commit the .keystore file)
+	@if [ -f keystore/debug.keystore ]; then \
+		echo "$(GREEN)keystore/debug.keystore already exists — skipping.$(NC)"; \
+	else \
+		echo "$(BLUE)Generating keystore/debug.keystore...$(NC)"; \
+		keytool -genkeypair \
+			-keystore keystore/debug.keystore \
+			-alias androiddebugkey \
+			-keyalg RSA -keysize 2048 -validity 10000 \
+			-storepass android -keypass android \
+			-dname "CN=BankSMSTracker Debug, O=Debug, C=US" \
+			-storetype pkcs12; \
+		echo "$(GREEN)keystore/debug.keystore created.$(NC)"; \
+		echo "$(YELLOW)Keep this file safe — share it via the signing server, not git.$(NC)"; \
+	fi
+
 install-fresh: build ## Uninstall (wipe data) then install current debug build
 	adb uninstall com.example.banksmstracker || true
 	./gradlew installDebug --no-daemon
+
+update-adb: build ## Build and install via ADB, PRESERVING app data and DB
+	@echo "$(BLUE)Installing update via ADB (data preserved)...$(NC)"
+	@if adb install -r app/build/outputs/apk/debug/app-debug.apk 2>&1 | grep -q "Success"; then \
+		echo "$(GREEN)Update installed. App data and databases preserved.$(NC)"; \
+	else \
+		echo "$(YELLOW)Signature mismatch — backing up data, reinstalling, restoring...$(NC)"; \
+		adb shell "run-as com.example.banksmstracker sh -c 'cp -r databases /sdcard/bst_db_backup 2>/dev/null; cp -r shared_prefs /sdcard/bst_prefs_backup 2>/dev/null; echo ok'" || true; \
+		adb uninstall com.example.banksmstracker || true; \
+		echo "$(YELLOW)>>> WATCH YOUR PHONE — tap 'Install' if a confirmation dialog appears <<<$(NC)"; \
+		if adb install app/build/outputs/apk/debug/app-debug.apk 2>&1 | grep -q "Success"; then \
+			adb shell "run-as com.example.banksmstracker sh -c 'cp -r /sdcard/bst_db_backup/. databases/ 2>/dev/null; cp -r /sdcard/bst_prefs_backup/. shared_prefs/ 2>/dev/null; echo ok'" || true; \
+			adb shell rm -rf /sdcard/bst_db_backup /sdcard/bst_prefs_backup 2>/dev/null || true; \
+			echo "$(GREEN)Update installed with data restored.$(NC)"; \
+		else \
+			echo "$(RED)Install failed. App is uninstalled. Your data backup is at /sdcard/bst_db_backup and /sdcard/bst_prefs_backup$(NC)"; \
+			echo "$(RED)Fix the install issue, then run: make restore-adb$(NC)"; \
+			exit 1; \
+		fi; \
+	fi
+
+restore-adb: ## Restore DB backup from /sdcard after a failed update-adb (app must be installed)
+	@echo "$(BLUE)Restoring data from /sdcard backup...$(NC)"
+	adb shell "run-as com.example.banksmstracker sh -c 'cp -r /sdcard/bst_db_backup/. databases/ 2>/dev/null; cp -r /sdcard/bst_prefs_backup/. shared_prefs/ 2>/dev/null; echo ok'"
+	adb shell rm -rf /sdcard/bst_db_backup /sdcard/bst_prefs_backup 2>/dev/null || true
+	@echo "$(GREEN)Data restored.$(NC)"
+
+update-apk: build ## Build APK and print its local path for manual transfer to phone
+	@echo "$(GREEN)APK ready:$(NC) $(shell pwd)/app/build/outputs/apk/debug/app-debug.apk"
 
 #------------------------------------------------------------------------------
 # Linting targets
@@ -112,6 +167,13 @@ test-smoke: ## Run smoke tests only — 1-2 tests per feature (requires Appium s
 		--tests "*.appium.CategoryCascadeAppiumTest.recategorizeButtonExists" \
 		--tests "*.appium.PaymentsFilterAppiumTest.navigateToPaymentsScreen" \
 		--tests "*.appium.PaymentsFilterAppiumTest.senderFilterSpinnerExists" \
+		--tests "*.appium.PaymentsFilterAppiumTest.merchantSearchFieldExists" \
+		--tests "*.appium.PaymentsFilterAppiumTest.categorySelectButtonExists" \
+		--tests "*.appium.IncomesAppiumTest.navigateToIncomesScreen" \
+		--tests "*.appium.IncomesAppiumTest.senderFilterSpinnerExists" \
+		--tests "*.appium.IncomesAppiumTest.startDateButtonExists" \
+		--tests "*.appium.IncomesAppiumTest.sourceSearchFieldExists" \
+		--tests "*.appium.IncomesAppiumTest.incomeReportButtonExists" \
 		--tests "*.appium.SmsToPaymentFlowAppiumTest.createCategory" \
 		--tests "*.appium.SmsToPaymentFlowAppiumTest.createSenderWithRule" \
 		--tests "*.appium.MainNavigationAppiumTest.navigateToIncomesScreen" \

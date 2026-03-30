@@ -169,7 +169,7 @@ class PaymentsFilterTest {
             makePayment("03/03/2026 10:00:00", categoryId = null)
         )
 
-        val result = filterPayments(payments, "Food", null, null, null)
+        val result = filterPayments(payments, setOf("Food"), null, null, null)
 
         assertEquals(1, result.size)
         assertEquals("Food", result[0].categoryId)
@@ -283,7 +283,7 @@ class PaymentsFilterTest {
             makePayment("02/03/2026 10:00:00", categoryId = "Transport").copy(merchant = "Bolt"),
             makePayment("03/03/2026 10:00:00", categoryId = "Food").copy(merchant = "Carrefour")
         )
-        val result = filterPayments(payments, "Food", null, null, null, merchantQuery = "bolt")
+        val result = filterPayments(payments, setOf("Food"), null, null, null, merchantQuery = "bolt")
         assertEquals(1, result.size)
         assertEquals("Bolt Food", result[0].merchant)
     }
@@ -294,13 +294,13 @@ class PaymentsFilterTest {
             makePayment("01/03/2026 10:00:00", categoryId = "Food"),
             makePayment("02/03/2026 10:00:00", categoryId = "Transport")
         )
-        val result = filterPayments(payments, "Utilities", null, null, null)
+        val result = filterPayments(payments, setOf("Utilities"), null, null, null)
         assertEquals(0, result.size)
     }
 
     @Test
     fun `filter returns empty list when input list is empty`() {
-        val result = filterPayments(emptyList(), "Food", null, null, null)
+        val result = filterPayments(emptyList(), setOf("Food"), null, null, null)
         assertEquals(0, result.size)
     }
 
@@ -310,7 +310,7 @@ class PaymentsFilterTest {
             makePayment("01/03/2026 10:00:00", categoryId = "food"),
             makePayment("02/03/2026 10:00:00", categoryId = "Food")
         )
-        val result = filterPayments(payments, "Food", null, null, null)
+        val result = filterPayments(payments, setOf("Food"), null, null, null)
         assertEquals(1, result.size)
         assertEquals("Food", result[0].categoryId)
     }
@@ -323,6 +323,50 @@ class PaymentsFilterTest {
         )
         val result = filterPayments(payments, null, null, null, null)
         assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `multi-select category filter returns payments from any of the selected categories`() {
+        val payments = listOf(
+            makePayment("01/03/2026 10:00:00", categoryId = "Food"),
+            makePayment("02/03/2026 10:00:00", categoryId = "Transport"),
+            makePayment("03/03/2026 10:00:00", categoryId = "Utilities"),
+            makePayment("04/03/2026 10:00:00", categoryId = null)
+        )
+        val result = filterPayments(payments, setOf("Food", "Transport"), null, null, null)
+        assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `UNCATEGORIZED_FILTER includes only payments with null categoryId`() {
+        val payments = listOf(
+            makePayment("01/03/2026 10:00:00", categoryId = "Food"),
+            makePayment("02/03/2026 10:00:00", categoryId = null),
+            makePayment("03/03/2026 10:00:00", categoryId = null)
+        )
+        val result = filterPayments(payments, setOf(UNCATEGORIZED_FILTER), null, null, null)
+        assertEquals(2, result.size)
+        assertTrue(result.all { it.categoryId == null })
+    }
+
+    @Test
+    fun `UNCATEGORIZED_FILTER combined with named category includes both`() {
+        val payments = listOf(
+            makePayment("01/03/2026 10:00:00", categoryId = "Food"),
+            makePayment("02/03/2026 10:00:00", categoryId = null),
+            makePayment("03/03/2026 10:00:00", categoryId = "Transport")
+        )
+        val result = filterPayments(payments, setOf("Food", UNCATEGORIZED_FILTER), null, null, null)
+        assertEquals(2, result.size)
+    }
+
+    @Test
+    fun `empty selectedCategories set returns all payments`() {
+        val payments = listOf(
+            makePayment("01/03/2026 10:00:00", categoryId = "Food"),
+            makePayment("02/03/2026 10:00:00", categoryId = null)
+        )
+        assertEquals(2, filterPayments(payments, emptySet(), null, null, null).size)
     }
 
     @Test

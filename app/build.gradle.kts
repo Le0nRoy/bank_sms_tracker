@@ -28,7 +28,28 @@ android {
         }
     }
 
+    // Use a project-local keystore when present so all builds on the same machine
+    // (including CI) share one identity and `adb install -r` always succeeds.
+    // Generate with: make keystore-init
+    val projectDebugKeystore = rootProject.file("keystore/debug.keystore")
+    if (projectDebugKeystore.exists()) {
+        signingConfigs {
+            create("projectDebug") {
+                storeFile = projectDebugKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            if (projectDebugKeystore.exists()) {
+                signingConfig = signingConfigs.getByName("projectDebug")
+            }
+            // else: falls back to the default ~/.android/debug.keystore
+        }
         release {
             isMinifyEnabled = true
             proguardFiles(

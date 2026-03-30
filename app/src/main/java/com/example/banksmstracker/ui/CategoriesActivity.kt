@@ -341,28 +341,54 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
         }
 
         private fun addMerchantField(index: Int, merchant: Merchant, category: Category, callbacks: CategoryCallbacks) {
-            val view = LayoutInflater.from(itemView.context)
-                .inflate(R.layout.view_dynamic_edit_text_with_delete, merchantsContainer, false)
+            val ctx = itemView.context
+
+            // Wrapper holds both the pattern row and the display-name field below it.
+            val wrapper = android.widget.LinearLayout(ctx).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+            }
+
+            // Pattern row (existing layout: EditText + Move + Delete buttons)
+            val view = LayoutInflater.from(ctx)
+                .inflate(R.layout.view_dynamic_edit_text_with_delete, wrapper, false)
             val editText: EditText = view.findViewById(R.id.etValue)
             val btnMove: android.widget.ImageButton = view.findViewById(R.id.btnMove)
             val btnDelete: android.widget.ImageButton = view.findViewById(R.id.btnDelete)
 
-            editText.hint = itemView.context.getString(R.string.merchant_hint, index + 1)
-            // Display the human-readable name if set, otherwise the pattern
-            editText.setText(merchant.displayName ?: merchant.pattern)
+            editText.hint = ctx.getString(R.string.merchant_hint, index + 1)
+            editText.setText(merchant.pattern)
             editText.setSimpleWatcher { newValue ->
                 if (index in category.merchants.indices) {
                     val current = category.merchants[index]
-                    val displayText = current.displayName ?: current.pattern
-                    if (displayText != newValue) {
-                        // Update the display name if one was already set; otherwise update pattern.
-                        val updated = if (current.displayName != null) {
-                            current.copy(displayName = newValue.ifEmpty { null })
-                        } else {
-                            current.copy(pattern = newValue)
-                        }
-                        category.merchants[index] = updated
+                    if (current.pattern != newValue) {
+                        category.merchants[index] = current.copy(pattern = newValue)
                         callbacks.onCategoryUpdated(category)
+                    }
+                }
+            }
+
+            // Display-name field (optional, shown below the pattern)
+            val displayNameField = EditText(ctx).apply {
+                hint = ctx.getString(R.string.merchant_display_name_hint)
+                setText(merchant.displayName ?: "")
+                textSize = 12f
+                setPadding(8, 4, 8, 4)
+                layoutParams = android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                ).also { lp -> lp.setMargins(8, 0, 8, 4) }
+                setSimpleWatcher { newValue ->
+                    if (index in category.merchants.indices) {
+                        val current = category.merchants[index]
+                        val newDisplayName = newValue.takeIf { it.isNotBlank() }
+                        if (current.displayName != newDisplayName) {
+                            category.merchants[index] = current.copy(displayName = newDisplayName)
+                            callbacks.onCategoryUpdated(category)
+                        }
                     }
                 }
             }
@@ -377,13 +403,14 @@ class CategoriesAdapter(private val callbacks: CategoryCallbacks) :
                 if (index in category.merchants.indices) {
                     category.merchants.removeAt(index)
                     callbacks.onCategoryUpdated(category)
-                    merchantsContainer.removeView(view)
-                    // Refresh to update hints
+                    merchantsContainer.removeView(wrapper)
                     refreshMerchantFields(category, callbacks)
                 }
             }
 
-            merchantsContainer.addView(view)
+            wrapper.addView(view)
+            wrapper.addView(displayNameField)
+            merchantsContainer.addView(wrapper)
         }
 
         private fun refreshMerchantFields(category: Category, callbacks: CategoryCallbacks) {
