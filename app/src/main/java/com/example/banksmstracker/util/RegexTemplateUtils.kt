@@ -20,6 +20,10 @@ fun regexToTemplate(regex: String): String {
         result = Regex("\\(\\?<$name>(?:[^)(]|\\([^)]*\\))*\\)")
             .replace(result) { "⟨$name⟩" }
     }
+    // Second pass: convert any remaining (?<name>…) groups with unknown names so they are
+    // also shown as ⟨name⟩ placeholders instead of raw regex syntax.
+    result = Regex("\\(\\?<([^>]+)>(?:[^)(]|\\([^)]*\\))*\\)")
+        .replace(result) { mr -> "⟨${mr.groupValues[1]}⟩" }
     return result
 }
 
@@ -35,6 +39,9 @@ fun templateToRegex(template: String): String {
     for ((name, preset) in PRESET_REGEXES) {
         result = result.replace("⟨$name⟩", preset)
     }
+    // Second pass: convert any remaining ⟨name⟩ tokens with unknown names back to
+    // a named capture group with a default pattern, so the regex remains valid.
+    result = Regex("⟨([^⟩]+)⟩").replace(result) { mr -> "(?<${mr.groupValues[1]}>.+?)" }
     return result
 }
 

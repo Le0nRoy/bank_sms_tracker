@@ -23,6 +23,7 @@ import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.ExchangeRateDao
 import com.example.banksmstracker.database.IncomeEntity
 import com.example.banksmstracker.util.ExchangeRateCache
+import com.example.banksmstracker.util.formatDisplayTimestamp
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
@@ -367,7 +368,8 @@ class IncomesActivity : BaseActivity() {
             fun bind(income: IncomeEntity) {
                 tvSource.text = income.source ?: getString(R.string.income_unknown_source)
                 tvAmount.text = "+${"%.2f".format(income.amount)} ${income.currency}"
-                val displayDate = income.timestamp ?: income.receivedAt?.let { dateFormat.format(Date(it)) }
+                val displayDate = income.timestamp?.let { formatDisplayTimestamp(it) }
+                    ?: income.receivedAt?.let { dateFormat.format(Date(it)) }
                 tvTimestamp.text = displayDate ?: ""
             }
         }

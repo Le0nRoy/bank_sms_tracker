@@ -82,9 +82,17 @@ class RegexTemplateUtilsTest {
     }
 
     @Test
-    fun `regexToTemplate leaves unknown groups unchanged`() {
+    fun `regexToTemplate converts unknown named groups to placeholders`() {
+        // Bug 2 fix: any (?<name>…) group — even with an unknown name — is converted to ⟨name⟩
+        // so it is shown as a readable placeholder instead of raw regex syntax.
         val regex = "(?<unknown>foo)"
-        assertEquals("(?<unknown>foo)", regexToTemplate(regex))
+        assertEquals("⟨unknown⟩", regexToTemplate(regex))
+    }
+
+    @Test
+    fun `regexToTemplate converts unknown named group with digit content`() {
+        val regex = "(?<code>\\d+)"
+        assertEquals("⟨code⟩", regexToTemplate(regex))
     }
 
     @Test

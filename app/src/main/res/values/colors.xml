@@ -17,4 +17,5 @@
     <color name="card_background">#FFFFFFFF</color>
     <color name="surface_background">#FFFAFAFA</color>
     <color name="error_text">#FFD32F2F</color>
+    <color name="regex_highlight">#FFFFCC80</color>
 </resources>

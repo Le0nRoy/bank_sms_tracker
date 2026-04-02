@@ -421,9 +421,22 @@
     <string name="toggle_display_names_off">Names: Raw</string>
 
     <!-- Feature: Uncategorized-only filter (Feature 4) -->
-    <string name="uncategorized_only">Uncategorized only</string>
+    <string name="uncategorized_only">Uncategorized</string>
     <string name="categories_n_selected">%1$d categories</string>
     <string name="categories_button_label">Categories: %1$s</string>
+
+    <!-- Feature: Currency conversion display + paging (Bug 4 / 4.1) -->
+    <string-array name="currency_entries">
+        <item>GEL</item>
+        <item>USD</item>
+        <item>EUR</item>
+        <item>RUB</item>
+    </string-array>
+    <string name="display_currency_label">Display in:</string>
+    <string name="page_prev">&#171; Prev</string>
+    <string name="page_next">Next &#187;</string>
+    <string name="page_indicator">Page %1$d / %2$d</string>
+    <string name="payments_summary_converted">%1$d payments - Total: %2$s %3$s (converted)</string>
 
     <!-- Feature: Income activity full interface (Feature 5) -->
     <string name="income_report">Income Report</string>

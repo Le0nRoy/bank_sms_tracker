@@ -249,6 +249,7 @@
     <!-- Extracted hardcoded strings -->
     <string name="unknown">Неизвестно</string>
     <string name="uncategorized">Без категории</string>
+    <string name="uncategorized_only">Без категории</string>
     <string name="error_with_message">Ошибка: %1$s</string>
     <string name="share_csv">Поделиться CSV</string>
     <string name="payments_summary">%1$d платежей - Итого: %2$s %3$s</string>

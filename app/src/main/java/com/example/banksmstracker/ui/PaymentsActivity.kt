@@ -32,6 +32,7 @@ import com.example.banksmstracker.database.ExchangeRateDao
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
 import com.example.banksmstracker.util.ExchangeRateCache
+import com.example.banksmstracker.util.formatDisplayTimestamp
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
@@ -60,12 +61,16 @@ class PaymentsActivity : BaseActivity() {
     private lateinit var tvPaymentCount: TextView
     private lateinit var btnSelectCategories: Button
     private lateinit var spinnerSender: Spinner
+    private lateinit var spinnerCurrency: Spinner
     private lateinit var btnExportCsv: Button
     private lateinit var btnStartDate: Button
     private lateinit var btnEndDate: Button
     private lateinit var btnClearDates: Button
     private lateinit var btnSpendingReport: Button
     private lateinit var btnToggleDisplayNames: Button
+    private lateinit var btnPrevPage: Button
+    private lateinit var btnNextPage: Button
+    private lateinit var tvPageIndicator: TextView
     private lateinit var etMerchantSearch: android.widget.EditText
 
     private lateinit var paymentRepository: RoomPaymentRepository
@@ -89,9 +94,16 @@ class PaymentsActivity : BaseActivity() {
     private var endDate: Long? = null
     private var merchantSearchQuery: String? = null
 
+    /** The currency in which amounts are displayed (conversion is on-the-fly; stored values unchanged). */
+    private var selectedDisplayCurrency: String = "GEL"
+
     /** Map from raw merchant pattern → human-readable display name. */
     private var merchantDisplayNames: Map<String, String> = emptyMap()
     private var showDisplayNames: Boolean = false
+
+    // ── Paging ────────────────────────────────────────────────────────────────
+    private var currentPage: Int = 0
+    private val pageSize: Int = 25
 
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val adapter = PaymentAdapter()
@@ -137,11 +149,15 @@ class PaymentsActivity : BaseActivity() {
         tvPaymentCount = findViewById(R.id.tvPaymentCount)
         btnSelectCategories = findViewById(R.id.btnSelectCategories)
         spinnerSender = findViewById(R.id.spinnerSender)
+        spinnerCurrency = findViewById(R.id.spinnerCurrency)
         btnExportCsv = findViewById(R.id.btnExportCsv)
         btnStartDate = findViewById(R.id.btnStartDate)
         btnEndDate = findViewById(R.id.btnEndDate)
         btnClearDates = findViewById(R.id.btnClearDates)
         btnToggleDisplayNames = findViewById(R.id.btnToggleDisplayNames)
+        btnPrevPage = findViewById(R.id.btnPrevPage)
+        btnNextPage = findViewById(R.id.btnNextPage)
+        tvPageIndicator = findViewById(R.id.tvPageIndicator)
         etMerchantSearch = findViewById(R.id.etMerchantSearch)
 
         btnSelectCategories.setOnClickListener { showCategorySelectionDialog() }
@@ -151,6 +167,7 @@ class PaymentsActivity : BaseActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {
                 merchantSearchQuery = s?.toString()?.takeIf { it.isNotBlank() }
+                currentPage = 0
                 applyFilter()
             }
         })
@@ -179,7 +196,32 @@ class PaymentsActivity : BaseActivity() {
             startDate = null; endDate = null
             btnStartDate.text = getString(R.string.start_date)
             btnEndDate.text = getString(R.string.end_date)
+            currentPage = 0
             applyFilter()
+        }
+
+        setupCurrencySpinner()
+
+        btnPrevPage.setOnClickListener {
+            if (currentPage > 0) { currentPage--; renderPage() }
+        }
+        btnNextPage.setOnClickListener {
+            val totalPages = totalPageCount()
+            if (currentPage < totalPages - 1) { currentPage++; renderPage() }
+        }
+    }
+
+    private fun setupCurrencySpinner() {
+        spinnerCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val currencies = resources.getStringArray(R.array.currency_entries)
+                val chosen = if (position in currencies.indices) currencies[position] else "GEL"
+                if (chosen != selectedDisplayCurrency) {
+                    selectedDisplayCurrency = chosen
+                    renderPage()
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 
@@ -208,6 +250,7 @@ class PaymentsActivity : BaseActivity() {
                 } else {
                     endDate = timestamp; btnEndDate.text = dateText
                 }
+                currentPage = 0
                 applyFilter()
             },
             calendar.get(Calendar.YEAR),
@@ -292,11 +335,13 @@ class PaymentsActivity : BaseActivity() {
                     .filterIndexed { i, _ -> checked[i] }
                     .toMutableSet()
                 updateCategoryButtonLabel()
+                currentPage = 0
                 applyFilter()
             }
             .setNeutralButton(R.string.clear) { _, _ ->
                 selectedCategories.clear()
                 updateCategoryButtonLabel()
+                currentPage = 0
                 applyFilter()
             }
             .setNegativeButton(R.string.cancel, null)
@@ -323,10 +368,11 @@ class PaymentsActivity : BaseActivity() {
         spinnerSender.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 selectedSender = if (position == 0) null else senderAddresses[position]
+                currentPage = 0
                 applyFilter()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {
-                selectedSender = null; applyFilter()
+                selectedSender = null; currentPage = 0; applyFilter()
             }
         }
     }
@@ -336,10 +382,30 @@ class PaymentsActivity : BaseActivity() {
             allPayments,
             selectedCategories.takeIf { it.isNotEmpty() },
             selectedSender, startDate, endDate, merchantSearchQuery
-        )
-        adapter.submitList(filteredPayments)
-        updateUI()
+        ).sortedBy { parseTransactionTimestamp(it.timestamp) ?: Long.MAX_VALUE }
+        renderPage()
         saveFilterState()
+    }
+
+    // ── Paging ────────────────────────────────────────────────────────────────
+
+    private fun totalPageCount(): Int =
+        if (filteredPayments.isEmpty()) 1
+        else (filteredPayments.size + pageSize - 1) / pageSize
+
+    private fun pagedPayments(): List<Payment> {
+        if (filteredPayments.isEmpty()) return emptyList()
+        val totalPages = totalPageCount()
+        if (currentPage >= totalPages) currentPage = totalPages - 1
+        val start = currentPage * pageSize
+        val end = minOf(start + pageSize, filteredPayments.size)
+        return filteredPayments.subList(start, end)
+    }
+
+    private fun renderPage() {
+        val paged = pagedPayments()
+        adapter.submitList(paged)
+        updateUI()
     }
 
     private fun saveFilterState() {
@@ -364,6 +430,12 @@ class PaymentsActivity : BaseActivity() {
         val total = filteredPayments.sumOf { it.amount }
         val currency = filteredPayments.firstOrNull()?.currency ?: ""
         tvPaymentCount.text = getString(R.string.payments_summary, filteredPayments.size, "%.2f".format(total), currency)
+
+        // Update paging controls
+        val totalPages = totalPageCount()
+        tvPageIndicator.text = getString(R.string.page_indicator, currentPage + 1, totalPages)
+        btnPrevPage.isEnabled = currentPage > 0
+        btnNextPage.isEnabled = currentPage < totalPages - 1
     }
 
     private fun exportToCsv() {
@@ -403,7 +475,7 @@ class PaymentsActivity : BaseActivity() {
         if (value.contains(",") || value.contains("\"") || value.contains("\n"))
             "\"${value.replace("\"", "\"\"")}\"" else value
 
-    // ── Spending report (uses filteredPayments directly — categories already applied) ──
+    // ── Spending report (uses filteredPayments — all pages, categories already applied) ──
 
     private fun showSpendingReport() {
         if (filteredPayments.isEmpty()) {
@@ -416,23 +488,17 @@ class PaymentsActivity : BaseActivity() {
         }
 
         lifecycleScope.launch {
-            val hasUsd = filteredPayments.any { it.currency == "USD" }
-            val usdRate: Double? = if (hasUsd) {
-                withTimeoutOrNull(3_000L) {
-                    ExchangeRateCache.getUsdToGelRate(System.currentTimeMillis(), exchangeRateDao)
-                }
-            } else null
+            // Convert every payment to GEL using per-payment date exchange rates.
+            val categoryGelTotals = buildCategoryTotalsInGel()
+            val totalGel = categoryGelTotals.sumOf { it.second }
 
             val dateRangeText = buildDateRangeText()
-            val categoryTotals = buildCategoryTotals()
-            val totalAmount = filteredPayments.sumOf { it.amount }
-            val currency = filteredPayments.firstOrNull()?.currency ?: ""
-            val reportText = buildReportText(dateRangeText, categoryTotals, totalAmount, currency, usdRate)
+            val reportText = buildReportText(dateRangeText, categoryGelTotals, totalGel)
 
             val dialogView = LayoutInflater.from(this@PaymentsActivity).inflate(R.layout.dialog_spending_report, null)
             dialogView.findViewById<TextView>(R.id.tvReportText).text = reportText
-            setupPieChart(dialogView.findViewById(R.id.pieChart), categoryTotals, totalAmount)
-            setupBarChart(dialogView.findViewById(R.id.barChart), categoryTotals)
+            setupPieChart(dialogView.findViewById(R.id.pieChart), categoryGelTotals, totalGel)
+            setupBarChart(dialogView.findViewById(R.id.barChart), categoryGelTotals)
 
             AlertDialog.Builder(this@PaymentsActivity)
                 .setTitle(R.string.spending_report)
@@ -454,45 +520,49 @@ class PaymentsActivity : BaseActivity() {
         }
     }
 
-    private fun buildCategoryTotals(): List<Pair<String, Double>> =
-        filteredPayments
-            .groupBy { it.categoryId ?: getString(R.string.uncategorized) }
-            .mapValues { (_, pmts) -> pmts.sumOf { it.amount } }
-            .toList()
-            .sortedByDescending { it.second }
+    /**
+     * Builds category totals where every payment is converted to GEL using the exchange rate
+     * for that payment's individual transaction date.
+     * Payments whose rate cannot be fetched are converted at rate 1.0 (i.e. treated as GEL).
+     */
+    private suspend fun buildCategoryTotalsInGel(): List<Pair<String, Double>> {
+        val categoryGelAmounts = mutableMapOf<String, Double>()
+        for (payment in filteredPayments) {
+            val gelAmount = convertToGel(payment)
+            val category = payment.categoryId ?: getString(R.string.uncategorized)
+            categoryGelAmounts[category] = (categoryGelAmounts[category] ?: 0.0) + gelAmount
+        }
+        return categoryGelAmounts.toList().sortedByDescending { it.second }
+    }
+
+    /**
+     * Converts a single payment's amount to GEL.
+     * GEL payments return amount as-is.
+     * Other currencies fetch the rate via [ExchangeRateCache] with a 3-second timeout.
+     */
+    private suspend fun convertToGel(payment: Payment): Double {
+        if (payment.currency == "GEL") return payment.amount
+        val dateMs = parseTransactionTimestamp(payment.timestamp) ?: System.currentTimeMillis()
+        val rate = withTimeoutOrNull(3_000L) {
+            ExchangeRateCache.getRateToGel(dateMs, payment.currency, exchangeRateDao)
+        } ?: 1.0
+        return payment.amount * rate
+    }
 
     private fun buildReportText(
         dateRangeText: String,
-        categoryTotals: List<Pair<String, Double>>,
-        totalAmount: Double,
-        currency: String,
-        usdRate: Double?
+        categoryGelTotals: List<Pair<String, Double>>,
+        totalGel: Double
     ): String {
         val sb = StringBuilder()
         sb.appendLine("Period: $dateRangeText")
         sb.appendLine()
-        sb.appendLine(getString(R.string.total_spending, "%.2f".format(totalAmount), currency))
-
-        if (usdRate != null) {
-            val gelTotal = filteredPayments.sumOf { p ->
-                if (p.currency == "USD") p.amount * usdRate
-                else if (p.currency == "GEL") p.amount
-                else 0.0
-            }
-            sb.appendLine(getString(R.string.total_in_gel, "%.2f".format(gelTotal)))
-            sb.appendLine(getString(R.string.usd_gel_rate, "%.4f".format(usdRate)))
-        }
-
+        sb.appendLine(getString(R.string.total_spending, "%.2f".format(totalGel), "GEL"))
         sb.appendLine()
         sb.appendLine(getString(R.string.by_category))
-        categoryTotals.forEach { (category, amount) ->
-            val pct = if (totalAmount > 0) (amount / totalAmount * 100).toInt() else 0
-            val line = "  $category: ${"%.2f".format(amount)} $currency ($pct%)"
-            if (usdRate != null && currency == "USD") {
-                sb.appendLine("$line  ${getString(R.string.gel_equivalent, "%.2f".format(amount * usdRate))}")
-            } else {
-                sb.appendLine(line)
-            }
+        categoryGelTotals.forEach { (category, gelAmount) ->
+            val pct = if (totalGel > 0) (gelAmount / totalGel * 100).toInt() else 0
+            sb.appendLine("  $category: ${"%.2f".format(gelAmount)} GEL ($pct%)")
         }
         return sb.toString()
     }
@@ -507,7 +577,7 @@ class PaymentsActivity : BaseActivity() {
             this.data = data; description.isEnabled = false; isDrawHoleEnabled = true; holeRadius = 40f
             setUsePercentValues(true); setEntryLabelTextSize(10f); setEntryLabelColor(Color.WHITE)
             legend.isEnabled = false; setDrawCenterText(true)
-            centerText = getString(R.string.total_spending, "%.0f".format(totalAmount), "")
+            centerText = getString(R.string.total_spending, "%.0f".format(totalAmount), "GEL")
             setCenterTextSize(12f); animateY(600); invalidate()
         }
     }
@@ -650,15 +720,36 @@ class PaymentsActivity : BaseActivity() {
                 tvMerchant.text = if (showDisplayNames)
                     merchantDisplayNames[payment.merchant] ?: payment.merchant ?: getString(R.string.unknown)
                 else payment.merchant ?: getString(R.string.unknown)
+                // Show original amount immediately as a placeholder, then update after conversion.
                 tvAmount.text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
                 tvCategory.text = payment.categoryId ?: getString(R.string.uncategorized)
-                tvTimestamp.text = payment.timestamp
+                tvTimestamp.text = formatDisplayTimestamp(payment.timestamp)
                 if (!payment.card.isNullOrBlank()) {
                     tvCard.visibility = View.VISIBLE; tvCard.text = getString(R.string.card_display, payment.card)
                 } else {
                     tvCard.visibility = View.GONE
                 }
                 itemView.setOnClickListener { showPaymentDetail(payment) }
+
+                // Convert amount to selectedDisplayCurrency on-the-fly (display only; stored values unchanged).
+                if (payment.currency != selectedDisplayCurrency) {
+                    lifecycleScope.launch {
+                        val dateMs = parseTransactionTimestamp(payment.timestamp) ?: System.currentTimeMillis()
+                        val gelRate = withTimeoutOrNull(3_000L) {
+                            ExchangeRateCache.getRateToGel(dateMs, payment.currency, exchangeRateDao)
+                        } ?: 1.0
+                        val gelAmount = payment.amount * gelRate
+                        val displayAmount = if (selectedDisplayCurrency == "GEL") {
+                            gelAmount
+                        } else {
+                            val displayRate = withTimeoutOrNull(3_000L) {
+                                ExchangeRateCache.getRateToGel(dateMs, selectedDisplayCurrency, exchangeRateDao)
+                            } ?: 1.0
+                            if (displayRate > 0.0) gelAmount / displayRate else gelAmount
+                        }
+                        tvAmount.text = "-${"%.2f".format(displayAmount)} $selectedDisplayCurrency"
+                    }
+                }
             }
         }
     }

@@ -287,6 +287,7 @@ object ConfigRepository {
      */
     suspend fun importConfig(jsonString: String): ImportResult = withContext(Dispatchers.IO) {
         try {
+            refreshConfigInternal()
             val importedConfig = ConfigLoader.load(jsonString)
             mergeConfig(importedConfig)
         } catch (e: SerializationException) {

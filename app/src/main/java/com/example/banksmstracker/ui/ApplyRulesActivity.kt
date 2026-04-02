@@ -18,10 +18,12 @@ import androidx.lifecycle.lifecycleScope
 import com.example.banksmstracker.R
 import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.database.BankSmsDatabase
+import com.example.banksmstracker.database.IncomeEntity
 import com.example.banksmstracker.processor.MessageIgnoredException
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
 import com.example.banksmstracker.util.Constants
+import com.example.banksmstracker.util.HashUtil
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -285,8 +287,23 @@ class ApplyRulesActivity : BaseActivity() {
                             when (result) {
                                 is MessageProcessResult.PaymentResult ->
                                     items += SmsResultItem.PaymentItem(sender, result.payment)
-                                is MessageProcessResult.IncomeResult ->
+                                is MessageProcessResult.IncomeResult -> {
+                                    val incomeEntity = IncomeEntity(
+                                        amount = result.income.amount,
+                                        currency = result.income.currency,
+                                        source = result.income.source,
+                                        timestamp = result.income.timestamp,
+                                        balance = result.income.balance,
+                                        messageHash = HashUtil.computeMessageHash(smsWithDate.body, sender),
+                                        senderAddress = sender,
+                                        receivedAt = smsWithDate.date,
+                                        ruleId = result.income.ruleId
+                                    )
+                                    withContext(Dispatchers.IO) {
+                                        database.incomeDao().insertIncome(incomeEntity)
+                                    }
                                     items += SmsResultItem.IncomeItem(sender, result.income)
+                                }
                                 is MessageProcessResult.Ignored ->
                                     items += SmsResultItem.IgnoredItem(sender, smsWithDate.body, result.ruleName)
                             }
