@@ -715,6 +715,7 @@ class PaymentsActivity : BaseActivity() {
             private val tvCategory: TextView = itemView.findViewById(R.id.tvCategory)
             private val tvTimestamp: TextView = itemView.findViewById(R.id.tvTimestamp)
             private val tvCard: TextView = itemView.findViewById(R.id.tvCard)
+            private val tvConversionRate: TextView = itemView.findViewById(R.id.tvConversionRate)
 
             fun bind(payment: Payment) {
                 tvMerchant.text = if (showDisplayNames)
@@ -729,6 +730,8 @@ class PaymentsActivity : BaseActivity() {
                 } else {
                     tvCard.visibility = View.GONE
                 }
+                // Hide conversion rate label until we confirm a successful conversion.
+                tvConversionRate.visibility = View.GONE
                 itemView.setOnClickListener { showPaymentDetail(payment) }
 
                 // Convert amount to selectedDisplayCurrency on-the-fly (display only; stored values unchanged).
@@ -737,17 +740,31 @@ class PaymentsActivity : BaseActivity() {
                         val dateMs = parseTransactionTimestamp(payment.timestamp) ?: System.currentTimeMillis()
                         val gelRate = withTimeoutOrNull(3_000L) {
                             ExchangeRateCache.getRateToGel(dateMs, payment.currency, exchangeRateDao)
-                        } ?: 1.0
+                        }
+                        // If gelRate is null the fetch failed — leave the placeholder unchanged and
+                        // keep tvConversionRate hidden to avoid showing a misleading currency label.
+                        if (gelRate == null) return@launch
                         val gelAmount = payment.amount * gelRate
-                        val displayAmount = if (selectedDisplayCurrency == "GEL") {
-                            gelAmount
+
+                        val displayAmount: Double
+                        val rateLabel: String
+                        if (selectedDisplayCurrency == "GEL") {
+                            displayAmount = gelAmount
+                            // payment.currency → GEL: show "1 USD = 2.7812 GEL"
+                            rateLabel = "1 ${payment.currency} = ${"%.4f".format(gelRate)} GEL"
                         } else {
                             val displayRate = withTimeoutOrNull(3_000L) {
                                 ExchangeRateCache.getRateToGel(dateMs, selectedDisplayCurrency, exchangeRateDao)
-                            } ?: 1.0
-                            if (displayRate > 0.0) gelAmount / displayRate else gelAmount
+                            }
+                            if (displayRate == null || displayRate <= 0.0) return@launch
+                            displayAmount = gelAmount / displayRate
+                            // Show cross rate: "1 USD ≈ 0.9234 EUR"
+                            rateLabel = "1 ${payment.currency} ≈ ${"%.4f".format(gelRate / displayRate)} $selectedDisplayCurrency"
                         }
+
                         tvAmount.text = "-${"%.2f".format(displayAmount)} $selectedDisplayCurrency"
+                        tvConversionRate.text = rateLabel
+                        tvConversionRate.visibility = View.VISIBLE
                     }
                 }
             }
