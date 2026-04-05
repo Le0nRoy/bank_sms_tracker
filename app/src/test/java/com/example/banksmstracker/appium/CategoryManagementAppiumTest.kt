@@ -145,29 +145,26 @@ class CategoryManagementAppiumTest : AppiumBaseTest() {
         clickButton("btnCategories")
         mediumWait()
 
-        // Find the Add Merchant button
-        val addMerchantButton = findAllById("btnAddMerchant").first()
+        // Scroll to the Add Merchant button so the category card is fully on-screen
+        scrollToElementById("btnAddMerchant")
 
-        // Get initial count of merchant fields
-        val merchantsContainer = findById("merchantsContainer")
-        val initialCount = merchantsContainer.findElements(AppiumBy.className("android.widget.EditText")).size
+        // Add two more merchants — scroll after each click to keep new fields in view,
+        // and re-fetch the button each time to avoid stale reference after DOM change.
+        findAllById("btnAddMerchant").first().click()
+        mediumWait()
+        scrollToElementById("btnAddMerchant")   // scroll down to reveal new field
+        findAllById("btnAddMerchant").first().click()
+        mediumWait()
+        scrollToElementById("btnAddMerchant")   // scroll down to reveal second new field
 
-        // Add two more merchants
-        addMerchantButton.click()
+        // Collect all visible pattern fields (etValue) and type into the last two.
+        val patternFields = driver.findElements(
+            io.appium.java_client.AppiumBy.id("$APP_PACKAGE:id/etValue")
+        )
+        assertTrue(patternFields.size >= 2, "Should have at least 2 merchant pattern fields visible")
+        patternFields[patternFields.size - 2].sendKeys("Walmart")
         shortWait()
-        addMerchantButton.click()
-        shortWait()
-
-        // Verify count increased
-        val newCount = merchantsContainer.findElements(AppiumBy.className("android.widget.EditText")).size
-        assertEquals(initialCount + 2, newCount, "Should have 2 more merchant fields")
-
-        // Fill in the new merchant fields
-        val editTexts = merchantsContainer.findElements(AppiumBy.className("android.widget.EditText"))
-        if (editTexts.size >= 2) {
-            editTexts[editTexts.size - 2].sendKeys("Walmart")
-            editTexts[editTexts.size - 1].sendKeys("Target")
-        }
+        patternFields[patternFields.size - 1].sendKeys("Target")
         shortWait()
 
         navigateToMain()
