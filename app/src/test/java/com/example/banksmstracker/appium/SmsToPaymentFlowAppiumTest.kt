@@ -77,6 +77,15 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
 
         findById("fabAddSender").click()
         shortWait()
+        // Scroll to bottom so the new sender form (appended at end) is fully visible
+        try {
+            driver.findElement(
+                AppiumBy.androidUIAutomator(
+                    "new UiScrollable(new UiSelector().scrollable(true)).scrollToEnd(5)"
+                )
+            )
+        } catch (e: Exception) { /* already at end or not scrollable */ }
+        shortWait()
 
         // Set sender name
         val senderNameFields = findAllById("senderNameEditText")
@@ -198,8 +207,11 @@ class SmsToPaymentFlowAppiumTest : AppiumBaseTest() {
         shortWait()
 
         // Dismiss dialog
-        if (textExists("Cancel")) findByText("Cancel").click()
-        else driver.navigate().back()
+        if (textExists("Cancel")) {
+            findByText("Cancel").click()
+        } else {
+            driver.navigate().back()
+        }
         shortWait()
 
         navigateToMain()

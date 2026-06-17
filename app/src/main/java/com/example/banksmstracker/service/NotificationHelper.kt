@@ -17,6 +17,10 @@ object NotificationHelper {
     private const val UNMATCHED_CHANNEL_NAME = "Unmatched SMS"
     private const val BODY_PREVIEW_LENGTH = 100
 
+    const val EXCHANGE_RATE_CHANNEL_ID = "exchange_rate_channel"
+    private const val EXCHANGE_RATE_CHANNEL_NAME = "Exchange Rate Errors"
+    private const val EXCHANGE_RATE_NOTIFICATION_ID = 2001
+
     fun createUnmatchedSmsChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val prefs = context.getSharedPreferences(
@@ -84,6 +88,32 @@ object NotificationHelper {
         val manager = context.getSystemService(NotificationManager::class.java)
         val notificationId = senderAddress.hashCode() xor messageBody.hashCode()
         manager.notify(notificationId, notification)
+    }
+
+    fun sendExchangeRateErrorNotification(context: Context, message: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                EXCHANGE_RATE_CHANNEL_ID,
+                EXCHANGE_RATE_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = context.getString(R.string.exchange_rate_channel_desc)
+                setShowBadge(false)
+            }
+            context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(context, EXCHANGE_RATE_CHANNEL_ID)
+            .setContentTitle(context.getString(R.string.exchange_rate_error_title))
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .build()
+
+        context.getSystemService(NotificationManager::class.java)
+            .notify(EXCHANGE_RATE_NOTIFICATION_ID, notification)
     }
 
     const val KEY_NOTIFICATIONS_UNMATCHED_SMS = "notifications_unmatched_sms"

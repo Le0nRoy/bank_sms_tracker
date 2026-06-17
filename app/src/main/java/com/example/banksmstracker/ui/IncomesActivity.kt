@@ -127,7 +127,8 @@ class IncomesActivity : BaseActivity() {
         btnStartDate.setOnClickListener { showDatePicker(isStartDate = true) }
         btnEndDate.setOnClickListener { showDatePicker(isStartDate = false) }
         btnClearDates.setOnClickListener {
-            startDate = null; endDate = null
+            startDate = null
+            endDate = null
             btnStartDate.text = getString(R.string.start_date)
             btnEndDate.text = getString(R.string.end_date)
             applyFilter()
@@ -144,16 +145,25 @@ class IncomesActivity : BaseActivity() {
             val cal = Calendar.getInstance().apply {
                 set(year, month, day)
                 if (isStartDate) {
-                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
                 } else {
-                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
-                    set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
                 }
             }
             val ts = cal.timeInMillis
-            if (isStartDate) { startDate = ts; btnStartDate.text = dateFormat.format(Date(ts)) }
-            else { endDate = ts; btnEndDate.text = dateFormat.format(Date(ts)) }
+            if (isStartDate) {
+                startDate = ts
+                btnStartDate.text = dateFormat.format(Date(ts))
+            } else {
+                endDate = ts
+                btnEndDate.text = dateFormat.format(Date(ts))
+            }
             applyFilter()
         }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
     }
@@ -182,14 +192,18 @@ class IncomesActivity : BaseActivity() {
     private fun setDefaultDateRange() {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0); calendar.set(Calendar.MILLISECOND, 0)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
         startDate = calendar.timeInMillis
         btnStartDate.text = dateFormat.format(Date(startDate!!))
 
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-        calendar.set(Calendar.HOUR_OF_DAY, 23); calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59); calendar.set(Calendar.MILLISECOND, 999)
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
         endDate = calendar.timeInMillis
         btnEndDate.text = dateFormat.format(Date(endDate!!))
     }
@@ -204,7 +218,8 @@ class IncomesActivity : BaseActivity() {
                 applyFilter()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {
-                selectedSender = null; applyFilter()
+                selectedSender = null
+                applyFilter()
             }
         }
     }
@@ -249,7 +264,8 @@ class IncomesActivity : BaseActivity() {
             recyclerIncomes.visibility = View.VISIBLE
             val total = filteredIncomes.sumOf { it.amount }
             val currency = filteredIncomes.first().currency
-            tvIncomeTotal.text = getString(R.string.incomes_summary, filteredIncomes.size, "%.2f".format(total), currency)
+            tvIncomeTotal.text =
+                getString(R.string.incomes_summary, filteredIncomes.size, "%.2f".format(total), currency)
         }
     }
 
@@ -268,7 +284,9 @@ class IncomesActivity : BaseActivity() {
                 withTimeoutOrNull(3_000L) {
                     ExchangeRateCache.getUsdToGelRate(System.currentTimeMillis(), exchangeRateDao)
                 }
-            } else null
+            } else {
+                null
+            }
 
             val sourceTotals = buildSourceTotals()
             val totalAmount = filteredIncomes.sumOf { it.amount }
@@ -288,12 +306,11 @@ class IncomesActivity : BaseActivity() {
         }
     }
 
-    private fun buildSourceTotals(): List<Pair<String, Double>> =
-        filteredIncomes
-            .groupBy { it.source ?: getString(R.string.income_unknown_source) }
-            .mapValues { (_, items) -> items.sumOf { it.amount } }
-            .toList()
-            .sortedByDescending { it.second }
+    private fun buildSourceTotals(): List<Pair<String, Double>> = filteredIncomes
+        .groupBy { it.source ?: getString(R.string.income_unknown_source) }
+        .mapValues { (_, items) -> items.sumOf { it.amount } }
+        .toList()
+        .sortedByDescending { it.second }
 
     private fun buildIncomeReportText(
         sourceTotals: List<Pair<String, Double>>,
@@ -305,7 +322,13 @@ class IncomesActivity : BaseActivity() {
         sb.appendLine(getString(R.string.total_spending, "%.2f".format(totalAmount), currency))
         if (usdRate != null) {
             val gelTotal = filteredIncomes.sumOf { i ->
-                if (i.currency == "USD") i.amount * usdRate else if (i.currency == "GEL") i.amount else 0.0
+                if (i.currency == "USD") {
+                    i.amount * usdRate
+                } else if (i.currency == "GEL") {
+                    i.amount
+                } else {
+                    0.0
+                }
             }
             sb.appendLine(getString(R.string.total_in_gel, "%.2f".format(gelTotal)))
             sb.appendLine(getString(R.string.usd_gel_rate, "%.4f".format(usdRate)))
@@ -322,15 +345,26 @@ class IncomesActivity : BaseActivity() {
     private fun setupPieChart(chart: PieChart, sourceTotals: List<Pair<String, Double>>, total: Double) {
         val entries = sourceTotals.map { (src, amt) -> PieEntry(amt.toFloat(), src) }
         val dataSet = PieDataSet(entries, "").apply {
-            colors = CHART_COLORS; valueTextSize = 11f; valueTextColor = Color.WHITE; sliceSpace = 2f
+            colors = CHART_COLORS
+            valueTextSize = 11f
+            valueTextColor = Color.WHITE
+            sliceSpace = 2f
         }
         val data = PieData(dataSet).apply { setValueFormatter(PercentFormatter(chart)) }
         chart.apply {
-            this.data = data; description.isEnabled = false; isDrawHoleEnabled = true; holeRadius = 40f
-            setUsePercentValues(true); setEntryLabelTextSize(10f); setEntryLabelColor(Color.WHITE)
-            legend.isEnabled = false; setDrawCenterText(true)
+            this.data = data
+            description.isEnabled = false
+            isDrawHoleEnabled = true
+            holeRadius = 40f
+            setUsePercentValues(true)
+            setEntryLabelTextSize(10f)
+            setEntryLabelColor(Color.WHITE)
+            legend.isEnabled = false
+            setDrawCenterText(true)
             centerText = getString(R.string.total_spending, "%.0f".format(total), "")
-            setCenterTextSize(12f); animateY(600); invalidate()
+            setCenterTextSize(12f)
+            animateY(600)
+            invalidate()
         }
     }
 
@@ -340,11 +374,15 @@ class IncomesActivity : BaseActivity() {
         chart.data = BarData(dataSet)
         chart.xAxis.apply {
             valueFormatter = IndexAxisValueFormatter(sourceTotals.map { it.first })
-            position = XAxis.XAxisPosition.BOTTOM; granularity = 1f
-            setDrawGridLines(false); labelRotationAngle = -30f
+            position = XAxis.XAxisPosition.BOTTOM
+            granularity = 1f
+            setDrawGridLines(false)
+            labelRotationAngle = -30f
         }
-        chart.axisRight.isEnabled = false; chart.legend.isEnabled = false
-        chart.description.isEnabled = false; chart.invalidate()
+        chart.axisRight.isEnabled = false
+        chart.legend.isEnabled = false
+        chart.description.isEnabled = false
+        chart.invalidate()
     }
 
     // ─────────────────────────────────────────────────────────────────────────

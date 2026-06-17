@@ -427,6 +427,7 @@
 
     <!-- Feature: Currency conversion display + paging (Bug 4 / 4.1) -->
     <string-array name="currency_entries">
+        <item>— original —</item>
         <item>GEL</item>
         <item>USD</item>
         <item>EUR</item>
@@ -455,4 +456,30 @@
     <string name="summary_processed_full">%1$d payments, %2$d incomes, %3$d failed, %4$d ignored</string>
     <string name="income_item_label">Income: +%1$s %2$s</string>
     <string name="message_income">Income message</string>
+
+    <!-- Feature: Enhanced currency conversion (Phase 4) -->
+    <string-array name="currency_entries_with_none">
+        <item></item>
+        <item>GEL</item>
+        <item>USD</item>
+        <item>EUR</item>
+        <item>RUB</item>
+    </string-array>
+    <string name="currency_none_label">— original —</string>
+    <string name="exchange_rate_fetch_error">Exchange rate for some dates on the current page neither can be found nor can be downloaded. Check your internet connection and try again.</string>
+    <string name="exchange_rate_prefetch_error">Exchange rates could not be downloaded for some processed dates. Check your internet connection.</string>
+    <string name="exchange_rate_error_title">Exchange Rate Error</string>
+    <string name="exchange_rate_channel_desc">Notifications when exchange rates cannot be downloaded</string>
+    <string name="loading_exchange_rates">Loading exchange rates…</string>
+
+    <!-- ExchangeRatesActivity -->
+    <string name="exchange_rates">Exchange Rates</string>
+    <string name="exchange_rates_title">Stored Exchange Rates</string>
+    <string name="btn_download_missing">Download Missing</string>
+    <string name="btn_select_currencies">Currencies: %1$s</string>
+    <string name="exchange_rate_row">%1$s  |  %2$s  |  %3$s GEL</string>
+    <string name="no_exchange_rates">No exchange rates stored yet</string>
+    <string name="download_missing_done">Download complete: %1$d fetched, %2$d failed</string>
+    <string name="refetch_rate">Re-fetch</string>
+    <string name="exchange_rates_currencies_all">All</string>
 </resources>

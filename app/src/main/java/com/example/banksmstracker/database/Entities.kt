@@ -174,7 +174,7 @@ data class IncomeEntity(
     primaryKeys = ["date", "currency"]
 )
 data class ExchangeRateEntity(
-    val date: String,      // "yyyy-MM-dd"
-    val currency: String,  // e.g. "USD"
+    val date: String, // "yyyy-MM-dd"
+    val currency: String, // e.g. "USD"
     val rateToGel: Double
 )

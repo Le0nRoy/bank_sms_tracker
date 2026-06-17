@@ -139,6 +139,15 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+    <!-- Loading indicator for exchange rate fetching -->
+    <ProgressBar
+        android:id="@+id/pbConversionLoading"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone" />
+
     <!-- Paging controls -->
     <LinearLayout
         android:layout_width="match_parent"

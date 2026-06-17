@@ -66,18 +66,16 @@ class CurrencyConversionAppiumTest : AppiumBaseTest() {
      * Returns true if [tvConversionRate] is displayed (visible) for the first payment row.
      * Falls back to false if no payment rows exist or no tvConversionRate is found.
      */
-    private fun firstItemConversionRateVisible(): Boolean {
-        return try {
-            driver.manage().timeouts().implicitlyWait(SHORT_TIMEOUT)
-            val views = driver.findElements(
-                io.appium.java_client.AppiumBy.id("$APP_PACKAGE:id/tvConversionRate")
-            )
-            driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
-            views.isNotEmpty() && views.first().isDisplayed
-        } catch (e: Exception) {
-            driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
-            false
-        }
+    private fun firstItemConversionRateVisible(): Boolean = try {
+        driver.manage().timeouts().implicitlyWait(SHORT_TIMEOUT)
+        val views = driver.findElements(
+            io.appium.java_client.AppiumBy.id("$APP_PACKAGE:id/tvConversionRate")
+        )
+        driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+        views.isNotEmpty() && views.first().isDisplayed
+    } catch (e: Exception) {
+        driver.manage().timeouts().implicitlyWait(DEFAULT_TIMEOUT)
+        false
     }
 
     // ── Tests ─────────────────────────────────────────────────────────────────

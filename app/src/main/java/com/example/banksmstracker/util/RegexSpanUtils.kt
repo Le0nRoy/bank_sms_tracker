@@ -53,10 +53,10 @@ fun applyPlaceholderSpans(editable: Editable, context: Context) {
     // out from literal text. Matches: escape sequences (\d \w \s \D \W \S \n \t \b and others),
     // character classes ([…]), non-capturing groups ((?:…)), and quantifiers (+, *, ?, {n,m}).
     val regexSyntax = Regex(
-        """\\[dDwWsSntrb.]|""" +          // escape sequences: \d \D \w \W \s \S \n \t \r \b \.
-        """\[(?:[^\]\\]|\\.)*]|""" +       // character class: [...]
-        """\(\?:(?:[^)(]|\([^)]*\))*\)|""" + // non-capturing group: (?:...)
-        """[+*?]|\{[0-9]+(?:,[0-9]*)?\}"""  // quantifiers: + * ? {n} {n,} {n,m}
+        """\\[dDwWsSntrb.]|""" + // escape sequences: \d \D \w \W \s \S \n \t \r \b \.
+            """\[(?:[^\]\\]|\\.)*]|""" + // character class: [...]
+            """\(\?:(?:[^)(]|\([^)]*\))*\)|""" + // non-capturing group: (?:...)
+            """[+*?]|\{[0-9]+(?:,[0-9]*)?\}""" // quantifiers: + * ? {n} {n,} {n,m}
     )
     val amberBg = ContextCompat.getColor(context, R.color.regex_highlight)
     regexSyntax.findAll(text).forEach { match ->

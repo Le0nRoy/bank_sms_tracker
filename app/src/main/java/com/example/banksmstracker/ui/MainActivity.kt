@@ -103,6 +103,10 @@ class MainActivity : BaseActivity() {
             startActivity(Intent(this, RegexBuilderActivity::class.java))
         }
 
+        findViewById<Button>(R.id.btnExchangeRates).setOnClickListener {
+            startActivity(Intent(this, ExchangeRatesActivity::class.java))
+        }
+
         findViewById<Button>(R.id.btnBugReport).setOnClickListener {
             startActivity(Intent(this, BugReportActivity::class.java))
         }

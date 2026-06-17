@@ -23,8 +23,12 @@ import com.example.banksmstracker.database.IncomeEntity
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.processor.UnparsedMessageException
 import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.util.ExchangeRateCache
 import com.example.banksmstracker.util.HashUtil
 import com.example.banksmstracker.util.SmsAddressMatcher
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -79,10 +83,17 @@ class SmsProcessingService : Service() {
             val receivedAt = messages.firstOrNull()?.timestampMillis ?: System.currentTimeMillis()
 
             serviceScope.launch {
+                val processedDates = mutableSetOf<String>()
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
                 for (message in messages) {
                     val sender = message.originatingAddress ?: continue
                     val body = message.messageBody
-                    handleIncomingSms(sender, body, receivedAt)
+                    if (handleIncomingSms(sender, body, receivedAt)) {
+                        processedDates.add(dateFormat.format(Date(receivedAt)))
+                    }
+                }
+                if (processedDates.isNotEmpty()) {
+                    prefetchRatesForDates(processedDates)
                 }
             }
         }
@@ -123,18 +134,18 @@ class SmsProcessingService : Service() {
         }
     }
 
-    private suspend fun handleIncomingSms(sender: String, body: String, receivedAt: Long) {
+    private suspend fun handleIncomingSms(sender: String, body: String, receivedAt: Long): Boolean {
         val configuredAddresses = ConfigRepository.config.senders
             .flatMap { it.addresses }
             .toSet()
 
         if (!SmsAddressMatcher.matchesAny(sender, configuredAddresses)) {
             Log.d(TAG, "SMS from unknown sender '$sender' — skipping parse")
-            return
+            return false
         }
 
         val processor = ConfigRepository.getPaymentProcessor()
-        processWithProcessor(processor, sender, body, receivedAt)
+        return processWithProcessor(processor, sender, body, receivedAt)
     }
 
     private suspend fun processWithProcessor(
@@ -142,25 +153,26 @@ class SmsProcessingService : Service() {
         sender: String,
         body: String,
         receivedAt: Long
-    ) {
-        try {
-            val result = processor.processMessageFull(body, sender, receivedAt)
-            logProcessingResult(result, sender, body)
-            if (result is MessageProcessResult.IncomeResult) {
-                saveIncome(result, body, sender)
-            }
-        } catch (e: UnparsedMessageException) {
-            Log.d(TAG, "SMS from $sender could not be parsed — sending unmatched notification")
-            val prefs = applicationContext.getSharedPreferences(
-                BankSmsTrackerApp.PREFS_NAME,
-                MODE_PRIVATE
-            )
-            if (prefs.getBoolean(NotificationHelper.KEY_NOTIFICATIONS_UNMATCHED_SMS, true)) {
-                NotificationHelper.sendUnmatchedSmsNotification(applicationContext, sender, body)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error processing SMS from $sender: ${e.message}")
+    ): Boolean = try {
+        val result = processor.processMessageFull(body, sender, receivedAt)
+        logProcessingResult(result, sender, body)
+        if (result is MessageProcessResult.IncomeResult) {
+            saveIncome(result, body, sender)
         }
+        true
+    } catch (e: UnparsedMessageException) {
+        Log.d(TAG, "SMS from $sender could not be parsed — sending unmatched notification")
+        val prefs = applicationContext.getSharedPreferences(
+            BankSmsTrackerApp.PREFS_NAME,
+            MODE_PRIVATE
+        )
+        if (prefs.getBoolean(NotificationHelper.KEY_NOTIFICATIONS_UNMATCHED_SMS, true)) {
+            NotificationHelper.sendUnmatchedSmsNotification(applicationContext, sender, body)
+        }
+        false
+    } catch (e: Exception) {
+        Log.e(TAG, "Error processing SMS from $sender: ${e.message}")
+        false
     }
 
     private fun logProcessingResult(result: MessageProcessResult, sender: String, body: String) {
@@ -173,6 +185,20 @@ class SmsProcessingService : Service() {
                 is MessageProcessResult.Ignored ->
                     Log.d(TAG, "SMS from $sender ignored by rule '${result.ruleName}': $body")
             }
+        }
+    }
+
+    private suspend fun prefetchRatesForDates(dates: Set<String>) {
+        val dao = BankSmsDatabase.getInstance(applicationContext).exchangeRateDao()
+        val pairs = dates.flatMap { dateStr ->
+            ExchangeRateCache.PREFETCH_CURRENCIES.map { dateStr to it }
+        }
+        val failed = ExchangeRateCache.prefetchRates(pairs, dao)
+        if (failed.isNotEmpty()) {
+            NotificationHelper.sendExchangeRateErrorNotification(
+                applicationContext,
+                applicationContext.getString(R.string.exchange_rate_prefetch_error)
+            )
         }
     }
 

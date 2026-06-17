@@ -8,13 +8,19 @@ import android.os.Build
 import android.telephony.SmsMessage
 import android.util.Log
 import com.example.banksmstracker.BuildConfig
+import com.example.banksmstracker.R
 import com.example.banksmstracker.data.MessageProcessResult
 import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.IncomeEntity
 import com.example.banksmstracker.processor.PaymentProcessor
 import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.service.NotificationHelper
 import com.example.banksmstracker.service.SmsProcessingService
+import com.example.banksmstracker.util.ExchangeRateCache
 import com.example.banksmstracker.util.HashUtil
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -63,14 +69,20 @@ class SmsReceiver : BroadcastReceiver() {
                 // Async mode - running from actual broadcast
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        handleMessage(testSender, testBody, System.currentTimeMillis())
+                        val testTimestamp = System.currentTimeMillis()
+                        handleMessage(testSender, testBody, testTimestamp)
+                        prefetchRatesForDates(setOf(dateStringFor(testTimestamp)), context)
                     } finally {
                         pendingResult.finish()
                     }
                 }
             } else {
                 // Sync mode - running from tests (goAsync() returns null)
-                runBlocking { handleMessage(testSender, testBody, System.currentTimeMillis()) }
+                runBlocking {
+                    val testTimestamp = System.currentTimeMillis()
+                    handleMessage(testSender, testBody, testTimestamp)
+                    prefetchRatesForDates(setOf(dateStringFor(testTimestamp)), context)
+                }
             }
             return
         }
@@ -109,6 +121,7 @@ class SmsReceiver : BroadcastReceiver() {
                         val body = message.messageBody
                         handleMessage(sender, body, smsReceivedAt)
                     }
+                    prefetchRatesForDates(setOf(dateStringFor(smsReceivedAt)), context)
                 } finally {
                     pendingResult.finish()
                 }
@@ -121,6 +134,7 @@ class SmsReceiver : BroadcastReceiver() {
                     val body = message.messageBody
                     handleMessage(sender, body, smsReceivedAt)
                 }
+                prefetchRatesForDates(setOf(dateStringFor(smsReceivedAt)), context)
             }
         }
     }
@@ -162,6 +176,24 @@ class SmsReceiver : BroadcastReceiver() {
                     "Error processing SMS from $sender:\n${e.message}\nMessage: $body"
                 )
             }
+        }
+    }
+
+    private fun dateStringFor(timestampMs: Long): String =
+        SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(timestampMs))
+
+    private suspend fun prefetchRatesForDates(dates: Set<String>, context: Context?) {
+        val ctx = context ?: applicationContext ?: return
+        val dao = BankSmsDatabase.getInstance(ctx).exchangeRateDao()
+        val pairs = dates.flatMap { dateStr ->
+            ExchangeRateCache.PREFETCH_CURRENCIES.map { dateStr to it }
+        }
+        val failed = ExchangeRateCache.prefetchRates(pairs, dao)
+        if (failed.isNotEmpty()) {
+            NotificationHelper.sendExchangeRateErrorNotification(
+                ctx,
+                ctx.getString(R.string.exchange_rate_prefetch_error)
+            )
         }
     }
 

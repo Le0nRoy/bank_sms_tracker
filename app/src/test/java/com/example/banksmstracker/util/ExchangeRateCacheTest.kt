@@ -30,12 +30,29 @@ class ExchangeRateCacheTest {
     private class FakeExchangeRateDao : ExchangeRateDao {
         val store = HashMap<String, ExchangeRateEntity>()
 
-        override suspend fun getRate(date: String, currency: String): ExchangeRateEntity? =
-            store["$date:$currency"]
+        override suspend fun getRate(date: String, currency: String): ExchangeRateEntity? = store["$date:$currency"]
 
         override suspend fun insertRate(rate: ExchangeRateEntity) {
             store["${rate.date}:${rate.currency}"] = rate
         }
+
+        override suspend fun getAll(): List<ExchangeRateEntity> = store.values.toList()
+
+        override suspend fun getByDateRange(startDate: String, endDate: String): List<ExchangeRateEntity> =
+            store.values.filter { it.date in startDate..endDate }
+
+        override suspend fun getByCurrencies(currencies: List<String>): List<ExchangeRateEntity> =
+            store.values.filter { it.currency in currencies }
+
+        override suspend fun deleteRate(date: String, currency: String) {
+            store.remove("$date:$currency")
+        }
+
+        override suspend fun getAvailableCurrencies(): List<String> =
+            store.values.map { it.currency }.distinct().sorted()
+
+        override suspend fun getDatesForCurrency(currency: String): List<String> =
+            store.values.filter { it.currency == currency }.map { it.date }.sortedDescending()
     }
 
     private lateinit var fakeDao: FakeExchangeRateDao
@@ -99,6 +116,52 @@ class ExchangeRateCacheTest {
     }
 
     @Test
+    @DisplayName("Test 5: prefetchRates returns empty list when all rates are in memory cache")
+    fun `prefetchRates returns empty list when rates already cached`() = runBlocking {
+        // Seed memory cache directly via DB then first call.
+        fakeDao.store["2026-03-01:USD"] = ExchangeRateEntity("2026-03-01", "USD", 2.72)
+        ExchangeRateCache.getRateToGelForDate("2026-03-01", "USD", fakeDao) // populates memory
+
+        val pairs = listOf("2026-03-01" to "USD")
+        val failed = ExchangeRateCache.prefetchRates(pairs, fakeDao)
+
+        assertEquals(emptyList<Pair<String, String>>(), failed, "No failures expected when rate is cached")
+    }
+
+    @Test
+    @DisplayName("Test 6: prefetchRates skips GEL pairs (always 1.0)")
+    fun `prefetchRates skips GEL pairs`() = runBlocking {
+        val pairs = listOf("2026-03-01" to "GEL", "2026-03-01" to "USD")
+        // USD will fail (no network in unit test, empty DAO) but GEL must be skipped
+        val failed = ExchangeRateCache.prefetchRates(pairs, fakeDao)
+
+        // GEL should not appear in failed list (it was skipped)
+        assert(failed.none { it.second == "GEL" }) { "GEL should never appear in failed list" }
+    }
+
+    @Test
+    @DisplayName("Test 7: prefetchRates returns all pairs when network is down and DB is empty")
+    fun `prefetchRates returns all failed pairs on network failure`() = runBlocking {
+        val pairs = listOf("2026-03-01" to "USD", "2026-03-02" to "EUR")
+        val failed = ExchangeRateCache.prefetchRates(pairs, fakeDao)
+
+        assertEquals(2, failed.size, "Both pairs should fail when DB is empty and network is down")
+        assert(pairs.all { it in failed }) { "All input pairs should be in failed list" }
+    }
+
+    @Test
+    @DisplayName("Test 8: prefetchRates returns only failed pairs when some succeed via DB")
+    fun `prefetchRates returns only failed pairs when some in DB`() = runBlocking {
+        fakeDao.store["2026-03-01:USD"] = ExchangeRateEntity("2026-03-01", "USD", 2.72)
+
+        val pairs = listOf("2026-03-01" to "USD", "2026-03-02" to "EUR")
+        val failed = ExchangeRateCache.prefetchRates(pairs, fakeDao)
+
+        assertEquals(1, failed.size, "Only EUR pair should fail")
+        assertEquals("2026-03-02" to "EUR", failed.first())
+    }
+
+    @Test
     @DisplayName("Test 4 (regression): Returns null when DAO is empty and network is unavailable")
     fun `returns null when DAO empty and network unreachable`() = runBlocking {
         // DAO is intentionally empty.  The cache will attempt a network fetch which will fail in
@@ -113,7 +176,10 @@ class ExchangeRateCacheTest {
 
         // Regression: before the fix the caller used `?: 1.0` and never saw null; after the fix
         // the cache correctly propagates null so the caller can decide not to update the UI.
-        assertNull(result, "Should return null (not 1.0) when DAO is empty and network is unavailable — " +
-            "returning 1.0 would silently display the wrong currency label")
+        assertNull(
+            result,
+            "Should return null (not 1.0) when DAO is empty and network is unavailable — " +
+                "returning 1.0 would silently display the wrong currency label"
+        )
     }
 }

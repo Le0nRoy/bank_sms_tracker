@@ -177,6 +177,11 @@ test-smoke: ## Run smoke tests only — 1-2 tests per feature (requires Appium s
 		--tests "*.appium.SmsToPaymentFlowAppiumTest.createCategory" \
 		--tests "*.appium.SmsToPaymentFlowAppiumTest.createSenderWithRule" \
 		--tests "*.appium.MainNavigationAppiumTest.navigateToIncomesScreen" \
+		--tests "*.appium.ExchangeRatesAppiumTest.navigateToExchangeRatesScreen" \
+		--tests "*.appium.ExchangeRatesAppiumTest.currencyFilterButtonExists" \
+		--tests "*.appium.ExchangeRatesAppiumTest.startDateButtonExists" \
+		--tests "*.appium.ExchangeRatesAppiumTest.endDateButtonExists" \
+		--tests "*.appium.ExchangeRatesAppiumTest.downloadMissingButtonExists" \
 		--no-daemon
 
 test-all: lint test-unit test-android ## Run all tests (lint + unit + android)

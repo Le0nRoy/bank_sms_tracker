@@ -22,12 +22,15 @@ import com.example.banksmstracker.database.IncomeEntity
 import com.example.banksmstracker.processor.MessageIgnoredException
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
+import com.example.banksmstracker.service.NotificationHelper
 import com.example.banksmstracker.util.Constants
+import com.example.banksmstracker.util.ExchangeRateCache
 import com.example.banksmstracker.util.HashUtil
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -41,24 +44,12 @@ private enum class ResultType { PAYMENT, INCOME, FAILED, IGNORED }
 /** One processed SMS item stored for later filtering/rendering. */
 private sealed class SmsResultItem {
     abstract val sender: String
-    data class PaymentItem(
-        override val sender: String,
-        val payment: com.example.banksmstracker.data.Payment
-    ) : SmsResultItem()
-    data class IncomeItem(
-        override val sender: String,
-        val income: com.example.banksmstracker.data.Income
-    ) : SmsResultItem()
-    data class IgnoredItem(
-        override val sender: String,
-        val body: String,
-        val ruleName: String?
-    ) : SmsResultItem()
-    data class FailedItem(
-        override val sender: String,
-        val body: String,
-        val error: String
-    ) : SmsResultItem()
+    data class PaymentItem(override val sender: String, val payment: com.example.banksmstracker.data.Payment) :
+        SmsResultItem()
+    data class IncomeItem(override val sender: String, val income: com.example.banksmstracker.data.Income) :
+        SmsResultItem()
+    data class IgnoredItem(override val sender: String, val body: String, val ruleName: String?) : SmsResultItem()
+    data class FailedItem(override val sender: String, val body: String, val error: String) : SmsResultItem()
 }
 
 class ApplyRulesActivity : BaseActivity() {
@@ -81,7 +72,7 @@ class ApplyRulesActivity : BaseActivity() {
 
     /** All processed items from the last run – retained for re-filtering. */
     private var processedItems: List<SmsResultItem> = emptyList()
-    private var activeFilter: ResultType? = null  // null = show ALL
+    private var activeFilter: ResultType? = null // null = show ALL
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -132,7 +123,8 @@ class ApplyRulesActivity : BaseActivity() {
         btnStartDate.setOnClickListener { showDatePicker(isStartDate = true) }
         btnEndDate.setOnClickListener { showDatePicker(isStartDate = false) }
         btnClearDates.setOnClickListener {
-            startDate = null; endDate = null
+            startDate = null
+            endDate = null
             btnStartDate.text = getString(R.string.start_date)
             btnEndDate.text = getString(R.string.end_date)
         }
@@ -176,8 +168,10 @@ class ApplyRulesActivity : BaseActivity() {
             }
 
             val today = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
-                set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
             }
             val todayEnd = today.timeInMillis
 
@@ -185,23 +179,29 @@ class ApplyRulesActivity : BaseActivity() {
                 val calendar = Calendar.getInstance().apply {
                     timeInMillis = lastPaymentDate
                     add(Calendar.DAY_OF_MONTH, 1)
-                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
                 }
                 if (calendar.timeInMillis <= todayEnd) startDate = calendar.timeInMillis
             } else {
                 val startOfMonth = Calendar.getInstance().apply {
                     set(Calendar.DAY_OF_MONTH, 1)
-                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
                 }
                 startDate = startOfMonth.timeInMillis
             }
 
             val lastDayOfMonth = Calendar.getInstance().apply {
                 set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
-                set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
-                set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
             }
             endDate = minOf(todayEnd, lastDayOfMonth.timeInMillis)
             updateDateButtons()
@@ -217,17 +217,26 @@ class ApplyRulesActivity : BaseActivity() {
             val cal = Calendar.getInstance().apply {
                 set(year, month, dayOfMonth)
                 if (isStartDate) {
-                    set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
                 } else {
-                    set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
-                    set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
+                    set(Calendar.HOUR_OF_DAY, 23)
+                    set(Calendar.MINUTE, 59)
+                    set(Calendar.SECOND, 59)
+                    set(Calendar.MILLISECOND, 999)
                 }
             }
             val ts = cal.timeInMillis
             val dateText = dateFormat.format(Date(ts))
-            if (isStartDate) { startDate = ts; btnStartDate.text = dateText }
-            else { endDate = ts; btnEndDate.text = dateText }
+            if (isStartDate) {
+                startDate = ts
+                btnStartDate.text = dateText
+            } else {
+                endDate = ts
+                btnEndDate.text = dateText
+            }
         }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
         dialog.datePicker.maxDate = System.currentTimeMillis()
         dialog.show()
@@ -237,14 +246,19 @@ class ApplyRulesActivity : BaseActivity() {
         ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED
 
     private fun requestSmsPermission() {
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_SMS), Constants.RequestCodes.SMS_PERMISSION)
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.READ_SMS),
+            Constants.RequestCodes.SMS_PERMISSION
+        )
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == Constants.RequestCodes.SMS_PERMISSION) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) applyRules()
-            else {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                applyRules()
+            } else {
                 resultsContainer.removeAllViews()
                 addStatusText(getString(R.string.sms_permission_denied_apply))
             }
@@ -282,7 +296,12 @@ class ApplyRulesActivity : BaseActivity() {
                     for (smsWithDate in messages) {
                         try {
                             val result = withContext(Dispatchers.IO) {
-                                processor.processMessageFull(smsWithDate.body, sender, smsWithDate.date, existingPayments)
+                                processor.processMessageFull(
+                                    smsWithDate.body,
+                                    sender,
+                                    smsWithDate.date,
+                                    existingPayments
+                                )
                             }
                             when (result) {
                                 is MessageProcessResult.PaymentResult ->
@@ -310,23 +329,62 @@ class ApplyRulesActivity : BaseActivity() {
                         } catch (e: MessageIgnoredException) {
                             items += SmsResultItem.IgnoredItem(sender, smsWithDate.body, e.ruleName)
                         } catch (e: Exception) {
-                            items += SmsResultItem.FailedItem(sender, smsWithDate.body, e.message ?: getString(R.string.unknown_error))
+                            items +=
+                                SmsResultItem.FailedItem(
+                                    sender,
+                                    smsWithDate.body,
+                                    e.message ?: getString(R.string.unknown_error)
+                                )
                         }
                     }
                 }
 
                 processedItems = items
 
+                // Pre-fetch exchange rates for all processed payment/income dates in background.
+                prefetchExchangeRatesForProcessedItems(database, items)
+
                 // Show filter row
                 filterScrollView.visibility = View.VISIBLE
                 activeFilter = null
                 updateFilterButtonStates()
                 renderResults()
-
             } catch (e: Exception) {
                 resultsContainer.removeAllViews()
                 addStatusText(getString(R.string.error_with_message, e.message ?: ""))
                 e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * Launches a fire-and-forget background prefetch for exchange rates covering all
+     * dates present in payment and income items. On any failure, shows an error notification.
+     */
+    private fun prefetchExchangeRatesForProcessedItems(database: BankSmsDatabase, items: List<SmsResultItem>) {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val pairs = mutableSetOf<Pair<String, String>>()
+        for (item in items) {
+            val timestamp = when (item) {
+                is SmsResultItem.PaymentItem -> item.payment.timestamp
+                is SmsResultItem.IncomeItem -> item.income.timestamp
+                else -> null
+            } ?: continue
+            val dateMs = parseTransactionTimestampMillis(timestamp) ?: continue
+            val dateStr = dateFormat.format(Date(dateMs))
+            for (currency in ExchangeRateCache.PREFETCH_CURRENCIES) {
+                pairs.add(dateStr to currency)
+            }
+        }
+        if (pairs.isEmpty()) return
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val failed = ExchangeRateCache.prefetchRates(pairs.toList(), database.exchangeRateDao())
+            if (failed.isNotEmpty()) {
+                NotificationHelper.sendExchangeRateErrorNotification(
+                    applicationContext,
+                    getString(R.string.exchange_rate_prefetch_error)
+                )
             }
         }
     }
@@ -382,16 +440,20 @@ class ApplyRulesActivity : BaseActivity() {
 
     private fun addStatusText(text: String) {
         val textView = TextView(this).apply {
-            this.text = text; textSize = 14f
-            setTextColor(getColor(R.color.text_primary)); setPadding(0, 16, 0, 16)
+            this.text = text
+            textSize = 14f
+            setTextColor(getColor(R.color.text_primary))
+            setPadding(0, 16, 0, 16)
         }
         resultsContainer.addView(textView)
     }
 
     private fun addSectionHeader(text: String) {
         val headerView = TextView(this).apply {
-            this.text = text; textSize = 16f
-            setTextColor(getColor(R.color.text_primary)); setPadding(0, 24, 0, 8)
+            this.text = text
+            textSize = 16f
+            setTextColor(getColor(R.color.text_primary))
+            setPadding(0, 24, 0, 8)
             setTypeface(null, android.graphics.Typeface.BOLD)
         }
         resultsContainer.addView(headerView)
@@ -427,8 +489,12 @@ class ApplyRulesActivity : BaseActivity() {
         titleView.setTextColor(0xFFFF8F00.toInt())
         view.findViewById<TextView>(R.id.tvErrorMessage).text = buildString {
             append(getString(R.string.from_sender, sender))
-            if (!ruleName.isNullOrBlank()) { append("\n"); append(ruleName) }
-            append("\n\n"); append(message)
+            if (!ruleName.isNullOrBlank()) {
+                append("\n")
+                append(ruleName)
+            }
+            append("\n\n")
+            append(message)
         }
         view.findViewById<Button>(R.id.btnOpenRegexBuilder).setOnClickListener { openRegexBuilder(sender, message) }
         resultsContainer.addView(view)
@@ -438,16 +504,21 @@ class ApplyRulesActivity : BaseActivity() {
         val view = LayoutInflater.from(this).inflate(R.layout.item_apply_rules_error, resultsContainer, false)
         view.findViewById<TextView>(R.id.tvErrorTitle).text = getString(R.string.error_parsing)
         view.findViewById<TextView>(R.id.tvErrorMessage).text = buildString {
-            append(getString(R.string.from_sender, sender)); append("\n\n"); append(message)
+            append(getString(R.string.from_sender, sender))
+            append("\n\n")
+            append(message)
         }
         view.findViewById<Button>(R.id.btnOpenRegexBuilder).setOnClickListener { openRegexBuilder(sender, message) }
         resultsContainer.addView(view)
     }
 
     private fun openRegexBuilder(sender: String, message: String) {
-        startActivity(Intent(this, RegexBuilderActivity::class.java).apply {
-            putExtra(EXTRA_SAMPLE_SMS, message); putExtra(EXTRA_SENDER_ADDRESS, sender)
-        })
+        startActivity(
+            Intent(this, RegexBuilderActivity::class.java).apply {
+                putExtra(EXTRA_SAMPLE_SMS, message)
+                putExtra(EXTRA_SENDER_ADDRESS, sender)
+            }
+        )
     }
 
     data class SmsWithDate(val address: String, val body: String, val date: Long)
@@ -462,12 +533,22 @@ class ApplyRulesActivity : BaseActivity() {
         val allArgs = mutableListOf(*selectionArgs)
         val dateFilter = buildString {
             append("address IN ($placeholders)")
-            if (startDate != null) { append(" AND date >= ?"); allArgs.add(startDate.toString()) }
-            if (endDate != null) { append(" AND date <= ?"); allArgs.add(endDate.toString()) }
+            if (startDate != null) {
+                append(" AND date >= ?")
+                allArgs.add(startDate.toString())
+            }
+            if (endDate != null) {
+                append(" AND date <= ?")
+                allArgs.add(endDate.toString())
+            }
         }
 
         val cursor: Cursor? = contentResolver.query(
-            uri, arrayOf("address", "body", "date"), dateFilter, allArgs.toTypedArray(), "date DESC LIMIT 5000"
+            uri,
+            arrayOf("address", "body", "date"),
+            dateFilter,
+            allArgs.toTypedArray(),
+            "date DESC LIMIT 5000"
         )
         cursor?.use {
             val addrCol = it.getColumnIndex("address")

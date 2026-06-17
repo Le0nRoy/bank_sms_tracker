@@ -13,6 +13,7 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
@@ -31,6 +32,7 @@ import com.example.banksmstracker.database.BankSmsDatabase
 import com.example.banksmstracker.database.ExchangeRateDao
 import com.example.banksmstracker.repository.ConfigRepository
 import com.example.banksmstracker.repository.RoomPaymentRepository
+import com.example.banksmstracker.service.NotificationHelper
 import com.example.banksmstracker.util.ExchangeRateCache
 import com.example.banksmstracker.util.formatDisplayTimestamp
 import com.github.mikephil.charting.charts.BarChart
@@ -72,6 +74,7 @@ class PaymentsActivity : BaseActivity() {
     private lateinit var btnNextPage: Button
     private lateinit var tvPageIndicator: TextView
     private lateinit var etMerchantSearch: android.widget.EditText
+    private lateinit var pbConversionLoading: ProgressBar
 
     private lateinit var paymentRepository: RoomPaymentRepository
     private lateinit var exchangeRateDao: ExchangeRateDao
@@ -94,8 +97,11 @@ class PaymentsActivity : BaseActivity() {
     private var endDate: Long? = null
     private var merchantSearchQuery: String? = null
 
-    /** The currency in which amounts are displayed (conversion is on-the-fly; stored values unchanged). */
-    private var selectedDisplayCurrency: String = "GEL"
+    /**
+     * The currency in which amounts are displayed (conversion is on-the-fly; stored values unchanged).
+     * Empty string = no conversion (show each payment in its original currency).
+     */
+    private var selectedDisplayCurrency: String = ""
 
     /** Map from raw merchant pattern → human-readable display name. */
     private var merchantDisplayNames: Map<String, String> = emptyMap()
@@ -159,6 +165,7 @@ class PaymentsActivity : BaseActivity() {
         btnNextPage = findViewById(R.id.btnNextPage)
         tvPageIndicator = findViewById(R.id.tvPageIndicator)
         etMerchantSearch = findViewById(R.id.etMerchantSearch)
+        pbConversionLoading = findViewById(R.id.pbConversionLoading)
 
         btnSelectCategories.setOnClickListener { showCategorySelectionDialog() }
 
@@ -174,10 +181,11 @@ class PaymentsActivity : BaseActivity() {
 
         btnToggleDisplayNames.setOnClickListener {
             showDisplayNames = !showDisplayNames
-            btnToggleDisplayNames.text = if (showDisplayNames)
+            btnToggleDisplayNames.text = if (showDisplayNames) {
                 getString(R.string.toggle_display_names_on)
-            else
+            } else {
                 getString(R.string.toggle_display_names_off)
+            }
             adapter.notifyDataSetChanged()
         }
 
@@ -193,7 +201,8 @@ class PaymentsActivity : BaseActivity() {
         btnStartDate.setOnClickListener { showDatePicker(isStartDate = true) }
         btnEndDate.setOnClickListener { showDatePicker(isStartDate = false) }
         btnClearDates.setOnClickListener {
-            startDate = null; endDate = null
+            startDate = null
+            endDate = null
             btnStartDate.text = getString(R.string.start_date)
             btnEndDate.text = getString(R.string.end_date)
             currentPage = 0
@@ -203,22 +212,34 @@ class PaymentsActivity : BaseActivity() {
         setupCurrencySpinner()
 
         btnPrevPage.setOnClickListener {
-            if (currentPage > 0) { currentPage--; renderPage() }
+            if (currentPage > 0) {
+                currentPage--
+                renderPage()
+            }
         }
         btnNextPage.setOnClickListener {
             val totalPages = totalPageCount()
-            if (currentPage < totalPages - 1) { currentPage++; renderPage() }
+            if (currentPage < totalPages - 1) {
+                currentPage++
+                renderPage()
+            }
         }
     }
 
     private fun setupCurrencySpinner() {
         spinnerCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                // Position 0 = "— original —" → empty string (no conversion)
+                // Position 1+ = actual currency codes GEL, USD, EUR, RUB
                 val currencies = resources.getStringArray(R.array.currency_entries)
-                val chosen = if (position in currencies.indices) currencies[position] else "GEL"
+                val chosen = when {
+                    position == 0 -> ""
+                    position in currencies.indices -> currencies[position]
+                    else -> ""
+                }
                 if (chosen != selectedDisplayCurrency) {
                     selectedDisplayCurrency = chosen
-                    renderPage()
+                    loadAndRenderPage()
                 }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
@@ -236,19 +257,25 @@ class PaymentsActivity : BaseActivity() {
                 val selectedCalendar = Calendar.getInstance().apply {
                     set(year, month, dayOfMonth)
                     if (isStartDate) {
-                        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-                        set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
                     } else {
-                        set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
-                        set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
+                        set(Calendar.HOUR_OF_DAY, 23)
+                        set(Calendar.MINUTE, 59)
+                        set(Calendar.SECOND, 59)
+                        set(Calendar.MILLISECOND, 999)
                     }
                 }
                 val timestamp = selectedCalendar.timeInMillis
                 val dateText = dateFormat.format(Date(timestamp))
                 if (isStartDate) {
-                    startDate = timestamp; btnStartDate.text = dateText
+                    startDate = timestamp
+                    btnStartDate.text = dateText
                 } else {
-                    endDate = timestamp; btnEndDate.text = dateText
+                    endDate = timestamp
+                    btnEndDate.text = dateText
                 }
                 currentPage = 0
                 applyFilter()
@@ -265,9 +292,11 @@ class PaymentsActivity : BaseActivity() {
     }
 
     private fun loadData(preserveScroll: Boolean = false) {
-        val savedScrollState = if (preserveScroll)
+        val savedScrollState = if (preserveScroll) {
             (recyclerPayments.layoutManager as? LinearLayoutManager)?.onSaveInstanceState()
-        else null
+        } else {
+            null
+        }
 
         lifecycleScope.launch {
             ConfigRepository.load(application)
@@ -303,14 +332,18 @@ class PaymentsActivity : BaseActivity() {
     private fun setDefaultDateRange() {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_MONTH, 1)
-        calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0); calendar.set(Calendar.MILLISECOND, 0)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
         startDate = calendar.timeInMillis
         btnStartDate.text = dateFormat.format(Date(startDate!!))
 
         calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH))
-        calendar.set(Calendar.HOUR_OF_DAY, 23); calendar.set(Calendar.MINUTE, 59)
-        calendar.set(Calendar.SECOND, 59); calendar.set(Calendar.MILLISECOND, 999)
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
         endDate = calendar.timeInMillis
         btnEndDate.text = dateFormat.format(Date(endDate!!))
     }
@@ -372,7 +405,9 @@ class PaymentsActivity : BaseActivity() {
                 applyFilter()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {
-                selectedSender = null; currentPage = 0; applyFilter()
+                selectedSender = null
+                currentPage = 0
+                applyFilter()
             }
         }
     }
@@ -381,7 +416,10 @@ class PaymentsActivity : BaseActivity() {
         filteredPayments = filterPayments(
             allPayments,
             selectedCategories.takeIf { it.isNotEmpty() },
-            selectedSender, startDate, endDate, merchantSearchQuery
+            selectedSender,
+            startDate,
+            endDate,
+            merchantSearchQuery
         ).sortedBy { parseTransactionTimestamp(it.timestamp) ?: Long.MAX_VALUE }
         renderPage()
         saveFilterState()
@@ -389,9 +427,11 @@ class PaymentsActivity : BaseActivity() {
 
     // ── Paging ────────────────────────────────────────────────────────────────
 
-    private fun totalPageCount(): Int =
-        if (filteredPayments.isEmpty()) 1
-        else (filteredPayments.size + pageSize - 1) / pageSize
+    private fun totalPageCount(): Int = if (filteredPayments.isEmpty()) {
+        1
+    } else {
+        (filteredPayments.size + pageSize - 1) / pageSize
+    }
 
     private fun pagedPayments(): List<Payment> {
         if (filteredPayments.isEmpty()) return emptyList()
@@ -403,9 +443,62 @@ class PaymentsActivity : BaseActivity() {
     }
 
     private fun renderPage() {
+        loadAndRenderPage()
+    }
+
+    /**
+     * Renders the current page. If a display currency is selected, pre-fetches all required
+     * exchange rates in parallel (with loading indicator) before submitting to the adapter.
+     * On rate fetch failure: resets spinner to "no conversion" and shows an error notification.
+     */
+    private fun loadAndRenderPage() {
         val paged = pagedPayments()
-        adapter.submitList(paged)
-        updateUI()
+
+        if (selectedDisplayCurrency.isEmpty()) {
+            adapter.updatePageData(paged, emptyMap())
+            updateUI()
+            return
+        }
+
+        lifecycleScope.launch {
+            pbConversionLoading.visibility = View.VISIBLE
+            btnPrevPage.isEnabled = false
+            btnNextPage.isEnabled = false
+
+            val pageDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            val pairs = mutableSetOf<Pair<String, String>>()
+            for (payment in paged) {
+                val dateMs = parseTransactionTimestamp(payment.timestamp) ?: System.currentTimeMillis()
+                val dateStr = pageDateFormat.format(Date(dateMs))
+                if (payment.currency != "GEL") pairs.add(dateStr to payment.currency)
+                if (selectedDisplayCurrency != "GEL") pairs.add(dateStr to selectedDisplayCurrency)
+            }
+
+            val failedPairs = ExchangeRateCache.prefetchRates(pairs.toList(), exchangeRateDao)
+
+            pbConversionLoading.visibility = View.GONE
+
+            if (failedPairs.isNotEmpty()) {
+                // Reset spinner to "— original —" (position 0) before changing state so the
+                // guard in onItemSelected (chosen == selectedDisplayCurrency) suppresses re-render.
+                selectedDisplayCurrency = ""
+                spinnerCurrency.setSelection(0, false)
+                NotificationHelper.sendExchangeRateErrorNotification(
+                    this@PaymentsActivity,
+                    getString(R.string.exchange_rate_fetch_error)
+                )
+                adapter.updatePageData(paged, emptyMap())
+            } else {
+                val ratesMap = mutableMapOf<String, Double>()
+                for ((dateStr, currency) in pairs) {
+                    val rate = ExchangeRateCache.getRateToGelForDate(dateStr, currency, exchangeRateDao)
+                    if (rate != null) ratesMap["$dateStr:$currency"] = rate
+                }
+                adapter.updatePageData(paged, ratesMap)
+            }
+
+            updateUI()
+        }
     }
 
     private fun saveFilterState() {
@@ -429,7 +522,8 @@ class PaymentsActivity : BaseActivity() {
         }
         val total = filteredPayments.sumOf { it.amount }
         val currency = filteredPayments.firstOrNull()?.currency ?: ""
-        tvPaymentCount.text = getString(R.string.payments_summary, filteredPayments.size, "%.2f".format(total), currency)
+        tvPaymentCount.text =
+            getString(R.string.payments_summary, filteredPayments.size, "%.2f".format(total), currency)
 
         // Update paging controls
         val totalPages = totalPageCount()
@@ -446,14 +540,23 @@ class PaymentsActivity : BaseActivity() {
                 val file = File(cacheDir, "payments_$timestamp.csv").also { it.deleteOnExit() }
                 file.writeText(csvContent)
                 val uri = FileProvider.getUriForFile(this@PaymentsActivity, "$packageName.fileprovider", file)
-                Toast.makeText(this@PaymentsActivity, getString(R.string.csv_export_success, file.absolutePath), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.csv_export_success, file.absolutePath),
+                    Toast.LENGTH_SHORT
+                ).show()
                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/csv"; putExtra(Intent.EXTRA_STREAM, uri)
+                    type = "text/csv"
+                    putExtra(Intent.EXTRA_STREAM, uri)
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
                 startActivity(Intent.createChooser(shareIntent, getString(R.string.share_csv)))
             } catch (e: Exception) {
-                Toast.makeText(this@PaymentsActivity, getString(R.string.csv_export_failed, e.message ?: ""), Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.csv_export_failed, e.message ?: ""),
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     }
@@ -462,18 +565,28 @@ class PaymentsActivity : BaseActivity() {
         val sb = StringBuilder()
         sb.appendLine(getString(R.string.csv_header_payments))
         for (p in payments) {
-            sb.appendLine(listOf(
-                p.amount.toString(), escapeCsv(p.currency), escapeCsv(p.card ?: ""),
-                escapeCsv(p.merchant ?: ""), escapeCsv(p.timestamp), p.balance?.toString() ?: "",
-                escapeCsv(p.categoryId ?: ""), escapeCsv(p.senderAddress ?: "")
-            ).joinToString(","))
+            sb.appendLine(
+                listOf(
+                    p.amount.toString(),
+                    escapeCsv(p.currency),
+                    escapeCsv(p.card ?: ""),
+                    escapeCsv(p.merchant ?: ""),
+                    escapeCsv(p.timestamp),
+                    p.balance?.toString() ?: "",
+                    escapeCsv(p.categoryId ?: ""),
+                    escapeCsv(p.senderAddress ?: "")
+                ).joinToString(",")
+            )
         }
         return sb.toString()
     }
 
     private fun escapeCsv(value: String): String =
-        if (value.contains(",") || value.contains("\"") || value.contains("\n"))
-            "\"${value.replace("\"", "\"\"")}\"" else value
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            "\"${value.replace("\"", "\"\"")}\""
+        } else {
+            value
+        }
 
     // ── Spending report (uses filteredPayments — all pages, categories already applied) ──
 
@@ -509,7 +622,8 @@ class PaymentsActivity : BaseActivity() {
     }
 
     private fun buildDateRangeText(): String {
-        val actualStart = startDate ?: filteredPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.minOrNull()
+        val actualStart =
+            startDate ?: filteredPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.minOrNull()
         val actualEnd = endDate ?: filteredPayments.mapNotNull { parseTransactionTimestamp(it.timestamp) }.maxOrNull()
         return when {
             actualStart != null && actualEnd != null ->
@@ -570,15 +684,26 @@ class PaymentsActivity : BaseActivity() {
     private fun setupPieChart(chart: PieChart, categoryTotals: List<Pair<String, Double>>, totalAmount: Double) {
         val entries = categoryTotals.map { (category, amount) -> PieEntry(amount.toFloat(), category) }
         val dataSet = PieDataSet(entries, "").apply {
-            colors = CHART_COLORS; valueTextSize = 11f; valueTextColor = Color.WHITE; sliceSpace = 2f
+            colors = CHART_COLORS
+            valueTextSize = 11f
+            valueTextColor = Color.WHITE
+            sliceSpace = 2f
         }
         val data = PieData(dataSet).apply { setValueFormatter(PercentFormatter(chart)) }
         chart.apply {
-            this.data = data; description.isEnabled = false; isDrawHoleEnabled = true; holeRadius = 40f
-            setUsePercentValues(true); setEntryLabelTextSize(10f); setEntryLabelColor(Color.WHITE)
-            legend.isEnabled = false; setDrawCenterText(true)
+            this.data = data
+            description.isEnabled = false
+            isDrawHoleEnabled = true
+            holeRadius = 40f
+            setUsePercentValues(true)
+            setEntryLabelTextSize(10f)
+            setEntryLabelColor(Color.WHITE)
+            legend.isEnabled = false
+            setDrawCenterText(true)
             centerText = getString(R.string.total_spending, "%.0f".format(totalAmount), "GEL")
-            setCenterTextSize(12f); animateY(600); invalidate()
+            setCenterTextSize(12f)
+            animateY(600)
+            invalidate()
         }
     }
 
@@ -588,23 +713,30 @@ class PaymentsActivity : BaseActivity() {
         chart.data = BarData(dataSet)
         chart.xAxis.apply {
             valueFormatter = IndexAxisValueFormatter(categoryTotals.map { it.first })
-            position = XAxis.XAxisPosition.BOTTOM; granularity = 1f
-            setDrawGridLines(false); labelRotationAngle = -30f
+            position = XAxis.XAxisPosition.BOTTOM
+            granularity = 1f
+            setDrawGridLines(false)
+            labelRotationAngle = -30f
         }
-        chart.axisRight.isEnabled = false; chart.legend.isEnabled = false
-        chart.description.isEnabled = false; chart.invalidate()
+        chart.axisRight.isEnabled = false
+        chart.legend.isEnabled = false
+        chart.description.isEnabled = false
+        chart.invalidate()
     }
 
     private fun showPaymentDetail(payment: Payment) {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_payment_detail, null)
 
-        val displayMerchant = if (showDisplayNames)
+        val displayMerchant = if (showDisplayNames) {
             merchantDisplayNames[payment.merchant] ?: payment.merchant ?: getString(R.string.unknown)
-        else payment.merchant ?: getString(R.string.unknown)
+        } else {
+            payment.merchant ?: getString(R.string.unknown)
+        }
 
         dialogView.findViewById<TextView>(R.id.tvMerchant).text = displayMerchant
         dialogView.findViewById<TextView>(R.id.tvAmount).text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
-        dialogView.findViewById<TextView>(R.id.tvCategory).text = payment.categoryId ?: getString(R.string.uncategorized)
+        dialogView.findViewById<TextView>(R.id.tvCategory).text =
+            payment.categoryId ?: getString(R.string.uncategorized)
         dialogView.findViewById<TextView>(R.id.tvCard).text = payment.card?.let { "****$it" } ?: "-"
         dialogView.findViewById<TextView>(R.id.tvTimestamp).text = payment.timestamp.ifBlank { "-" }
         dialogView.findViewById<TextView>(R.id.tvBalance).text =
@@ -618,7 +750,8 @@ class PaymentsActivity : BaseActivity() {
         lifecycleScope.launch {
             val configCategories = ConfigRepository.getCategories()
             val categoryNames = listOf(getString(R.string.select_category_hint)) + configCategories.map { it.name }
-            val spinnerAdapter = ArrayAdapter(this@PaymentsActivity, android.R.layout.simple_spinner_item, categoryNames)
+            val spinnerAdapter =
+                ArrayAdapter(this@PaymentsActivity, android.R.layout.simple_spinner_item, categoryNames)
             spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             spinnerCategories.adapter = spinnerAdapter
 
@@ -628,9 +761,11 @@ class PaymentsActivity : BaseActivity() {
 
             btnAddToCategory.setOnClickListener {
                 val pos = spinnerCategories.selectedItemPosition
-                if (pos > 0 && payment.merchant != null)
+                if (pos > 0 && payment.merchant != null) {
                     addMerchantToCategory(payment.merchant, configCategories[pos - 1], dialog)
-                else Toast.makeText(this@PaymentsActivity, R.string.no_sender_selected, Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@PaymentsActivity, R.string.no_sender_selected, Toast.LENGTH_SHORT).show()
+                }
             }
             btnCreateCategory.setOnClickListener {
                 if (payment.merchant != null) showCreateCategoryDialog(payment.merchant, dialog)
@@ -645,11 +780,18 @@ class PaymentsActivity : BaseActivity() {
                 withContext(Dispatchers.IO) {
                     val allCategories = ConfigRepository.getCategories()
                     for (cat in allCategories) {
-                        val hadMerchant = cat.merchants.any { m -> !m.isRegex && m.pattern.equals(merchant, ignoreCase = true) }
+                        val hadMerchant = cat.merchants.any { m ->
+                            !m.isRegex &&
+                                m.pattern.equals(merchant, ignoreCase = true)
+                        }
                         if (hadMerchant) {
-                            ConfigRepository.updateCategory(cat.copy(merchants = cat.merchants.filterNot { m ->
-                                !m.isRegex && m.pattern.equals(merchant, ignoreCase = true)
-                            }.toMutableList()))
+                            ConfigRepository.updateCategory(
+                                cat.copy(
+                                    merchants = cat.merchants.filterNot { m ->
+                                        !m.isRegex && m.pattern.equals(merchant, ignoreCase = true)
+                                    }.toMutableList()
+                                )
+                            )
                         }
                     }
                     val refreshed = ConfigRepository.getCategories().first { it.id == category.id }
@@ -660,17 +802,28 @@ class PaymentsActivity : BaseActivity() {
                     }
                     paymentRepository.updateCategoryForMerchant(merchant, category.name)
                 }
-                Toast.makeText(this@PaymentsActivity, getString(R.string.merchant_added_to_category, merchant, category.name), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.merchant_added_to_category, merchant, category.name),
+                    Toast.LENGTH_SHORT
+                ).show()
                 parentDialog.dismiss()
                 loadData(preserveScroll = true)
             } catch (e: Exception) {
-                Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.error_with_message, e.message ?: ""),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
 
     private fun showCreateCategoryDialog(merchant: String, parentDialog: AlertDialog) {
-        val input = EditText(this).apply { hint = getString(R.string.enter_category_name); setPadding(48, 32, 48, 32) }
+        val input = EditText(this).apply {
+            hint = getString(R.string.enter_category_name)
+            setPadding(48, 32, 48, 32)
+        }
         AlertDialog.Builder(this)
             .setTitle(R.string.create_new_category).setView(input)
             .setPositiveButton(R.string.confirm) { _, _ ->
@@ -689,11 +842,19 @@ class PaymentsActivity : BaseActivity() {
                         newCategory.copy(name = categoryName, merchants = mutableListOf(Merchant(merchant)))
                     )
                 }
-                Toast.makeText(this@PaymentsActivity, getString(R.string.category_created, categoryName), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.category_created, categoryName),
+                    Toast.LENGTH_SHORT
+                ).show()
                 parentDialog.dismiss()
                 loadData(preserveScroll = true)
             } catch (e: Exception) {
-                Toast.makeText(this@PaymentsActivity, getString(R.string.error_with_message, e.message ?: ""), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@PaymentsActivity,
+                    getString(R.string.error_with_message, e.message ?: ""),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -701,6 +862,18 @@ class PaymentsActivity : BaseActivity() {
     // ── RecyclerView Adapter ───────────────────────────────────────────────────
 
     inner class PaymentAdapter : ListAdapter<Payment, PaymentAdapter.PaymentViewHolder>(PaymentDiffCallback()) {
+
+        /**
+         * Pre-fetched rates map: key = "yyyy-MM-dd:CURRENCY" → rate-to-GEL.
+         * Populated by [loadAndRenderPage] before [submitList] is called.
+         * Adapter uses this for synchronous lookup in [PaymentViewHolder.bind] — no async needed.
+         */
+        private var ratesMap: Map<String, Double> = emptyMap()
+
+        fun updatePageData(payments: List<Payment>, rates: Map<String, Double>) {
+            ratesMap = rates
+            submitList(payments)
+        }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PaymentViewHolder {
             val view = LayoutInflater.from(parent.context).inflate(R.layout.item_payment, parent, false)
@@ -718,55 +891,63 @@ class PaymentsActivity : BaseActivity() {
             private val tvConversionRate: TextView = itemView.findViewById(R.id.tvConversionRate)
 
             fun bind(payment: Payment) {
-                tvMerchant.text = if (showDisplayNames)
+                tvMerchant.text = if (showDisplayNames) {
                     merchantDisplayNames[payment.merchant] ?: payment.merchant ?: getString(R.string.unknown)
-                else payment.merchant ?: getString(R.string.unknown)
-                // Show original amount immediately as a placeholder, then update after conversion.
-                tvAmount.text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
+                } else {
+                    payment.merchant ?: getString(R.string.unknown)
+                }
                 tvCategory.text = payment.categoryId ?: getString(R.string.uncategorized)
                 tvTimestamp.text = formatDisplayTimestamp(payment.timestamp)
                 if (!payment.card.isNullOrBlank()) {
-                    tvCard.visibility = View.VISIBLE; tvCard.text = getString(R.string.card_display, payment.card)
+                    tvCard.visibility = View.VISIBLE
+                    tvCard.text = getString(R.string.card_display, payment.card)
                 } else {
                     tvCard.visibility = View.GONE
                 }
-                // Hide conversion rate label until we confirm a successful conversion.
                 tvConversionRate.visibility = View.GONE
                 itemView.setOnClickListener { showPaymentDetail(payment) }
 
-                // Convert amount to selectedDisplayCurrency on-the-fly (display only; stored values unchanged).
-                if (payment.currency != selectedDisplayCurrency) {
-                    lifecycleScope.launch {
-                        val dateMs = parseTransactionTimestamp(payment.timestamp) ?: System.currentTimeMillis()
-                        val gelRate = withTimeoutOrNull(3_000L) {
-                            ExchangeRateCache.getRateToGel(dateMs, payment.currency, exchangeRateDao)
-                        }
-                        // If gelRate is null the fetch failed — leave the placeholder unchanged and
-                        // keep tvConversionRate hidden to avoid showing a misleading currency label.
-                        if (gelRate == null) return@launch
-                        val gelAmount = payment.amount * gelRate
-
-                        val displayAmount: Double
-                        val rateLabel: String
-                        if (selectedDisplayCurrency == "GEL") {
-                            displayAmount = gelAmount
-                            // payment.currency → GEL: show "1 USD = 2.7812 GEL"
-                            rateLabel = "1 ${payment.currency} = ${"%.4f".format(gelRate)} GEL"
-                        } else {
-                            val displayRate = withTimeoutOrNull(3_000L) {
-                                ExchangeRateCache.getRateToGel(dateMs, selectedDisplayCurrency, exchangeRateDao)
-                            }
-                            if (displayRate == null || displayRate <= 0.0) return@launch
-                            displayAmount = gelAmount / displayRate
-                            // Show cross rate: "1 USD ≈ 0.9234 EUR"
-                            rateLabel = "1 ${payment.currency} ≈ ${"%.4f".format(gelRate / displayRate)} $selectedDisplayCurrency"
-                        }
-
-                        tvAmount.text = "-${"%.2f".format(displayAmount)} $selectedDisplayCurrency"
-                        tvConversionRate.text = rateLabel
-                        tvConversionRate.visibility = View.VISIBLE
-                    }
+                // If no display currency selected, show original amount and done.
+                if (selectedDisplayCurrency.isEmpty() || payment.currency == selectedDisplayCurrency) {
+                    tvAmount.text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
+                    return
                 }
+
+                // Rates were pre-fetched by loadAndRenderPage — look them up synchronously.
+                val pageDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+                val dateMs = parseTransactionTimestamp(payment.timestamp) ?: System.currentTimeMillis()
+                val dateStr = pageDateFormat.format(Date(dateMs))
+
+                val srcRate = ratesMap["$dateStr:${payment.currency}"]
+                    ?: if (payment.currency == "GEL") 1.0 else null
+
+                if (srcRate == null) {
+                    // Rate unavailable — show original (should not happen after successful prefetch)
+                    tvAmount.text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
+                    return
+                }
+
+                val displayAmount: Double
+                val rateLabel: String
+
+                if (selectedDisplayCurrency == "GEL") {
+                    displayAmount = payment.amount * srcRate
+                    rateLabel = "1 ${payment.currency} = ${"%.4f".format(srcRate)} GEL"
+                } else {
+                    val displayRate = ratesMap["$dateStr:$selectedDisplayCurrency"]
+                        ?: if (selectedDisplayCurrency == "GEL") 1.0 else null
+                    if (displayRate == null || displayRate <= 0.0) {
+                        tvAmount.text = "-${"%.2f".format(payment.amount)} ${payment.currency}"
+                        return
+                    }
+                    val crossRate = srcRate / displayRate
+                    displayAmount = payment.amount * crossRate
+                    rateLabel = "1 ${payment.currency} ≈ ${"%.4f".format(crossRate)} $selectedDisplayCurrency"
+                }
+
+                tvAmount.text = "-${"%.2f".format(displayAmount)} $selectedDisplayCurrency"
+                tvConversionRate.text = rateLabel
+                tvConversionRate.visibility = View.VISIBLE
             }
         }
     }
@@ -775,14 +956,17 @@ class PaymentsActivity : BaseActivity() {
         private const val KEY_START_DATE = "key_start_date"
         private const val KEY_END_DATE = "key_end_date"
         const val PREFS_FILTER_STATE = "payments_filter_state"
+
         /** Replaces the old single KEY_FILTER_CATEGORY. Stored as pipe-separated values. */
         const val KEY_FILTER_CATEGORIES = "filter_categories"
-        @Deprecated("Replaced by KEY_FILTER_CATEGORIES") const val KEY_FILTER_CATEGORY = "filter_category"
+
+        @Deprecated("Replaced by KEY_FILTER_CATEGORIES")
+        const val KEY_FILTER_CATEGORY = "filter_category"
         const val KEY_FILTER_SENDER = "filter_sender"
         const val KEY_FILTER_START_DATE = "filter_start_date"
         const val KEY_FILTER_END_DATE = "filter_end_date"
         const val KEY_FILTER_MERCHANT = "filter_merchant"
-        private const val SEP = "\u001F"  // ASCII Unit Separator — safe in category names
+        private const val SEP = "\u001F" // ASCII Unit Separator — safe in category names
 
         private val CHART_COLORS = listOf(
             Color.rgb(64, 150, 220), Color.rgb(255, 140, 50), Color.rgb(90, 190, 100),

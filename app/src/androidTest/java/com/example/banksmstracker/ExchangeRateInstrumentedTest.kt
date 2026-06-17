@@ -57,8 +57,12 @@ class ExchangeRateInstrumentedTest {
         val rate = ExchangeRateCache.getRateToGel(dateMs, "USD", exchangeRateDao)
 
         // Assert
-        assertEquals(2.7812, rate, 0.0001,
-            "Should return the seeded rate from Room DB")
+        assertEquals(
+            2.7812,
+            rate!!,
+            0.0001,
+            "Should return the seeded rate from Room DB"
+        )
     }
 
     @Test
@@ -72,7 +76,7 @@ class ExchangeRateInstrumentedTest {
 
         // First call — loads from DB and populates memory cache.
         val first = ExchangeRateCache.getRateToGel(dateMs, "EUR", exchangeRateDao)
-        assertEquals(3.05, first, 0.0001)
+        assertEquals(3.05, first!!, 0.0001)
 
         // Clear the DB so only the memory cache has the value.
         database.close()
@@ -83,8 +87,12 @@ class ExchangeRateInstrumentedTest {
 
         // Second call — must be served from memory cache.
         val second = ExchangeRateCache.getRateToGel(dateMs, "EUR", freshDao)
-        assertEquals(3.05, second, 0.0001,
-            "Second call must be served from memory cache, not DB")
+        assertEquals(
+            3.05,
+            second!!,
+            0.0001,
+            "Second call must be served from memory cache, not DB"
+        )
     }
 
     @Test
@@ -94,8 +102,11 @@ class ExchangeRateInstrumentedTest {
         val dateMs = System.currentTimeMillis()
         val rate = ExchangeRateCache.getRateToGel(dateMs, "GEL", exchangeRateDao)
 
-        assertEquals(1.0, rate,
-            "GEL must return exactly 1.0 without DB or network access")
+        assertEquals(
+            1.0,
+            rate,
+            "GEL must return exactly 1.0 without DB or network access"
+        )
         // Confirm no rates were inserted into the DB.
         assertNull(
             exchangeRateDao.getRate(

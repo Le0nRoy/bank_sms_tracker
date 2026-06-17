@@ -152,10 +152,10 @@ class CategoryManagementAppiumTest : AppiumBaseTest() {
         // and re-fetch the button each time to avoid stale reference after DOM change.
         findAllById("btnAddMerchant").first().click()
         mediumWait()
-        scrollToElementById("btnAddMerchant")   // scroll down to reveal new field
+        scrollToElementById("btnAddMerchant") // scroll down to reveal new field
         findAllById("btnAddMerchant").first().click()
         mediumWait()
-        scrollToElementById("btnAddMerchant")   // scroll down to reveal second new field
+        scrollToElementById("btnAddMerchant") // scroll down to reveal second new field
 
         // Collect all visible pattern fields (etValue) and type into the last two.
         val patternFields = driver.findElements(

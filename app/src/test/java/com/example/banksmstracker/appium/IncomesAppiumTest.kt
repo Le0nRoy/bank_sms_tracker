@@ -128,8 +128,11 @@ class IncomesAppiumTest : AppiumBaseTest() {
         val hasDatePicker = textExists("OK") || textExists("Cancel") || textExists("Date")
         assertTrue(hasDatePicker, "Should show date picker dialog")
 
-        if (textExists("Cancel")) findByText("Cancel").click()
-        else driver.navigate().back()
+        if (textExists("Cancel")) {
+            findByText("Cancel").click()
+        } else {
+            driver.navigate().back()
+        }
         shortWait()
 
         navigateToMain()
@@ -175,7 +178,9 @@ class IncomesAppiumTest : AppiumBaseTest() {
         val text = searchField.text
         assertTrue(text.contains("salary", ignoreCase = true), "Search field should contain input, got: '$text'")
 
-        try { driver.hideKeyboard() } catch (_: Exception) {}
+        try {
+            driver.hideKeyboard()
+        } catch (_: Exception) {}
         shortWait()
 
         navigateToMain()

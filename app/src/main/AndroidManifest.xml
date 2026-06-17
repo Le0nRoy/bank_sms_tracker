@@ -62,6 +62,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.ExchangeRatesActivity"
+            android:label="@string/exchange_rates_title"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.RegexBuilderActivity"
             android:label="@string/regex_builder"
             android:exported="false" />

@@ -3,13 +3,13 @@ package com.example.banksmstracker.util
 import com.example.banksmstracker.data.Payment
 import com.example.banksmstracker.database.ExchangeRateDao
 import com.example.banksmstracker.database.ExchangeRateEntity
+import java.text.SimpleDateFormat
+import java.util.Locale
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 /**
  * Performance test for per-payment currency conversion via [ExchangeRateCache].
@@ -54,6 +54,12 @@ class PaymentConversionPerfTest {
             return ExchangeRateEntity(date, currency, rate)
         }
         override suspend fun insertRate(rate: ExchangeRateEntity) { /* no-op */ }
+        override suspend fun getAll(): List<ExchangeRateEntity> = emptyList()
+        override suspend fun getByDateRange(startDate: String, endDate: String): List<ExchangeRateEntity> = emptyList()
+        override suspend fun getByCurrencies(currencies: List<String>): List<ExchangeRateEntity> = emptyList()
+        override suspend fun deleteRate(date: String, currency: String) {}
+        override suspend fun getAvailableCurrencies(): List<String> = emptyList()
+        override suspend fun getDatesForCurrency(currency: String): List<String> = emptyList()
     }
 
     @BeforeEach
@@ -103,7 +109,11 @@ class PaymentConversionPerfTest {
     private fun buildTestPayments(): List<Payment> {
         val currencies = listOf("GEL", "USD", "EUR", "RUB")
         val dates = listOf(
-            "01/03/2026", "05/03/2026", "10/03/2026", "15/03/2026", "20/03/2026"
+            "01/03/2026",
+            "05/03/2026",
+            "10/03/2026",
+            "15/03/2026",
+            "20/03/2026"
         )
         val payments = mutableListOf<Payment>()
         var idx = 0
@@ -142,11 +152,9 @@ class PaymentConversionPerfTest {
         return payments
     }
 
-    private fun parseTimestampMs(timestamp: String): Long {
-        return try {
-            dateFormat.parse(timestamp)?.time ?: System.currentTimeMillis()
-        } catch (_: Exception) {
-            System.currentTimeMillis()
-        }
+    private fun parseTimestampMs(timestamp: String): Long = try {
+        dateFormat.parse(timestamp)?.time ?: System.currentTimeMillis()
+    } catch (_: Exception) {
+        System.currentTimeMillis()
     }
 }
