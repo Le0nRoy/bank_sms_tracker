@@ -2,6 +2,9 @@ package com.example.banksmstracker.parser
 
 import com.example.banksmstracker.data.PaymentRegexRule
 import java.time.LocalDate
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class PaymentParserTest {
 
