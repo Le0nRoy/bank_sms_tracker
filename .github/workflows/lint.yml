@@ -2,8 +2,6 @@ name: CI
 
 # Temporarily disabled - enable by removing 'if: false' from jobs
 on:
-  push:
-    branches: [ main, feature/* ]
   pull_request:
     branches: [ main ]
 
