@@ -1,0 +1,239 @@
+package com.example.banksmstracker
+
+import android.content.Intent
+import androidx.test.core.app.ApplicationProvider
+import com.example.banksmstracker.data.Payment
+import com.example.banksmstracker.data.Rule
+import com.example.banksmstracker.database.BankSmsDatabase
+import com.example.banksmstracker.parser.SmsReceiver
+import com.example.banksmstracker.repository.ConfigRepository
+import com.example.banksmstracker.repository.RoomPaymentRepository
+import com.example.banksmstracker.ui.filterPayments
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+
+/**
+ * E2E tests for payment filtering functionality.
+ * Tests filtering payments by sender, date range, and combined filters.
+ */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class PaymentFilterE2ETest {
+
+    private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+    private lateinit var paymentRepository: RoomPaymentRepository
+
+    private fun buildSmsIntent(sender: String, body: String): Intent =
+        Intent("android.provider.Telephony.SMS_RECEIVED").apply {
+            putExtra(SmsReceiver.EXTRA_TEST_SENDER, sender)
+            putExtra(SmsReceiver.EXTRA_TEST_BODY, body)
+        }
+
+    /**
+     * Wait for payments to appear in repository with polling.
+     * onReceive() spawns async coroutine, so we need to wait for it to complete.
+     */
+    private suspend fun waitForPayments(
+        expectedCount: Int,
+        timeoutMs: Long = 5000,
+        pollIntervalMs: Long = 100
+    ): List<Payment> {
+        val startTime = System.currentTimeMillis()
+        while (System.currentTimeMillis() - startTime < timeoutMs) {
+            val payments = paymentRepository.getAllPayments()
+            if (payments.size >= expectedCount) return payments
+            delay(pollIntervalMs)
+        }
+        return paymentRepository.getAllPayments()
+    }
+
+    @BeforeEach
+    fun setup() {
+        ConfigRepository.reset()
+        ConfigRepository.load(context.applicationContext as android.app.Application)
+
+        runBlocking {
+            ConfigRepository.clearAllData()
+        }
+
+        ConfigRepository.reset()
+        ConfigRepository.load(context.applicationContext as android.app.Application, seedIfEmpty = false)
+
+        // Set up multiple senders
+        runBlocking {
+            val sender1 = ConfigRepository.addSender()
+            sender1.name = "Bank A"
+            sender1.addresses = mutableListOf("BANK-A")
+            val rulePattern =
+                "Payment (?<amount>\\d+\\.\\d{2}) (?<currency>[A-Z]{3})" +
+                    " card (?<card>\\d+) (?<merchant>.+) at (?<date>\\d+) bal (?<balance>\\d+\\.\\d{2})"
+            sender1.rules = mutableListOf(Rule(pattern = rulePattern))
+            ConfigRepository.updateSender(sender1)
+
+            val sender2 = ConfigRepository.addSender()
+            sender2.name = "Bank B"
+            sender2.addresses = mutableListOf("BANK-B")
+            sender2.rules = mutableListOf(Rule(pattern = rulePattern))
+            ConfigRepository.updateSender(sender2)
+        }
+
+        paymentRepository = RoomPaymentRepository(
+            BankSmsDatabase.getInstance(context).paymentDao()
+        )
+    }
+
+    @Test
+    @DisplayName("filterBySender_returnsOnlyPaymentsFromSelectedSender")
+    fun filterBySenderReturnsOnlyPaymentsFromSelectedSender() = runBlocking {
+        val smsReceiver = SmsReceiver()
+        val processor = ConfigRepository.getPaymentProcessor()
+        smsReceiver.setPaymentProcessorForTest(processor)
+
+        // Send payments from different senders
+        smsReceiver.onReceive(
+            context,
+            buildSmsIntent("BANK-A", "Payment 100.00 USD card 1111 StoreA at 20230901 bal 500.00")
+        )
+        waitForPayments(1)
+        smsReceiver.onReceive(
+            context,
+            buildSmsIntent("BANK-B", "Payment 200.00 USD card 2222 StoreB at 20230902 bal 400.00")
+        )
+        waitForPayments(2)
+        smsReceiver.onReceive(
+            context,
+            buildSmsIntent("BANK-A", "Payment 150.00 USD card 1111 StoreC at 20230903 bal 350.00")
+        )
+        waitForPayments(3)
+
+        // Filter by sender BANK-A
+        val bankAPayments = paymentRepository.getPaymentsBySender("BANK-A")
+
+        assertEquals(2, bankAPayments.size)
+        assertTrue(bankAPayments.all { it.senderAddress == "BANK-A" })
+    }
+
+    @Test
+    @DisplayName("filterBySender_returnsEmptyForUnknownSender")
+    fun filterBySenderReturnsEmptyForUnknownSender() = runBlocking {
+        val smsReceiver = SmsReceiver()
+        val processor = ConfigRepository.getPaymentProcessor()
+        smsReceiver.setPaymentProcessorForTest(processor)
+
+        smsReceiver.onReceive(
+            context,
+            buildSmsIntent("BANK-A", "Payment 100.00 USD card 1111 Store at 20230901 bal 500.00")
+        )
+        waitForPayments(1)
+
+        val unknownPayments = paymentRepository.getPaymentsBySender("UNKNOWN")
+        assertTrue(unknownPayments.isEmpty())
+    }
+
+    @Test
+    @DisplayName("getDistinctSenders_returnsAllUniqueSenders")
+    fun getDistinctSendersReturnsAllUniqueSenders() = runBlocking {
+        val smsReceiver = SmsReceiver()
+        val processor = ConfigRepository.getPaymentProcessor()
+        smsReceiver.setPaymentProcessorForTest(processor)
+
+        smsReceiver.onReceive(
+            context,
+            buildSmsIntent("BANK-A", "Payment 100.00 USD card 1111 Store1 at 20230901 bal 500.00")
+        )
+        waitForPayments(1)
+        smsReceiver.onReceive(
+            context,
+            buildSmsIntent("BANK-B", "Payment 200.00 USD card 2222 Store2 at 20230902 bal 400.00")
+        )
+        waitForPayments(2)
+        smsReceiver.onReceive(
+            context,
+            buildSmsIntent("BANK-A", "Payment 300.00 USD card 1111 Store3 at 20230903 bal 300.00")
+        )
+        waitForPayments(3)
+
+        val senders = paymentRepository.getDistinctSenderAddresses()
+
+        assertEquals(2, senders.size)
+        assertTrue(senders.contains("BANK-A"))
+        assertTrue(senders.contains("BANK-B"))
+    }
+
+    @Test
+    @DisplayName("paymentsStoreSenderAddressCorrectly")
+    fun paymentsStoreSenderAddressCorrectly() = runBlocking {
+        val smsReceiver = SmsReceiver()
+        val processor = ConfigRepository.getPaymentProcessor()
+        smsReceiver.setPaymentProcessorForTest(processor)
+
+        smsReceiver.onReceive(
+            context,
+            buildSmsIntent("BANK-A", "Payment 100.00 USD card 1111 Store at 20230901 bal 500.00")
+        )
+
+        val payments = waitForPayments(1)
+        assertEquals(1, payments.size)
+        assertEquals("BANK-A", payments[0].senderAddress)
+    }
+
+    // ── Task 2.1: Merchant filter (in-memory filterPayments against real DB data) ─────
+
+    private fun makePaymentWithMerchant(merchant: String?) = Payment(
+        id = null,
+        amount = 10.0,
+        currency = "GEL",
+        card = null,
+        merchant = merchant,
+        timestamp = "01/03/2026 10:00:00",
+        balance = null,
+        categoryId = null,
+        senderAddress = "BANK-A",
+        ruleId = null
+    )
+
+    @Test
+    @DisplayName("Task21 merchantFilter_returnsOnlyMatchingPayments")
+    fun task21MerchantFilterReturnsOnlyMatchingPayments() = runBlocking {
+        paymentRepository.savePayment(makePaymentWithMerchant("Carrefour City"), "sms-carrefour-city", "BANK-A")
+        paymentRepository.savePayment(makePaymentWithMerchant("Bolt Food"), "sms-bolt-food", "BANK-A")
+        paymentRepository.savePayment(makePaymentWithMerchant("bolt"), "sms-bolt", "BANK-A")
+
+        val all = paymentRepository.getAllPayments()
+        val result = filterPayments(all, null, null, null, null, merchantQuery = "bolt")
+
+        assertEquals(2, result.size, "Should match 'Bolt Food' and 'bolt'")
+        assertTrue(result.all { it.merchant?.contains("bolt", ignoreCase = true) == true })
+    }
+
+    @Test
+    @DisplayName("Task21 merchantFilter_blankQuery_returnsAll")
+    fun task21MerchantFilterBlankQueryReturnsAll() = runBlocking {
+        paymentRepository.savePayment(makePaymentWithMerchant("Carrefour"), "sms-carrefour", "BANK-A")
+        paymentRepository.savePayment(makePaymentWithMerchant("Bolt"), "sms-bolt", "BANK-A")
+
+        val all = paymentRepository.getAllPayments()
+        val resultNull = filterPayments(all, null, null, null, null, merchantQuery = null)
+        val resultBlank = filterPayments(all, null, null, null, null, merchantQuery = "  ")
+
+        assertEquals(all.size, resultNull.size, "null query should return all")
+        assertEquals(all.size, resultBlank.size, "blank query should return all")
+    }
+
+    @Test
+    @DisplayName("Task21 merchantFilter_noMatch_returnsEmpty")
+    fun task21MerchantFilterNoMatchReturnsEmpty() = runBlocking {
+        paymentRepository.savePayment(makePaymentWithMerchant("Carrefour"), "sms-carrefour", "BANK-A")
+        paymentRepository.savePayment(makePaymentWithMerchant("Bolt"), "sms-bolt", "BANK-A")
+
+        val all = paymentRepository.getAllPayments()
+        val result = filterPayments(all, null, null, null, null, merchantQuery = "xyz_no_match")
+
+        assertEquals(0, result.size, "Non-matching query should return empty list")
+    }
+}

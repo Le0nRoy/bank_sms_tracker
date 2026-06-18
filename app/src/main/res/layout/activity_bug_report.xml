@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/bug_description_label"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp" />
+
+            <EditText
+                android:id="@+id/etBugDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minLines="4"
+                android:maxLines="8"
+                android:gravity="top|start"
+                android:hint="@string/bug_description_hint"
+                android:inputType="textMultiLine"
+                android:background="@drawable/edit_text_themed"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint" />
+
+            <CheckBox
+                android:id="@+id/cbIncludeConfig"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/include_config"
+                android:checked="true"
+                android:layout_marginTop="16dp" />
+
+            <CheckBox
+                android:id="@+id/cbIncludeDeviceInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/include_device_info"
+                android:checked="true" />
+
+            <CheckBox
+                android:id="@+id/cbIncludePaymentStats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/include_payment_stats"
+                android:checked="true" />
+
+            <CheckBox
+                android:id="@+id/cbIncludeFilterState"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/include_filter_state"
+                android:checked="false" />
+
+            <CheckBox
+                android:id="@+id/cbAttachPaymentsData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/attach_payments_data"
+                android:checked="false" />
+
+            <Button
+                android:id="@+id/btnPreviewReport"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/preview_report"
+                android:layout_marginTop="16dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/report_preview_label"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tvReportPreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textSize="11sp"
+                android:textColor="@color/text_primary"
+                android:background="@drawable/edit_text_themed"
+                android:padding="12dp"
+                android:minHeight="150dp"
+                android:gravity="top|start" />
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnSendReport"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/send_report"
+        android:layout_margin="16dp" />
+
+</LinearLayout>

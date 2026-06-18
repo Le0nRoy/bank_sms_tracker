@@ -1,0 +1,230 @@
+{
+  "senders": [
+    {
+      "name": "TBC Bank",
+      "addresses": ["TBC SMS", "TBC"],
+      "rules": [
+        {
+          "regex": "(?m)^(?<amount>\\d+(?:[.]\\d{2}))[ ]+(?<currency>[A-Z]{3})(?:\\r?\\n)(?<card>.+)(?:\\r?\\n)(?<merchant>.+?)[ ]+(?<date>\\d{2}/\\d{2}/\\d{4})[ ]+(?<time>\\d{2}:\\d{2}:\\d{2})(?:\\r?\\n)Balance:[ ]+(?<balance>\\d+(?:[.]\\d{2}))[ ]+[A-Z]{3}",
+          "description": "Card payment with balance"
+        },
+        {
+          "regex": "(?m)^(?<amount>\\d+(?:[.]\\d{2}))[ ]+(?<currency>[A-Z]{3})(?:\\r?\\n)(?<card>.+)(?:\\r?\\n)(?<merchant>TBCTPMTR)[ ]+(?<date>\\d{2}/\\d{2}/\\d{4})[ ]+(?<time>\\d{2}:\\d{2}:\\d{2})",
+          "description": "TBC public transport payment"
+        },
+        {
+          "regex": "(?m)^Payment:\\s*(?:\\r?\\n)(?<amount>\\d+(?:[.]\\d{2}))[ ]+(?<currency>[A-Z]{3})(?:\\r?\\n)(?<merchant>.+)(?:\\r?\\n)ID:\\d+(?:\\r?\\n)Creation date:[ ]+(?<date>\\d{2}/\\d{2}/\\d{4})[ ]+(?<time>\\d{2}:\\d{2}:\\d{2})",
+          "description": "Utility / online payment"
+        },
+        {
+          "regex": "(?m)^Deposit money:[ ]+(?<amount>\\d+(?:[.]\\d{2}))[ ]+(?<currency>[A-Z]{3})(?:\\r?\\n)(?<card>.+)(?:\\r?\\n)(?<merchant>.+?)[ ]+(?<date>\\d{2}/\\d{2}/\\d{4})[ ]+(?<time>\\d{2}:\\d{2}:\\d{2})(?:\\r?\\n)Balance:[ ]+(?<balance>\\d+(?:[.]\\d{2}))[ ]+[A-Z]{3}",
+          "ruleType": "INCOME",
+          "description": "Salary / incoming deposit to card"
+        },
+        {
+          "regex": "(?m)^Deposit Money:[ ]+(?<amount>\\d+(?:[.]\\d{2}))[ ]+(?<currency>[A-Z]{3})(?:\\r?\\n)(?<merchant>.+)(?:\\r?\\n)(?<date>\\d{2}/\\d{2}/\\d{4})",
+          "ruleType": "INCOME",
+          "description": "Cash deposit to account"
+        },
+        {
+          "regex": "(?m)^Money Transfer:\\s*(?:\\r?\\n)(?<amount>\\d+(?:[.]\\d{2}))[ ]+(?<currency>[A-Z]{3})(?:\\r?\\n)(?<merchant>.+)(?:\\r?\\n)(?<date>\\d{2}/\\d{2}/\\d{4})",
+          "ruleType": "INCOME",
+          "description": "Incoming money transfer"
+        },
+        {
+          "regex": "(?m)^Reversal:\\s*(?:\\r?\\n)(?<amount>\\d+(?:[.]\\d{2}))[ ]+(?<currency>[A-Z]{3})(?:\\r?\\n)(?<card>.+)(?:\\r?\\n)(?<merchant>.+)(?:\\r?\\n)(?<date>\\d{2}/\\d{2}/\\d{4})[ ]+(?<time>\\d{2}:\\d{2}:\\d{2})(?:\\r?\\n)Balance:[ ]+(?<balance>\\d+(?:[.]\\d{2}))[ ]+[A-Z]{3}",
+          "ruleType": "INCOME",
+          "description": "Payment reversal / refund"
+        },
+        {
+          "regex": "Transaction .* was declined",
+          "ruleType": "IGNORE",
+          "description": "Declined transaction"
+        },
+        {
+          "regex": "<#> By entering code you confirm transfer to someone.\nPlease, make sure you're entering it on https://tbconline.ge or in mobilebank\n\\d+\n.+",
+          "ruleType": "IGNORE",
+          "description": "OTP for money transfer"
+        },
+        {
+          "regex": "Code: \\d+\nWith the code, you can confirm a \\d+(?:[.]\\d{2}) [A-Z]{3} payment with your card [*]{3}\\d{4} at .+",
+          "ruleType": "IGNORE",
+          "description": "OTP for card payment confirmation"
+        },
+        {
+          "regex": "<#> Code:\\d+",
+          "ruleType": "IGNORE",
+          "description": "Short hash OTP code"
+        },
+        {
+          "regex": "Code: \\d+\nPlease check that you enter this code",
+          "ruleType": "IGNORE",
+          "description": "Generic OTP verification code"
+        },
+        {
+          "regex": "Conversion:",
+          "ruleType": "IGNORE",
+          "description": "Currency conversion notification"
+        },
+        {
+          "regex": "Transfer between Accounts:",
+          "ruleType": "IGNORE",
+          "description": "Internal account transfer"
+        },
+        {
+          "regex": "<#>\\sBy\\sentering\\scode\\syou\\sconfirm\\stransfer\\sto\\ssomeone.\\nPlease,\\smake\\ssure\\syou're\\sentering\\sit\\son\\shttps://tbconline.ge\\sor\\sin\\smobilebank\\n\\d+\\n.+",
+          "ruleType": "IGNORE",
+          "description": "OTP for money transfer (whitespace-escaped variant)"
+        },
+        {
+          "regex": "<#>\\sBy\\sentering\\scode\\syou\\sconfirm\\stransfer\\sto\\ssomeone.Please,\\smake\\ssure\\syou're\\sentering\\sit\\son\\shttps://tbconline.ge\\sor\\sin\\smobilebank\\d+.+",
+          "ruleType": "IGNORE",
+          "description": "OTP for money transfer (single-line variant)"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "name": "Marketplaces",
+      "merchants": ["Temu"]
+    },
+    {
+      "name": "Bars & Restaurants",
+      "merchants": [
+        "MEQANIKA",
+        "dodo pizza modzravi",
+        "COFFEE LAB LTD",
+        "SOMA NOODLE BAE RAMEN",
+        "Tegi LTD",
+        "SARAMENE ONIMUSHA",
+        "kfc 006 saburtalo",
+        "SANTINO",
+        "IC NEO 12",
+        "COFF.EE* CENTRET",
+        "KFC 001 Goodwill",
+        "LOLLY LTD",
+        "CHASHNAGIRI",
+        "DUNKIN YAZBEGI"
+      ]
+    },
+    {
+      "name": "Delivery",
+      "merchants": ["Wolt", "Vip Pay*YANDEX.DELIVER"]
+    },
+    {
+      "name": "Transport",
+      "merchants": ["Vip Pay*YANDEX.GO", "boltapp", "TBCTPMTR"]
+    },
+    {
+      "name": "Groceries",
+      "merchants": [
+        "MAGNITI",
+        "I/M GVANTSA NADARAIA",
+        "ltd bulbaland",
+        "agrohub",
+        "ltd zgva ludi",
+        "I/M NANA TIBUA",
+        "carrefour(axs)",
+        "p/e shorena meladze",
+        "FOODMART",
+        "NIKORA",
+        "IOLI",
+        "SPS SAVI 73",
+        "SMART RETAIL",
+        "S Market (Urbnisi)3",
+        "NINOS TAMBAQO LLC"
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "merchants": [
+        "GOOGLE *YouTube",
+        "MICROSOFT*MICROSOFT 36",
+        "Patreon* Membership",
+        "FOR SUPPORT OVD-INFO",
+        "CLAUDE.AI SUBSCRIPTION",
+        "GOOGLE *Telegram",
+        "ILOVEPDF.COM",
+        "Google Telegram"
+      ]
+    },
+    {
+      "name": "Households",
+      "merchants": ["Supermaket FIX Price", "clean house jsc", "DRY CLEAN LTD", "Domino"]
+    },
+    {
+      "name": "Pharmacy",
+      "merchants": ["PSP 73", "PSP 142", "PHARMADEPOT 315", "PSP 67"]
+    },
+    {
+      "name": "Pets",
+      "merchants": ["zoolife ltd", "VETLIFE LLC", "p/e londa kiladze", "aqua terra"]
+    },
+    {
+      "name": "Withdrawal",
+      "merchants": [
+        "ATM TBC-248 (Gamsakhurdia 6",
+        "ATM TBC-1383 (Vaja-25)",
+        "ATM TBC-310 (Saburtalo 32/2",
+        "ATM TBC-247 (Gori 2)",
+        "ATM TBC-1318 (Gori Sokar)"
+      ]
+    },
+    {
+      "name": "Leisure & Hobbies",
+      "merchants": [
+        "CALIBER",
+        "SHOW TECHNICS CENTERE",
+        "Leader LLC",
+        "TKT.GE",
+        "bakuraini salaro nodo",
+        "HOTEL VELI",
+        "POTALONU",
+        "HOOKAH STORE"
+      ]
+    },
+    {
+      "name": "Utilities",
+      "merchants": [
+        "GWP",
+        "TELMICO",
+        "MAG GELINK",
+        "Dasuftaveba",
+        "SELF-EMPLOYMENT.MOH.GO",
+        "Tbilisi Energy"
+      ]
+    },
+    {
+      "name": "Technics",
+      "merchants": [
+        "PCShop.ge (Saburtalo)",
+        "zoommer (pekini)",
+        "ELIT ELECTRONICS",
+        "LTD ADA",
+        "Zoommer (siti moli)"
+      ]
+    },
+    {
+      "name": "Medicine",
+      "merchants": [
+        "Dentsblanches ltd",
+        "JSC EVEX TCA Tsintsadz",
+        "SS INSURANCE COMP. IME",
+        "ALTRA VITA LTD"
+      ]
+    },
+    {
+      "name": "Games",
+      "merchants": ["STEAMGAMES.COM 4259522"]
+    },
+    {
+      "name": "Presents",
+      "merchants": ["Fw-market*Flowwow 3 No", "PSHC 1"]
+    },
+    {
+      "name": "Clothes",
+      "merchants": ["colins (saburtalo city", "SHOP NIKE 1"]
+    }
+  ]
+}

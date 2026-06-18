@@ -1,0 +1,373 @@
+<resources>
+    <string name="app_name">Трекер банковских SMS</string>
+    <string name="navigation_drawer_open">Открыть навигацию</string>
+    <string name="navigation_drawer_close">Закрыть навигацию</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Заголовок навигации</string>
+    <string name="action_settings">Настройки</string>
+
+    <string name="merchant_hint">Продавец %1$d</string>
+    <string name="menu_home">Главная</string>
+    <string name="menu_gallery">Галерея</string>
+    <string name="menu_slideshow">Слайд-шоу</string>
+    <string name="sender_name_hint">Имя отправителя</string>
+    <string name="sender_addresses_title">Адреса</string>
+    <string name="add_address">Добавить адрес</string>
+    <string name="sender_address_hint">Адрес %1$d</string>
+    <string name="sender_rules_title">Regex правила</string>
+    <string name="add_rule">Добавить правило</string>
+    <string name="sender_rule_hint">Правило %1$d</string>
+    <string name="export_config">Экспорт конфигурации</string>
+    <string name="share_config_title">Поделиться конфигурацией</string>
+    <string name="config_export_success">Конфигурация экспортирована в %1$s</string>
+    <string name="config_export_failed">Ошибка экспорта конфигурации: %1$s</string>
+    <string name="import_config">Импорт конфигурации</string>
+    <string name="config_import_success">%1$s</string>
+    <string name="config_import_failed">Ошибка импорта конфигурации: %1$s</string>
+    <string name="payments">Платежи</string>
+    <string name="categories">Категории</string>
+    <string name="senders">Отправители</string>
+    <string name="test_rules">Тест правил</string>
+    <string name="process_sms_history">Обработать историю SMS</string>
+    <string name="no_payments">Платежей пока нет</string>
+    <string name="filter_by_category">Фильтр по категории</string>
+    <string name="filter_by_sender">Фильтр по отправителю</string>
+    <string name="all_categories">Все категории</string>
+    <string name="all_senders">Все отправители</string>
+    <string name="export_csv">Экспорт CSV</string>
+    <string name="csv_export_success">Платежи экспортированы в %1$s</string>
+    <string name="csv_export_failed">Ошибка экспорта платежей: %1$s</string>
+    <string name="start_date">Начальная дата</string>
+    <string name="end_date">Конечная дата</string>
+    <string name="clear">Очистить</string>
+    <string name="search_merchant_hint">Поиск по продавцу…</string>
+    <string name="recategorize_payments">Переопределить категории</string>
+    <string name="recategorize_success">Переопределено %1$d платежей</string>
+    <string name="recategorize_failed">Ошибка переопределения: %1$s</string>
+    <string name="regex_builder">Конструктор Regex</string>
+    <string name="regex_builder_title">Конструктор Regex</string>
+    <string name="sample_sms_label">Пример SMS сообщения</string>
+    <string name="sample_sms_hint">Вставьте пример SMS сообщения…</string>
+    <string name="regex_pattern_label">Regex шаблон</string>
+    <string name="regex_pattern_hint">Введите regex шаблон…</string>
+    <string name="regex_groups_help">Именованные группы: (?&lt;amount&gt;…) (?&lt;currency&gt;…) (?&lt;card&gt;…) (?&lt;merchant&gt;…) (?&lt;date&gt;…) (?&lt;time&gt;…) (?&lt;balance&gt;…)</string>
+    <string name="test_regex">Тестировать шаблон</string>
+    <string name="results_label">Результаты</string>
+    <string name="error_empty_sms">Пожалуйста, введите SMS сообщение</string>
+    <string name="error_empty_pattern">Пожалуйста, введите regex шаблон</string>
+    <string name="save_to_sender_label">Сохранить для отправителя</string>
+    <string name="select_sender_hint">Выберите отправителя…</string>
+    <string name="save_regex">Сохранить Regex</string>
+    <string name="regex_saved">Regex сохранён для %1$s</string>
+    <string name="regex_save_failed">Ошибка сохранения regex: %1$s</string>
+    <string name="no_sender_selected">Сначала выберите отправителя</string>
+    <string name="no_senders_available">Нет настроенных отправителей. Сначала добавьте отправителя.</string>
+    <string name="bug_report">Отчёт об ошибке</string>
+    <string name="bug_report_title">Отчёт об ошибке</string>
+    <string name="bug_description_label">Опишите проблему</string>
+    <string name="bug_description_hint">Что произошло? Что вы ожидали?</string>
+    <string name="include_config">Включить сводку конфигурации</string>
+    <string name="include_device_info">Включить информацию об устройстве</string>
+    <string name="include_payment_stats">Включить статистику платежей</string>
+    <string name="preview_report">Предпросмотр отчёта</string>
+    <string name="report_preview_label">Предпросмотр отчёта</string>
+    <string name="send_report">Отправить отчёт</string>
+    <string name="generate_preview_first">Сначала сформируйте предпросмотр</string>
+    <string name="share_report_title">Поделиться отчётом об ошибке</string>
+    <string name="select_from_inbox">Выбрать из входящих SMS</string>
+    <string name="select_sms_message">Выберите SMS сообщение</string>
+    <string name="no_sms_found">SMS сообщения не найдены</string>
+    <string name="no_sms_from_sender">SMS от %1$s не найдены</string>
+    <string name="sms_permission_denied">Для выбора сообщений требуется разрешение на SMS</string>
+    <string name="cancel">Отмена</string>
+    <string name="existing_patterns_label">Редактировать существующий шаблон</string>
+    <string name="new_pattern_hint">Создать новый шаблон…</string>
+    <string name="duplicate_sender_name">Отправитель с таким именем уже существует</string>
+    <string name="duplicate_category_name">Категория с таким именем уже существует</string>
+    <string name="duplicate_sender_address">Этот адрес уже используется другим отправителем</string>
+
+    <!-- Phase 5: UI improvements -->
+    <string name="loading">Загрузка…</string>
+    <string name="no_categories">Категорий пока нет. Нажмите + чтобы добавить.</string>
+    <string name="no_senders">Отправителей пока нет. Нажмите + чтобы добавить.</string>
+    <string name="confirm">Подтвердить</string>
+    <string name="recategorize_confirm_title">Переопределить категории</string>
+    <string name="recategorize_confirm_message">Это переопределит категории всех платежей на основе текущих правил. Это действие нельзя отменить.\n\nПродолжить?</string>
+    <string name="save_regex_confirm_title">Сохранить правило Regex</string>
+    <string name="save_regex_confirm_message">Добавить этот regex шаблон для %1$s?\n\nШаблон: %2$s</string>
+    <string name="processing">Обработка…</string>
+
+    <!-- Error states -->
+    <string name="error_loading_categories">Ошибка загрузки категорий</string>
+    <string name="error_loading_senders">Ошибка загрузки отправителей</string>
+    <string name="error_loading_payments">Ошибка загрузки платежей</string>
+    <string name="error_generic">Что-то пошло не так</string>
+    <string name="retry">Повторить</string>
+
+    <!-- Undo functionality -->
+    <string name="undo">Отменить</string>
+    <string name="category_deleted">Категория удалена</string>
+    <string name="sender_deleted">Отправитель удалён</string>
+    <string name="payment_deleted">Платёж удалён</string>
+
+    <!-- Main menu groups -->
+    <string name="menu_group_data">Управление данными</string>
+    <string name="menu_group_tools">Инструменты</string>
+    <string name="menu_group_data_reports">Данные и отчёты</string>
+    <string name="menu_group_settings">Настройки</string>
+
+    <!-- Spending report -->
+    <string name="spending_report">Отчёт о расходах</string>
+    <string name="total_spending">Итого: %1$s %2$s</string>
+    <string name="category_spending">%1$s: %2$s %3$s</string>
+    <string name="no_spending_data">Нет данных о расходах за выбранный период</string>
+    <string name="date_range_format">%1$s - %2$s</string>
+    <string name="select_date_range">Выбрать период</string>
+    <string name="all_time">За всё время</string>
+    <string name="this_month">Этот месяц</string>
+    <string name="last_month">Прошлый месяц</string>
+    <string name="custom_range">Произвольный период</string>
+
+    <!-- Apply Rules -->
+    <string name="process_sms">Обработать SMS</string>
+    <string name="open_regex_builder">Открыть конструктор Regex</string>
+    <string name="error_parsing">Ошибка обработки сообщения</string>
+    <string name="success_indicator">✅</string>
+    <string name="error_indicator">❌</string>
+    <string name="processing_results">Результаты обработки</string>
+    <string name="messages_processed">Обработано сообщений: %1$d</string>
+    <string name="messages_failed">Ошибок: %1$d</string>
+
+    <!-- Payment Details -->
+    <string name="payment_details">Детали платежа</string>
+    <string name="detail_category">Категория:</string>
+    <string name="detail_card">Карта:</string>
+    <string name="detail_date">Дата:</string>
+    <string name="detail_balance">Баланс:</string>
+    <string name="detail_sender">Отправитель:</string>
+    <string name="add_merchant_to_category">Добавить продавца в категорию</string>
+    <string name="add_to_category">Добавить в категорию</string>
+    <string name="create_new_category">Создать новую категорию</string>
+    <string name="select_category_hint">Выберите категорию…</string>
+    <string name="merchant_added_to_category">%1$s добавлен в %2$s</string>
+    <string name="category_created">Создана категория: %1$s</string>
+    <string name="enter_category_name">Введите название категории</string>
+
+    <!-- Ignore Rules -->
+    <string name="ignore_rules">Правила игнорирования</string>
+    <string name="ignore_rules_description">Сообщения, соответствующие этим шаблонам, будут игнорироваться при обработке. Используйте regex для фильтрации спама.</string>
+    <string name="no_ignore_rules">Нет правил игнорирования. Нажмите + чтобы добавить.</string>
+    <string name="add_ignore_rule">Добавить правило</string>
+    <string name="edit_ignore_rule">Редактировать правило</string>
+    <string name="delete_ignore_rule">Удалить правило</string>
+    <string name="delete_ignore_rule_confirm">Вы уверены, что хотите удалить это правило?</string>
+    <string name="ignore_rule_added">Правило добавлено</string>
+    <string name="ignore_rule_deleted">Правило удалено</string>
+    <string name="ignore_pattern_label">Шаблон (Regex)</string>
+    <string name="ignore_pattern_hint">напр., OTP|верификация|запрос баланса</string>
+    <string name="ignore_pattern_help">Используйте | для разделения шаблонов. Используйте .* для любого текста.</string>
+    <string name="description_label">Описание (необязательно)</string>
+    <string name="description_hint">напр., Игнорировать OTP сообщения</string>
+    <string name="invalid_regex_pattern">Неверный regex шаблон: %1$s</string>
+    <string name="delete">Удалить</string>
+    <string name="message_ignored">Сообщение проигнорировано правилом</string>
+
+    <!-- Delete confirmations -->
+    <string name="delete_category_confirm_title">Удалить категорию</string>
+    <string name="delete_category_confirm_message">Вы уверены, что хотите удалить эту категорию и всех её продавцов?</string>
+    <string name="delete_sender_confirm_title">Удалить отправителя</string>
+    <string name="delete_sender_confirm_message">Вы уверены, что хотите удалить этого отправителя, все его адреса и правила?</string>
+
+    <!-- Ignore rules with sender -->
+    <string name="ignore_rules_filter_all">Все отправители</string>
+    <string name="select_sender_for_rule">Выберите отправителя для правила</string>
+    <string name="sender_required">Сначала выберите отправителя</string>
+
+    <!-- Regex builder rule type -->
+    <string name="rule_type_label">Тип правила</string>
+    <string name="rule_type_process">Правило обработки (разбор платежей)</string>
+    <string name="rule_type_ignore">Правило игнорирования (пропуск сообщений)</string>
+    <string name="rule_type_payment">Платёж</string>
+    <string name="rule_type_ignore_short">Игнорировать</string>
+    <string name="rule_type_income">Доход</string>
+    <string name="ignore_rule_saved">Правило игнорирования сохранено для %1$s</string>
+    <string name="rule_saved">Правило сохранено для %1$s</string>
+
+    <!-- SMS Export -->
+    <string name="sms_export">Экспорт SMS</string>
+    <string name="sms_export_description">Экспорт SMS сообщений от настроенных отправителей. Выберите период и формат экспорта.</string>
+    <string name="export_format_label">Формат экспорта</string>
+    <string name="format_json">JSON</string>
+    <string name="format_csv">CSV</string>
+    <string name="messages_to_export">Сообщений для экспорта: %1$d</string>
+    <string name="export_sms">Экспортировать SMS</string>
+    <string name="sms_export_success">SMS экспортированы в %1$s</string>
+    <string name="sms_export_failed">Ошибка экспорта SMS: %1$s</string>
+    <string name="no_messages_to_export">Сообщений по фильтрам не найдено</string>
+    <string name="share_sms_export">Поделиться экспортом SMS</string>
+
+    <!-- Income tracking -->
+    <string name="incomes">Доходы</string>
+    <string name="no_incomes">Доходов пока нет</string>
+    <string name="income_details">Детали дохода</string>
+    <string name="activity_incomes_title">Доходы</string>
+    <string name="income_total_label">Итого: %1$s %2$s</string>
+    <string name="income_no_entries">Нет записей о доходах</string>
+    <string name="btn_incomes_label">Доходы</string>
+    <string name="income_unknown_source">Неизвестный источник</string>
+
+    <!-- Theme -->
+    <string name="settings">Настройки</string>
+    <string name="dark_mode">Тёмная тема</string>
+    <string name="light_mode">Светлая тема</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme">Тема</string>
+
+    <!-- Language -->
+    <string name="language">Язык</string>
+    <string name="language_system">Системный</string>
+    <string name="language_english">Английский</string>
+    <string name="language_russian">Русский</string>
+
+    <!-- Regex Builder Presets -->
+    <string name="regex_presets_label">Вставить шаблон</string>
+    <string name="preset_amount">Сумма</string>
+    <string name="preset_currency">Валюта</string>
+    <string name="preset_card">Карта</string>
+    <string name="preset_merchant">Продавец</string>
+    <string name="preset_date">Дата</string>
+    <string name="preset_time">Время</string>
+    <string name="preset_balance">Баланс</string>
+
+    <!-- Unregistered sender -->
+    <string name="unregistered_sender_title">Незарегистрированный отправитель</string>
+    <string name="unregistered_sender_message">SMS отправитель \"%1$s\" не зарегистрирован в приложении. Хотите зарегистрировать его?</string>
+    <string name="register_sender">Зарегистрировать</string>
+    <string name="skip">Пропустить</string>
+
+    <!-- Extracted hardcoded strings -->
+    <string name="unknown">Неизвестно</string>
+    <string name="uncategorized">Без категории</string>
+    <string name="uncategorized_only">Без категории</string>
+    <string name="error_with_message">Ошибка: %1$s</string>
+    <string name="share_csv">Поделиться CSV</string>
+    <string name="payments_summary">%1$d платежей - Итого: %2$s %3$s</string>
+    <string name="by_category">По категориям:</string>
+    <string name="card_display">Карта: ****%1$s</string>
+    <string name="unknown_error">Неизвестная ошибка</string>
+    <string name="summary_processed">Итого: %1$d обработано, %2$d ошибок, %3$d проигнорировано</string>
+    <string name="category_display">Категория: %1$s</string>
+    <string name="from_sender">От: %1$s</string>
+    <string name="sms_permission_denied_apply">Нет разрешения на SMS. Невозможно применить правила.</string>
+    <string name="sms_permission_denied_check">Нет разрешения на SMS. Невозможно проверить отправителей.</string>
+    <string name="no_sms_in_range">SMS от настроенных отправителей в выбранном периоде не найдены.</string>
+
+    <!-- Bug Report checkboxes -->
+    <string name="include_filter_state">Добавить активный фильтр платежей</string>
+    <string name="filter_state_header">\n\nФИЛЬТР ПЛАТЕЖЕЙ:</string>
+    <string name="attach_payments_data">Прикрепить данные платежей (JSON)</string>
+
+    <!-- Bug Report strings -->
+    <string name="report_header">ТРЕКЕР БАНКОВСКИХ SMS - ОТЧЁТ ОБ ОШИБКЕ</string>
+    <string name="user_description_header">\n\nОПИСАНИЕ ПОЛЬЗОВАТЕЛЯ:</string>
+    <string name="no_description_provided">(Описание не предоставлено)</string>
+    <string name="device_info_header">\n\nИНФОРМАЦИЯ ОБ УСТРОЙСТВЕ:</string>
+    <string name="app_version_label">Версия приложения: %1$s (%2$d)</string>
+    <string name="build_type_label">Тип сборки: %1$s</string>
+    <string name="device_model_label">Устройство: %1$s %2$s</string>
+    <string name="android_version_label">Уровень API Android: %1$d</string>
+    <string name="product_label">Продукт: %1$s</string>
+    <string name="hardware_label">Оборудование: %1$s</string>
+    <string name="config_summary_header">\n\nСВОДКА КОНФИГУРАЦИИ:</string>
+    <string name="senders_count_label">Отправителей: %1$d</string>
+    <string name="enabled_status">включён</string>
+    <string name="disabled_status">отключён</string>
+    <string name="addresses_count">Адресов: %1$d</string>
+    <string name="rules_count">Правил: %1$d</string>
+    <string name="categories_count_label">Категорий: %1$d</string>
+    <string name="merchants_count">Продавцов: %1$d</string>
+    <string name="error_loading_config">Ошибка загрузки конфигурации: %1$s</string>
+    <string name="payment_stats_header">\n\nСТАТИСТИКА ПЛАТЕЖЕЙ:</string>
+    <string name="total_payments_count">Всего платежей: %1$d</string>
+    <string name="categorized_count">С категорией: %1$d</string>
+    <string name="uncategorized_count">Без категории: %1$d</string>
+    <string name="currencies_label">Валюты: %1$s</string>
+    <string name="totals_label">Итого:</string>
+    <string name="currency_total">%1$s: %2$s</string>
+    <string name="end_of_report">\n\nКонец отчёта</string>
+
+    <!-- Check Senders strings -->
+    <string name="senders_check_title">Результаты проверки SMS отправителей:\n\n</string>
+    <string name="senders_with_rules_found">Найдены отправители с правилами:\n</string>
+    <string name="sender_messages_count">%1$s: %2$d сообщений\n</string>
+    <string name="no_senders_with_rules_found">Отправители с правилами не найдены в хранилище SMS.\n\n</string>
+    <string name="all_sms_senders_without_rules">Все SMS отправители (без правил):\n</string>
+
+    <!-- SMS Export strings -->
+    <string name="csv_header_sms">Адрес,Дата,Тип,Текст</string>
+    <string name="csv_header_payments">Сумма,Валюта,Карта,Продавец,Время,Баланс,Категория,Отправитель</string>
+    <string name="sms_type_inbox">Входящие</string>
+    <string name="sms_type_sent">Отправленные</string>
+    <string name="sms_type_draft">Черновик</string>
+    <string name="sms_type_outbox">Исходящие</string>
+    <string name="sms_type_failed">Не отправлено</string>
+    <string name="sms_type_queued">В очереди</string>
+
+    <!-- Regex Builder result strings -->
+    <string name="match_found">СОВПАДЕНИЕ НАЙДЕНО</string>
+    <string name="no_match">НЕТ СОВПАДЕНИЙ</string>
+    <string name="regex_error">ОШИБКА REGEX</string>
+    <string name="full_match_label">Полное совпадение:</string>
+    <string name="captured_groups_label">Захваченные группы:</string>
+    <string name="group_label">Группа %1$d (%2$s):</string>
+    <string name="payment_preview_label">Предпросмотр платежа:</string>
+    <string name="no_captured_groups">Нет захваченных групп.</string>
+    <string name="capture_hint">Используйте скобки () для захвата групп.</string>
+    <string name="pattern_no_match">Шаблон не совпал с SMS.</string>
+    <string name="regex_tips">Советы:</string>
+    <string name="tip_typos">- Проверьте опечатки в шаблоне</string>
+    <string name="tip_wildcard">- Используйте .* для любых символов</string>
+    <string name="tip_digits">- Используйте \\d+ для цифр</string>
+    <string name="tip_escape">- Экранируйте спецсимволы: . * + ? [ ] ( ) { } | \\ ^ $</string>
+    <string name="invalid_pattern_error">Неверный regex шаблон:</string>
+    <string name="common_issues">Частые проблемы:</string>
+    <string name="issue_parentheses">- Несбалансированные скобки</string>
+    <string name="issue_special">- Неэкранированные спецсимволы</string>
+    <string name="issue_escape">- Неверные escape-последовательности</string>
+    <string name="amount_label">Сумма:</string>
+    <string name="card_label_regex">Карта:</string>
+    <string name="merchant_label">Продавец:</string>
+    <string name="timestamp_label">Время:</string>
+    <string name="balance_label">Баланс:</string>
+    <string name="not_captured">(не захвачено)</string>
+    <string name="invalid_or_missing">(неверно или отсутствует)</string>
+
+    <!-- Move merchant to category -->
+    <string name="move_to_category">Переместить в категорию</string>
+    <string name="move_merchant_dialog_title">Переместить \'%1$s\' в:</string>
+    <string name="merchant_moved">\'%1$s\' перемещён в %2$s</string>
+    <string name="no_other_categories">Нет других категорий</string>
+
+    <!-- Pattern List (Feature 4.2) -->
+    <string name="browse_patterns">Просмотр существующих шаблонов</string>
+    <string name="pattern_list_title_short">Шаблоны</string>
+    <string name="pattern_list_title">Шаблоны: %1$s (%2$s)</string>
+    <string name="no_patterns_available">Нет сохранённых шаблонов для этого отправителя и типа правила.</string>
+    <string name="load_into_builder">Загрузить в конструктор</string>
+    <string name="delete_pattern_confirm_title">Удалить шаблон</string>
+    <string name="delete_pattern_confirm_message">Вы уверены, что хотите удалить этот шаблон?</string>
+    <string name="pattern_deleted">Шаблон удалён</string>
+
+    <!-- Personal Data Agreement -->
+    <string name="terms_title">Уведомление о личных данных</string>
+    <string name="terms_message">Это приложение обрабатывает ваши банковские SMS для извлечения и хранения записей о платежах локально на вашем устройстве.\n\nВсе данные остаются на устройстве и никогда не передаются на внешние серверы или третьим лицам.\n\nНажимая «Понятно», вы подтверждаете, что SMS читаются и обрабатываются локально для обнаружения платежей.</string>
+    <string name="terms_agree">Понятно</string>
+    <string name="terms_section_title">Конфиденциальность</string>
+    <string name="view_privacy_notice">Просмотреть уведомление</string>
+
+    <!-- Regex Builder mode toggle -->
+    <string name="regex_builder_show_regex_toggle">Показать regex</string>
+    <string name="regex_builder_mode_template">Шаблон</string>
+    <string name="regex_builder_mode_regex">Regex</string>
+</resources>

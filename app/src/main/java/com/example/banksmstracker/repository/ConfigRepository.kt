@@ -1,0 +1,671 @@
+package com.example.banksmstracker.repository
+
+import android.app.Application
+import android.content.Context
+import android.net.Uri
+import androidx.core.content.FileProvider
+import androidx.room.withTransaction
+import com.example.banksmstracker.data.Category
+import com.example.banksmstracker.data.Sender
+import com.example.banksmstracker.data.SmsConfig
+import com.example.banksmstracker.database.BankSmsDatabase
+import com.example.banksmstracker.database.CategoryEntity
+import com.example.banksmstracker.database.CategoryMerchantEntity
+import com.example.banksmstracker.database.ConfigDao
+import com.example.banksmstracker.database.RuleDao
+import com.example.banksmstracker.database.RuleEntity
+import com.example.banksmstracker.database.SenderAddressEntity
+import com.example.banksmstracker.database.SenderEntity
+import com.example.banksmstracker.database.toDomainCategories
+import com.example.banksmstracker.database.toDomainSenders
+import com.example.banksmstracker.serializer.ConfigLoader
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+object ConfigRepository {
+
+    private val configMutex = Mutex()
+
+    @Volatile
+    private var _config: SmsConfig? = null
+    private lateinit var database: BankSmsDatabase
+    private lateinit var configDao: ConfigDao
+    private lateinit var ruleDao: RuleDao
+    private lateinit var paymentRepository: PaymentRepository
+
+    @Volatile
+    private var paymentProcessor: com.example.banksmstracker.processor.PaymentProcessor? = null
+
+    // PF-4: dirty flag — set to true on any mutation so that getCategories() / getSenders()
+    //        only call refreshConfigInternal() when the DB has actually changed.
+    @Volatile
+    private var configDirty = true
+
+    val config: SmsConfig
+        get() = _config ?: throw IllegalStateException("Config not initialized")
+
+    fun load(application: Application, seedIfEmpty: Boolean = true) {
+        // RC-1: entire guard + init body moved inside configMutex to prevent TOCTOU race.
+        // OC-2: switched to runBlocking(Dispatchers.IO) so DB I/O does not run on the
+        //        main-thread dispatcher and the calling thread is not blocked on a UI-thread
+        //        coroutine dispatcher.
+        runBlocking(Dispatchers.IO) {
+            configMutex.withLock {
+                if (_config != null) return@withLock
+                database = BankSmsDatabase.getInstance(application)
+                configDao = database.configDao()
+                ruleDao = database.ruleDao()
+                paymentRepository = RoomPaymentRepository(database.paymentDao())
+
+                if (seedIfEmpty && isConfigEmpty()) {
+                    seedFromAssets(application)
+                }
+                refreshConfigUnlocked()
+            }
+        }
+    }
+
+    suspend fun getCategories(): List<Category> = withContext(Dispatchers.IO) {
+        // PF-4: only refresh when something has changed since the last read.
+        if (configDirty) refreshConfigInternal()
+        config.categories.map { it.copy(merchants = it.merchants.toMutableList()) }
+    }
+
+    suspend fun getSenders(): List<Sender> = withContext(Dispatchers.IO) {
+        // PF-4: only refresh when something has changed since the last read.
+        if (configDirty) refreshConfigInternal()
+        config.senders.map { sender ->
+            sender.copy(
+                addresses = sender.addresses.toMutableList(),
+                rules = sender.rules.map { it.copy() }.toMutableList()
+            )
+        }
+    }
+
+    suspend fun addCategory(): Category = withContext(Dispatchers.IO) {
+        val id = configDao.insertCategory(CategoryEntity(name = ""))
+        configDirty = true
+        refreshConfigInternal()
+        config.categories.first { it.id == id }
+    }
+
+    suspend fun updateCategory(category: Category) = withContext(Dispatchers.IO) {
+        val categoryId = category.id ?: error("Category must have id")
+        database.withTransaction {
+            configDao.updateCategory(
+                CategoryEntity(id = categoryId, name = category.name, enabled = category.enabled)
+            )
+            configDao.deleteMerchantsForCategory(categoryId)
+            category.merchants
+                .filter { it.pattern.trim().isNotEmpty() }
+                .forEach { merchant ->
+                    configDao.insertMerchant(
+                        CategoryMerchantEntity(
+                            categoryId = categoryId,
+                            pattern = merchant.pattern.trim(),
+                            displayName = merchant.displayName,
+                            isRegex = merchant.isRegex
+                        )
+                    )
+                }
+        }
+        configDirty = true
+        refreshConfigInternal()
+        recategorizeAllPayments()
+    }
+
+    suspend fun deleteCategory(categoryId: Long) = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            configDao.deleteMerchantsForCategory(categoryId)
+            configDao.deleteCategory(CategoryEntity(id = categoryId, name = ""))
+        }
+        configDirty = true
+        refreshConfigInternal()
+    }
+
+    suspend fun addSender(): Sender = withContext(Dispatchers.IO) {
+        val senderId = configDao.insertSender(SenderEntity(name = ""))
+        configDirty = true
+        refreshConfigInternal()
+        config.senders.first { it.id == senderId }
+    }
+
+    suspend fun updateSender(sender: Sender) = withContext(Dispatchers.IO) {
+        val senderId = sender.id ?: error("Sender must have id")
+        database.withTransaction {
+            configDao.updateSender(
+                SenderEntity(id = senderId, name = sender.name, enabled = sender.enabled)
+            )
+            configDao.deleteAddressesForSender(senderId)
+            sender.addresses
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .forEach { address ->
+                    configDao.insertAddress(
+                        SenderAddressEntity(senderId = senderId, address = address)
+                    )
+                }
+            ruleDao.deleteRulesForSender(senderId)
+            sender.rules
+                .filter { it.pattern.trim().isNotEmpty() }
+                .forEach { rule ->
+                    ruleDao.insertRule(
+                        RuleEntity(
+                            senderId = senderId,
+                            pattern = rule.pattern.trim(),
+                            description = rule.description,
+                            enabled = rule.enabled,
+                            ruleType = rule.ruleType.value
+                        )
+                    )
+                }
+        }
+        configDirty = true
+        refreshConfigInternal()
+    }
+
+    suspend fun deleteSender(senderId: Long) = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            configDao.deleteAddressesForSender(senderId)
+            ruleDao.deleteRulesForSender(senderId)
+            configDao.deleteSender(SenderEntity(id = senderId, name = ""))
+        }
+        configDirty = true
+        refreshConfigInternal()
+    }
+
+    // RC-2: synchronized block prevents two threads from both seeing null and creating
+    //        two separate PaymentProcessor instances.
+    fun getPaymentProcessor(): com.example.banksmstracker.processor.PaymentProcessor = synchronized(this) {
+        paymentProcessor ?: com.example.banksmstracker.processor.PaymentProcessor(
+            senders = config.senders,
+            categories = config.categories,
+            paymentRepository = paymentRepository
+        ).also { paymentProcessor = it }
+    }
+
+    /**
+     * Validation result for duplicate checks.
+     */
+    sealed class ValidationResult {
+        object Valid : ValidationResult()
+        data class DuplicateName(val existingName: String) : ValidationResult()
+        data class DuplicateAddress(val address: String, val existingSenderName: String) : ValidationResult()
+    }
+
+    /**
+     * Validate sender before update - check for duplicate names and addresses.
+     */
+    suspend fun validateSender(sender: Sender): ValidationResult = withContext(Dispatchers.IO) {
+        val senderId = sender.id
+        val senderName = sender.name.trim()
+
+        // Check for duplicate name (case-insensitive)
+        if (senderName.isNotEmpty()) {
+            val duplicateName = config.senders.find { s ->
+                s.id != senderId && s.name.equals(senderName, ignoreCase = true)
+            }
+            if (duplicateName != null) {
+                return@withContext ValidationResult.DuplicateName(duplicateName.name)
+            }
+        }
+
+        // Check for duplicate addresses across senders
+        val trimmedAddresses = sender.addresses.map { it.trim().lowercase() }.filter { it.isNotEmpty() }
+        for (address in trimmedAddresses) {
+            val otherSender = config.senders.find { s ->
+                s.id != senderId && s.addresses.any { it.trim().lowercase() == address }
+            }
+            if (otherSender != null) {
+                return@withContext ValidationResult.DuplicateAddress(address, otherSender.name)
+            }
+        }
+
+        ValidationResult.Valid
+    }
+
+    /**
+     * Validate category before update - check for duplicate names.
+     */
+    suspend fun validateCategory(category: Category): ValidationResult = withContext(Dispatchers.IO) {
+        val categoryId = category.id
+        val categoryName = category.name.trim()
+
+        // Check for duplicate name (case-insensitive)
+        if (categoryName.isNotEmpty()) {
+            val duplicateName = config.categories.find { c ->
+                c.id != categoryId && c.name.equals(categoryName, ignoreCase = true)
+            }
+            if (duplicateName != null) {
+                return@withContext ValidationResult.DuplicateName(duplicateName.name)
+            }
+        }
+
+        ValidationResult.Valid
+    }
+
+    suspend fun exportConfigJson(pretty: Boolean = true): String = withContext(Dispatchers.IO) {
+        refreshConfigInternal()
+        val json = Json {
+            ignoreUnknownKeys = true
+            prettyPrint = pretty
+        }
+        json.encodeToString(config)
+    }
+
+    suspend fun shareConfigFile(context: Context, fileName: String = "sms_config.json"): Pair<File, Uri> {
+        val json = exportConfigJson()
+        val file = withContext(Dispatchers.IO) {
+            // NEW-10: register for deletion on JVM exit so the cache file does not persist
+            //         indefinitely across app process restarts.
+            File(context.cacheDir, fileName).also {
+                it.deleteOnExit()
+                it.writeText(json)
+            }
+        }
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+        return file to uri
+    }
+
+    /**
+     * Import configuration from JSON string and merge with existing config.
+     * New senders/categories are added. Existing ones (matched by name) have their
+     * addresses/rules/merchants merged.
+     */
+    suspend fun importConfig(jsonString: String): ImportResult = withContext(Dispatchers.IO) {
+        try {
+            refreshConfigInternal()
+            val importedConfig = ConfigLoader.load(jsonString)
+            mergeConfig(importedConfig)
+        } catch (e: SerializationException) {
+            ImportResult.Error("Failed to parse config: ${e.message}")
+        } catch (e: Exception) {
+            ImportResult.Error("Import failed: ${e.message}")
+        }
+    }
+
+    /**
+     * Import configuration from a file URI.
+     */
+    suspend fun importConfigFromUri(context: Context, uri: Uri): ImportResult = withContext(Dispatchers.IO) {
+        try {
+            val jsonString = context.contentResolver.openInputStream(uri)?.use {
+                it.bufferedReader().readText()
+            } ?: return@withContext ImportResult.Error("Could not read file")
+            importConfig(jsonString)
+        } catch (e: Exception) {
+            ImportResult.Error("Failed to read file: ${e.message}")
+        }
+    }
+
+    private suspend fun mergeConfig(importedConfig: SmsConfig): ImportResult {
+        var sendersAdded = 0
+        var sendersMerged = 0
+        var categoriesAdded = 0
+        var categoriesMerged = 0
+
+        database.withTransaction {
+            // Merge senders
+            for (importedSender in importedConfig.senders) {
+                val existingSender = config.senders.find {
+                    it.name.equals(importedSender.name, ignoreCase = true)
+                }
+
+                if (existingSender != null) {
+                    // Merge with existing sender
+                    val mergedAddresses = (existingSender.addresses + importedSender.addresses)
+                        .map { it.trim().lowercase() }
+                        .distinct()
+                        .toMutableList()
+
+                    val existingPatterns = existingSender.rules.map { it.pattern.trim() }.toSet()
+                    val newRules = importedSender.rules.filter {
+                        it.pattern.trim() !in existingPatterns
+                    }
+                    val mergedRules = (existingSender.rules + newRules).toMutableList()
+
+                    val mergedSender = existingSender.copy(
+                        addresses = mergedAddresses,
+                        rules = mergedRules
+                    )
+                    updateSenderInternal(mergedSender)
+                    sendersMerged++
+                } else {
+                    // Add new sender
+                    val senderId = configDao.insertSender(
+                        SenderEntity(name = importedSender.name, enabled = importedSender.enabled)
+                    )
+                    importedSender.addresses
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
+                        .forEach { address ->
+                            configDao.insertAddress(
+                                SenderAddressEntity(senderId = senderId, address = address)
+                            )
+                        }
+                    importedSender.rules
+                        .filter { it.pattern.trim().isNotEmpty() }
+                        .forEach { rule ->
+                            ruleDao.insertRule(
+                                RuleEntity(
+                                    senderId = senderId,
+                                    pattern = rule.pattern.trim(),
+                                    description = rule.description,
+                                    enabled = rule.enabled,
+                                    ruleType = rule.ruleType.value
+                                )
+                            )
+                        }
+                    sendersAdded++
+                }
+            }
+
+            // Merge categories
+            for (importedCategory in importedConfig.categories) {
+                val existingCategory = config.categories.find {
+                    it.name.equals(importedCategory.name, ignoreCase = true)
+                }
+
+                if (existingCategory != null) {
+                    // Merge merchants: deduplicate by pattern (case-insensitive)
+                    val existingPatterns = existingCategory.merchants
+                        .map { it.pattern.trim().lowercase() }
+                        .toSet()
+                    val newMerchants = importedCategory.merchants
+                        .filter { it.pattern.trim().isNotEmpty() }
+                        .filter { it.pattern.trim().lowercase() !in existingPatterns }
+                    val mergedMerchants = (existingCategory.merchants + newMerchants).toMutableList()
+
+                    val mergedCategory = existingCategory.copy(merchants = mergedMerchants)
+                    updateCategoryInternal(mergedCategory)
+                    categoriesMerged++
+                } else {
+                    // Add new category
+                    val categoryId = configDao.insertCategory(
+                        CategoryEntity(name = importedCategory.name, enabled = importedCategory.enabled)
+                    )
+                    importedCategory.merchants
+                        .filter { it.pattern.trim().isNotEmpty() }
+                        .forEach { merchant ->
+                            configDao.insertMerchant(
+                                CategoryMerchantEntity(
+                                    categoryId = categoryId,
+                                    pattern = merchant.pattern.trim(),
+                                    displayName = merchant.displayName,
+                                    isRegex = merchant.isRegex
+                                )
+                            )
+                        }
+                    categoriesAdded++
+                }
+            }
+        }
+
+        configDirty = true
+        refreshConfigInternal()
+
+        return ImportResult.Success(
+            sendersAdded = sendersAdded,
+            sendersMerged = sendersMerged,
+            categoriesAdded = categoriesAdded,
+            categoriesMerged = categoriesMerged
+        )
+    }
+
+    private suspend fun updateSenderInternal(sender: Sender) {
+        val senderId = sender.id ?: return
+        configDao.updateSender(
+            SenderEntity(id = senderId, name = sender.name, enabled = sender.enabled)
+        )
+        configDao.deleteAddressesForSender(senderId)
+        sender.addresses
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .forEach { address ->
+                configDao.insertAddress(
+                    SenderAddressEntity(senderId = senderId, address = address)
+                )
+            }
+        ruleDao.deleteRulesForSender(senderId)
+        sender.rules
+            .filter { it.pattern.trim().isNotEmpty() }
+            .forEach { rule ->
+                ruleDao.insertRule(
+                    RuleEntity(
+                        senderId = senderId,
+                        pattern = rule.pattern.trim(),
+                        description = rule.description,
+                        enabled = rule.enabled,
+                        ruleType = rule.ruleType.value
+                    )
+                )
+            }
+    }
+
+    private suspend fun updateCategoryInternal(category: Category) {
+        val categoryId = category.id ?: return
+        configDao.updateCategory(
+            CategoryEntity(id = categoryId, name = category.name, enabled = category.enabled)
+        )
+        configDao.deleteMerchantsForCategory(categoryId)
+        category.merchants
+            .filter { it.pattern.trim().isNotEmpty() }
+            .forEach { merchant ->
+                configDao.insertMerchant(
+                    CategoryMerchantEntity(
+                        categoryId = categoryId,
+                        pattern = merchant.pattern.trim(),
+                        displayName = merchant.displayName,
+                        isRegex = merchant.isRegex
+                    )
+                )
+            }
+    }
+
+    // NEW-3: body extracted so load() (which already holds configMutex) can call this
+    //        without attempting a non-reentrant re-acquisition of the mutex.
+    private suspend fun refreshConfigUnlocked() = withContext(Dispatchers.IO) {
+        val categories = configDao.getCategories().toDomainCategories()
+        val senders = configDao.getSenders().toDomainSenders()
+        _config = SmsConfig(
+            senders = senders.toMutableList(),
+            categories = categories.toMutableList()
+        )
+        paymentProcessor = com.example.banksmstracker.processor.PaymentProcessor(
+            senders = config.senders,
+            categories = config.categories,
+            paymentRepository = paymentRepository
+        )
+        // PF-4: mark config as clean after a successful refresh.
+        configDirty = false
+    }
+
+    private suspend fun refreshConfigInternal() = configMutex.withLock { refreshConfigUnlocked() }
+
+    private suspend fun isConfigEmpty(): Boolean = withContext(Dispatchers.IO) {
+        configDao.getCategoriesCount() == 0 && configDao.getSendersCount() == 0
+    }
+
+    private suspend fun seedFromAssets(application: Application) {
+        try {
+            val json = withContext(Dispatchers.IO) {
+                application.assets.open("default_rules.json")
+                    .bufferedReader()
+                    .use { it.readText() }
+            }
+            val parsedConfig = ConfigLoader.load(json)
+            persistConfig(parsedConfig)
+        } catch (e: FileNotFoundException) {
+            val message = "Failed to find config file"
+            android.util.Log.e("ConfigRepository", message, e)
+            throw RuntimeException(message, e)
+        } catch (e: SerializationException) {
+            val message = "Failed to deserialize config"
+            android.util.Log.e("ConfigRepository", message, e)
+            throw RuntimeException(message, e)
+        } catch (e: IOException) {
+            val message = "Failed to open config"
+            android.util.Log.e("ConfigRepository", message, e)
+            throw RuntimeException(message, e)
+        }
+    }
+
+    private suspend fun persistConfig(config: SmsConfig) = withContext(Dispatchers.IO) {
+        database.withTransaction {
+            config.senders.forEach { sender ->
+                val senderId = configDao.insertSender(
+                    SenderEntity(name = sender.name, enabled = sender.enabled)
+                )
+                sender.addresses
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+                    .forEach { address ->
+                        configDao.insertAddress(
+                            SenderAddressEntity(senderId = senderId, address = address)
+                        )
+                    }
+                sender.rules
+                    .filter { it.pattern.trim().isNotEmpty() }
+                    .forEach { rule ->
+                        ruleDao.insertRule(
+                            RuleEntity(
+                                senderId = senderId,
+                                pattern = rule.pattern.trim(),
+                                description = rule.description,
+                                enabled = rule.enabled,
+                                ruleType = rule.ruleType.value
+                            )
+                        )
+                    }
+            }
+            config.categories.forEach { category ->
+                val categoryId = configDao.insertCategory(
+                    CategoryEntity(name = category.name, enabled = category.enabled)
+                )
+                category.merchants
+                    .filter { it.pattern.trim().isNotEmpty() }
+                    .forEach { merchant ->
+                        configDao.insertMerchant(
+                            CategoryMerchantEntity(
+                                categoryId = categoryId,
+                                pattern = merchant.pattern.trim(),
+                                displayName = merchant.displayName,
+                                isRegex = merchant.isRegex
+                            )
+                        )
+                    }
+            }
+        }
+    }
+
+    /**
+     * Shuts down the regex executor inside the current PaymentProcessor, if any.
+     * Call this from Application.onTerminate() to avoid leaking the thread pool.
+     */
+    fun shutdown() {
+        paymentProcessor?.shutdown()
+    }
+
+    internal fun reset() {
+        _config = null
+        paymentProcessor = null
+        configDirty = true
+        BankSmsDatabase.resetInstance()
+    }
+
+    /**
+     * Clear all data from the database. Used for testing.
+     * After calling this, you must call load() again to reinitialize.
+     */
+    internal suspend fun clearAllData() = withContext(Dispatchers.IO) {
+        if (::database.isInitialized) {
+            database.clearAllTables()
+        }
+        // Reset in-memory state - caller must call load() again
+        _config = null
+        paymentProcessor = null
+        configDirty = true
+    }
+
+    /**
+     * Check if config is loaded.
+     */
+    internal fun isLoaded(): Boolean = _config != null
+
+    /**
+     * Re-categorize all payments based on current category merchant mappings.
+     * Returns the number of payments that were re-categorized.
+     */
+    suspend fun recategorizeAllPayments(): Int = withContext(Dispatchers.IO) {
+        val allPayments = paymentRepository.getAllPayments()
+
+        // PF-2: instead of one UPDATE per payment (N+1), group payments by the
+        // (merchant, newCategory) pair and issue one UPDATE … WHERE merchant = ? per
+        // distinct merchant.  This reduces DB round-trips from O(payments) to
+        // O(distinct merchants that need recategorization).
+        // Key = merchant string (case-folded for grouping), Value = resolved category name.
+        val merchantToNewCategory = mutableMapOf<String, String?>()
+
+        // NEW-4: pre-compile each unique regex pattern once rather than re-compiling
+        //        inside the inner loop for every payment-merchant pair.
+        val compiledRegexCache: Map<String, Regex> = config.categories
+            .flatMap { it.merchants }
+            .filter { it.isRegex }
+            .map { it.pattern }
+            .distinct()
+            .associateWith { pattern -> Regex(pattern, setOf(RegexOption.IGNORE_CASE)) }
+
+        var count = 0
+        for (payment in allPayments) {
+            val merchant = payment.merchant ?: continue
+
+            val newCategory = merchantToNewCategory.getOrPut(merchant.lowercase()) {
+                config.categories
+                    .filter { it.enabled }
+                    .firstOrNull { cat ->
+                        cat.merchants.any { m ->
+                            if (m.isRegex) {
+                                compiledRegexCache.getValue(m.pattern).containsMatchIn(merchant)
+                            } else {
+                                m.pattern.equals(merchant, ignoreCase = true)
+                            }
+                        }
+                    }?.name
+            }
+
+            if (newCategory != payment.categoryId) {
+                count++
+            }
+        }
+
+        // Batch: one UPDATE per distinct merchant whose category changed.
+        val merchantsToUpdate = allPayments
+            .filter { it.merchant != null }
+            .groupBy { it.merchant!!.lowercase() }
+            .filter { (key, paymentsForMerchant) ->
+                val newCat = merchantToNewCategory[key]
+                paymentsForMerchant.any { it.categoryId != newCat }
+            }
+
+        for ((key, paymentsForMerchant) in merchantsToUpdate) {
+            val representativeMerchant = paymentsForMerchant.first().merchant!!
+            val newCategory = merchantToNewCategory[key]
+            paymentRepository.updateCategoryForMerchant(representativeMerchant, newCategory)
+        }
+
+        count
+    }
+}

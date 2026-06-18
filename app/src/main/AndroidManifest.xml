@@ -5,8 +5,14 @@
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
+        android:name=".BankSmsTrackerApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -18,15 +24,93 @@
         tools:targetApi="31">
         <activity
             android:name=".ui.MainActivity"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.BankSMSTracker.NoActionBar">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".ui.CategoriesActivity"
+            android:label="@string/categories"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.SendersActivity"
+            android:label="@string/senders"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.CheckSendersActivity"
+            android:label="@string/test_rules"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.ApplyRulesActivity"
+            android:label="@string/process_sms_history"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.PaymentsActivity"
+            android:label="@string/payments"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.IncomesActivity"
+            android:label="@string/activity_incomes_title"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.ExchangeRatesActivity"
+            android:label="@string/exchange_rates_title"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.RegexBuilderActivity"
+            android:label="@string/regex_builder"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.PatternListActivity"
+            android:label="@string/pattern_list_title_short"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.BugReportActivity"
+            android:label="@string/bug_report"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.IgnoreRulesActivity"
+            android:label="@string/ignore_rules"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.SmsExportActivity"
+            android:label="@string/sms_export"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:label="@string/settings"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.OnboardingActivity"
+            android:label="@string/app_name"
+            android:exported="false"
+            android:theme="@style/Theme.BankSMSTracker.NoActionBar" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <receiver
             android:name=".parser.SmsReceiver"
@@ -36,6 +120,19 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name=".service.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".service.SmsProcessingService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 
 </manifest>

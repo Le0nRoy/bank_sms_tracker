@@ -1,0 +1,180 @@
+package com.example.banksmstracker.database
+
+import androidx.room.Embedded
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.PrimaryKey
+import androidx.room.Relation
+
+@Entity(tableName = "categories")
+data class CategoryEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val enabled: Boolean = true
+)
+
+@Entity(
+    tableName = "category_merchants",
+    foreignKeys = [
+        ForeignKey(
+            entity = CategoryEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["categoryId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["categoryId"])]
+)
+data class CategoryMerchantEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val categoryId: Long,
+    val pattern: String,
+    val displayName: String? = null,
+    val isRegex: Boolean = false
+)
+
+data class CategoryWithMerchants(
+    @Embedded val category: CategoryEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "categoryId",
+        entity = CategoryMerchantEntity::class
+    )
+    val merchants: List<CategoryMerchantEntity>
+)
+
+@Entity(tableName = "senders")
+data class SenderEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val enabled: Boolean = true
+)
+
+@Entity(
+    tableName = "sender_addresses",
+    foreignKeys = [
+        ForeignKey(
+            entity = SenderEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["senderId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["senderId"])]
+)
+data class SenderAddressEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val senderId: Long,
+    val address: String
+)
+
+@Entity(
+    tableName = "rules",
+    foreignKeys = [
+        ForeignKey(
+            entity = SenderEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["senderId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["senderId"]), Index(value = ["ruleType"])]
+)
+data class RuleEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val senderId: Long,
+    val pattern: String,
+    val description: String? = null,
+    val enabled: Boolean = true,
+    val ruleType: String = "payment"
+)
+
+data class SenderWithDetails(
+    @Embedded val sender: SenderEntity,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "senderId",
+        entity = SenderAddressEntity::class
+    )
+    val addresses: List<SenderAddressEntity>,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "senderId",
+        entity = RuleEntity::class
+    )
+    val rules: List<RuleEntity>
+)
+
+@Entity(
+    tableName = "payments",
+    indices = [Index(value = ["messageHash"], unique = true)]
+)
+data class PaymentEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val amount: Double,
+    val currency: String,
+    val card: String?,
+    val merchant: String?,
+    val timestamp: String,
+    val balance: Double?,
+    val categoryName: String?,
+    val messageHash: String,
+    val senderAddress: String? = null,
+    val ruleId: Long? = null
+)
+
+@Entity(
+    tableName = "ignore_rules",
+    foreignKeys = [
+        ForeignKey(
+            entity = SenderEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["senderId"],
+            onDelete = ForeignKey.CASCADE,
+            onUpdate = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index(value = ["senderId"])]
+)
+data class IgnoreRuleEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val senderId: Long,
+    val pattern: String,
+    val description: String? = null,
+    val enabled: Boolean = true
+)
+
+@Entity(
+    tableName = "incomes",
+    indices = [Index(value = ["messageHash"], unique = true)]
+)
+data class IncomeEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val amount: Double,
+    val currency: String,
+    val source: String?,
+    val timestamp: String?,
+    val balance: Double?,
+    val messageHash: String,
+    val senderAddress: String? = null,
+    val receivedAt: Long? = null,
+    val ruleId: Long? = null
+)
+
+/**
+ * Cached exchange rate fetched from the National Bank of Georgia API.
+ * Primary key is (date, currency) so each currency has one rate per day.
+ */
+@Entity(
+    tableName = "exchange_rates",
+    primaryKeys = ["date", "currency"]
+)
+data class ExchangeRateEntity(
+    val date: String, // "yyyy-MM-dd"
+    val currency: String, // e.g. "USD"
+    val rateToGel: Double
+)

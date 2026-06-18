@@ -2,9 +2,11 @@ name: Android CI
 
 on:
   pull_request:
+    branches: [ main ]
 
 jobs:
-  test:
+  lint:
+    name: Kotlin Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -12,34 +14,75 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: actions/cache@v4
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Run ktlint check
+        run: ./gradlew ktlintCheck --no-daemon
+      - name: Upload ktlint report
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/libs.versions.toml') }}
-          restore-keys: ${{ runner.os }}-gradle-
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest
+          name: ktlint-report
+          path: app/build/reports/ktlint/
+          retention-days: 7
+
+  unit-tests:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Run unit tests with coverage
+        run: ./gradlew testDebugUnitTest jacocoTestReport --no-daemon
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: app/build/reports/tests/
+          retention-days: 14
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: app/build/reports/jacoco/
+          retention-days: 14
+      - name: Generate coverage summary
+        if: always()
+        run: |
+          echo "## Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f app/build/reports/jacoco/html/index.html ]; then
+            coverage=$(grep -oP 'Total.*?<td class="ctr2" id="c\d+">\K[0-9]+%' app/build/reports/jacoco/html/index.html | head -1)
+            echo "**Overall Line Coverage:** ${coverage:-N/A}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "See the coverage-report artifact for detailed HTML report." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Coverage report not found." >> $GITHUB_STEP_SUMMARY
+          fi
 
   build:
+    name: Build Debug APK
     runs-on: ubuntu-latest
-    needs: test
+    needs: unit-tests
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle.kts', '**/libs.versions.toml') }}
-          restore-keys: ${{ runner.os }}-gradle-
+          cache: gradle
       - name: Build debug APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

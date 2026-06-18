@@ -36,3 +36,9 @@ outputs/
 # Misc
 .DS_Store
 Thumbs.db
+.kotlin/
+
+# Allure Python venv (project-local)
+.venv/
+/docs/task-reports/
+/docs/reports/fixes/

@@ -1,11 +1,17 @@
 package com.example.banksmstracker.data
 
-import java.time.LocalDate
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Payment(
-    val sender: String,
+    val id: Long? = null,
     val amount: Double,
-    val receiver: String,
-    val date: LocalDate,
-    val category: String? = null
+    val currency: String,
+    val card: String?,
+    val merchant: String?,
+    val timestamp: String,
+    val balance: Double?,
+    val categoryId: String? = null,
+    val senderAddress: String? = null,
+    val ruleId: Long? = null
 )

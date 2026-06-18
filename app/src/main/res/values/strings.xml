@@ -7,7 +7,479 @@
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
+    <string name="merchant_hint">Merchant %1$d</string>
     <string name="menu_home">Home</string>
     <string name="menu_gallery">Gallery</string>
     <string name="menu_slideshow">Slideshow</string>
+    <string name="sender_name_hint">Sender name</string>
+    <string name="sender_addresses_title">Addresses</string>
+    <string name="add_address">Add Address</string>
+    <string name="sender_address_hint">Address %1$d</string>
+    <string name="sender_rules_title">Regex rules</string>
+    <string name="add_rule">Add Rule</string>
+    <string name="sender_rule_hint">Rule %1$d</string>
+    <string name="export_config">Export configuration</string>
+    <string name="share_config_title">Share configuration</string>
+    <string name="config_export_success">Configuration exported to %1$s</string>
+    <string name="config_export_failed">Failed to export configuration: %1$s</string>
+    <string name="import_config">Import configuration</string>
+    <string name="config_import_success">%1$s</string>
+    <string name="config_import_failed">Failed to import configuration: %1$s</string>
+    <string name="payments">Payments</string>
+    <string name="categories">Categories</string>
+    <string name="senders">Senders</string>
+    <string name="test_rules">Test Rules</string>
+    <string name="process_sms_history">Process SMS History</string>
+    <string name="no_payments">No payments yet</string>
+    <string name="filter_by_category">Filter by category</string>
+    <string name="filter_by_sender">Filter by sender</string>
+    <string name="all_categories">All categories</string>
+    <string name="all_senders">All senders</string>
+    <string name="export_csv">Export CSV</string>
+    <string name="csv_export_success">Payments exported to %1$s</string>
+    <string name="csv_export_failed">Failed to export payments: %1$s</string>
+    <string name="start_date">Start Date</string>
+    <string name="end_date">End Date</string>
+    <string name="clear">Clear</string>
+    <string name="search_merchant_hint">Search merchant…</string>
+    <string name="recategorize_payments">Re-categorize All Payments</string>
+    <string name="recategorize_success">Re-categorized %1$d payments</string>
+    <string name="recategorize_failed">Failed to re-categorize: %1$s</string>
+    <string name="regex_builder">Regex Builder</string>
+    <string name="regex_builder_title">Regex Builder</string>
+    <string name="sample_sms_label">Sample SMS Message</string>
+    <string name="sample_sms_hint">Paste a sample SMS message here…</string>
+    <string name="regex_pattern_label">Regex Pattern</string>
+    <string name="regex_pattern_hint">Enter your regex pattern here…</string>
+    <string name="regex_groups_help">Named groups: (?&lt;amount&gt;…) (?&lt;currency&gt;…) (?&lt;card&gt;…) (?&lt;merchant&gt;…) (?&lt;date&gt;…) (?&lt;time&gt;…) (?&lt;balance&gt;…)</string>
+    <string name="test_regex">Test Pattern</string>
+    <string name="results_label">Results</string>
+    <string name="error_empty_sms">Please enter a sample SMS message</string>
+    <string name="error_empty_pattern">Please enter a regex pattern</string>
+    <string name="save_to_sender_label">Save to Sender</string>
+    <string name="select_sender_hint">Select a sender…</string>
+    <string name="save_regex">Save Regex</string>
+    <string name="regex_saved">Regex saved to %1$s</string>
+    <string name="regex_save_failed">Failed to save regex: %1$s</string>
+    <string name="no_sender_selected">Please select a sender first</string>
+    <string name="no_senders_available">No senders configured. Add a sender first.</string>
+    <string name="bug_report">Bug Report</string>
+    <string name="bug_report_title">Bug Report</string>
+    <string name="bug_description_label">Describe the issue</string>
+    <string name="bug_description_hint">What happened? What did you expect?</string>
+    <string name="include_config">Include configuration summary</string>
+    <string name="include_device_info">Include device information</string>
+    <string name="include_payment_stats">Include payment statistics</string>
+    <string name="preview_report">Preview Report</string>
+    <string name="report_preview_label">Report Preview</string>
+    <string name="send_report">Send Report</string>
+    <string name="generate_preview_first">Please generate preview first</string>
+    <string name="share_report_title">Share Bug Report</string>
+    <string name="select_from_inbox">Select from SMS Inbox</string>
+    <string name="select_sms_message">Select SMS Message</string>
+    <string name="no_sms_found">No SMS messages found</string>
+    <string name="no_sms_from_sender">No SMS messages found from %1$s</string>
+    <string name="sms_permission_denied">SMS permission is required to select messages</string>
+    <string name="cancel">Cancel</string>
+    <string name="existing_patterns_label">Edit Existing Pattern</string>
+    <string name="new_pattern_hint">Create new pattern…</string>
+    <string name="duplicate_sender_name">A sender with this name already exists</string>
+    <string name="duplicate_category_name">A category with this name already exists</string>
+    <string name="duplicate_sender_address">This address already exists in another sender</string>
+
+    <!-- Phase 5: UI improvements -->
+    <string name="loading">Loading…</string>
+    <string name="no_categories">No categories yet. Tap + to add one.</string>
+    <string name="no_senders">No senders yet. Tap + to add one.</string>
+    <string name="confirm">Confirm</string>
+    <string name="recategorize_confirm_title">Re-categorize Payments</string>
+    <string name="recategorize_confirm_message">This will re-categorize all payments based on current merchant rules. This action cannot be undone.\n\nContinue?</string>
+    <string name="save_regex_confirm_title">Save Regex Rule</string>
+    <string name="save_regex_confirm_message">Add this regex pattern to %1$s?\n\nPattern: %2$s</string>
+    <string name="processing">Processing…</string>
+
+    <!-- Error states -->
+    <string name="error_loading_categories">Failed to load categories</string>
+    <string name="error_loading_senders">Failed to load senders</string>
+    <string name="error_loading_payments">Failed to load payments</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="retry">Retry</string>
+
+    <!-- Undo functionality -->
+    <string name="undo">Undo</string>
+    <string name="category_deleted">Category deleted</string>
+    <string name="sender_deleted">Sender deleted</string>
+    <string name="payment_deleted">Payment deleted</string>
+
+    <!-- Main menu groups -->
+    <string name="menu_group_data">Data Management</string>
+    <string name="menu_group_tools">Tools</string>
+    <string name="menu_group_data_reports">Data &amp; Reports</string>
+    <string name="menu_group_settings">Settings</string>
+
+    <!-- Spending report -->
+    <string name="spending_report">Spending Report</string>
+    <string name="total_spending">Total: %1$s %2$s</string>
+    <string name="category_spending">%1$s: %2$s %3$s</string>
+    <string name="no_spending_data">No spending data for selected period</string>
+    <string name="date_range_format">%1$s - %2$s</string>
+    <string name="select_date_range">Select Date Range</string>
+    <string name="all_time">All Time</string>
+    <string name="this_month">This Month</string>
+    <string name="last_month">Last Month</string>
+    <string name="custom_range">Custom Range</string>
+
+    <!-- Apply Rules -->
+    <string name="process_sms">Process SMS</string>
+    <string name="open_regex_builder">Open Regex Builder</string>
+    <string name="error_parsing">Error parsing message</string>
+    <string name="success_indicator">✅</string>
+    <string name="error_indicator">❌</string>
+    <string name="processing_results">Processing Results</string>
+    <string name="messages_processed">%1$d messages processed</string>
+    <string name="messages_failed">%1$d failed</string>
+
+    <!-- Payment Details -->
+    <string name="payment_details">Payment Details</string>
+    <string name="detail_category">Category:</string>
+    <string name="detail_card">Card:</string>
+    <string name="detail_date">Date:</string>
+    <string name="detail_balance">Balance:</string>
+    <string name="detail_sender">Sender:</string>
+    <string name="add_merchant_to_category">Add Merchant to Category</string>
+    <string name="add_to_category">Add to Category</string>
+    <string name="create_new_category">Create New Category</string>
+    <string name="select_category_hint">Select a category…</string>
+    <string name="merchant_added_to_category">%1$s added to %2$s</string>
+    <string name="category_created">Category created: %1$s</string>
+    <string name="enter_category_name">Enter category name</string>
+
+    <!-- Ignore Rules -->
+    <string name="ignore_rules">Ignore Rules</string>
+    <string name="ignore_rules_description">Messages matching these patterns will be ignored during processing. Use regex patterns to match spam or unwanted messages.</string>
+    <string name="no_ignore_rules">No ignore rules configured. Tap + to add one.</string>
+    <string name="add_ignore_rule">Add Ignore Rule</string>
+    <string name="edit_ignore_rule">Edit Ignore Rule</string>
+    <string name="delete_ignore_rule">Delete Ignore Rule</string>
+    <string name="delete_ignore_rule_confirm">Are you sure you want to delete this ignore rule?</string>
+    <string name="ignore_rule_added">Ignore rule added</string>
+    <string name="ignore_rule_deleted">Ignore rule deleted</string>
+    <string name="ignore_pattern_label">Pattern (Regex)</string>
+    <string name="ignore_pattern_hint">e.g., OTP|verification|balance inquiry</string>
+    <string name="ignore_pattern_help">Use | to separate multiple patterns. Use .* to match any text.</string>
+    <string name="description_label">Description (Optional)</string>
+    <string name="description_hint">e.g., Ignore OTP messages</string>
+    <string name="invalid_regex_pattern">Invalid regex pattern: %1$s</string>
+    <string name="delete">Delete</string>
+    <string name="message_ignored">Message ignored by rule</string>
+
+    <!-- Move merchant to category -->
+    <string name="move_to_category">Move to category</string>
+    <string name="move_merchant_dialog_title">Move \'%1$s\' to:</string>
+    <string name="merchant_moved">\'%1$s\' moved to %2$s</string>
+    <string name="no_other_categories">No other categories available</string>
+
+    <!-- Delete confirmations -->
+    <string name="delete_category_confirm_title">Delete Category</string>
+    <string name="delete_category_confirm_message">Are you sure you want to delete this category and all its merchants?</string>
+    <string name="delete_sender_confirm_title">Delete Sender</string>
+    <string name="delete_sender_confirm_message">Are you sure you want to delete this sender and all its addresses and rules?</string>
+
+    <!-- Ignore rules with sender -->
+    <string name="ignore_rules_filter_all">All Senders</string>
+    <string name="select_sender_for_rule">Select sender for this rule</string>
+    <string name="sender_required">Please select a sender first</string>
+
+    <!-- Regex builder rule type -->
+    <string name="rule_type_label">Rule Type</string>
+    <string name="rule_type_process">Process Rule (parse payments)</string>
+    <string name="rule_type_ignore">Ignore Rule (skip messages)</string>
+    <string name="rule_type_payment">Payment</string>
+    <string name="rule_type_ignore_short">Ignore</string>
+    <string name="rule_type_income">Income</string>
+    <string name="ignore_rule_saved">Ignore rule saved to %1$s</string>
+    <string name="rule_saved">Rule saved to %1$s</string>
+
+    <!-- SMS Export -->
+    <string name="sms_export">Export SMS</string>
+    <string name="sms_export_description">Export SMS messages from configured senders. Select a date range and sender filter, then choose export format.</string>
+    <string name="export_format_label">Export Format</string>
+    <string name="format_json">JSON</string>
+    <string name="format_csv">CSV</string>
+    <string name="messages_to_export">Messages to export: %1$d</string>
+    <string name="export_sms">Export SMS</string>
+    <string name="sms_export_success">SMS exported to %1$s</string>
+    <string name="sms_export_failed">Failed to export SMS: %1$s</string>
+    <string name="no_messages_to_export">No messages found matching filters</string>
+    <string name="share_sms_export">Share SMS Export</string>
+
+    <!-- Income tracking -->
+    <string name="incomes">Incomes</string>
+    <string name="no_incomes">No incomes yet</string>
+    <string name="income_details">Income Details</string>
+    <string name="activity_incomes_title">Incomes</string>
+    <string name="income_total_label">Total: %1$s %2$s</string>
+    <string name="income_no_entries">No income recorded yet</string>
+    <string name="btn_incomes_label">Incomes</string>
+    <string name="income_unknown_source">Unknown source</string>
+
+    <!-- Theme -->
+    <string name="settings">Settings</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="light_mode">Light Mode</string>
+    <string name="theme_system">System Default</string>
+    <string name="theme">Theme</string>
+
+    <!-- Language -->
+    <string name="language">Language</string>
+    <string name="language_system">System Default</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Russian</string>
+
+    <!-- Regex Builder Presets -->
+    <string name="regex_presets_label">Insert Preset</string>
+    <string name="preset_amount">Amount</string>
+    <string name="preset_currency">Currency</string>
+    <string name="preset_card">Card</string>
+    <string name="preset_merchant">Merchant</string>
+    <string name="preset_date">Date</string>
+    <string name="preset_time">Time</string>
+    <string name="preset_balance">Balance</string>
+
+    <!-- Unregistered sender -->
+    <string name="unregistered_sender_title">Unregistered Sender</string>
+    <string name="unregistered_sender_message">The SMS sender \"%1$s\" is not registered in the app. Would you like to register it?</string>
+    <string name="register_sender">Register Sender</string>
+    <string name="skip">Skip</string>
+
+    <!-- Extracted hardcoded strings -->
+    <string name="unknown">Unknown</string>
+    <string name="uncategorized">Uncategorized</string>
+    <string name="error_with_message">Error: %1$s</string>
+    <string name="share_csv">Share CSV</string>
+    <string name="payments_summary">%1$d payments - Total: %2$s %3$s</string>
+    <string name="by_category">By Category:</string>
+    <string name="card_display">Card: ****%1$s</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="summary_processed">Summary: %1$d parsed, %2$d failed, %3$d ignored</string>
+    <string name="category_display">Category: %1$s</string>
+    <string name="from_sender">From: %1$s</string>
+    <string name="sms_permission_denied_apply">SMS permission denied. Cannot apply rules.</string>
+    <string name="sms_permission_denied_check">SMS permission denied. Cannot check senders.</string>
+    <string name="no_sms_in_range">No SMS messages found from configured senders in selected date range.</string>
+
+    <!-- Bug Report checkboxes -->
+    <string name="include_filter_state">Include active payments filter</string>
+    <string name="filter_state_header">\n\nPAYMENTS FILTER STATE:</string>
+    <string name="attach_payments_data">Attach payments data (JSON)</string>
+
+    <!-- Bug Report strings -->
+    <string name="report_header">BANK SMS TRACKER - BUG REPORT</string>
+    <string name="user_description_header">\n\nUSER DESCRIPTION:</string>
+    <string name="no_description_provided">(No description provided)</string>
+    <string name="device_info_header">\n\nDEVICE INFORMATION:</string>
+    <string name="app_version_label">App Version: %1$s (%2$d)</string>
+    <string name="build_type_label">Build Type: %1$s</string>
+    <string name="device_model_label">Device: %1$s %2$s</string>
+    <string name="android_version_label">Android API Level: %1$d</string>
+    <string name="product_label">Product: %1$s</string>
+    <string name="hardware_label">Hardware: %1$s</string>
+    <string name="config_summary_header">\n\nCONFIGURATION SUMMARY:</string>
+    <string name="senders_count_label">Senders: %1$d</string>
+    <string name="enabled_status">enabled</string>
+    <string name="disabled_status">disabled</string>
+    <string name="addresses_count">Addresses: %1$d</string>
+    <string name="rules_count">Rules: %1$d</string>
+    <string name="categories_count_label">Categories: %1$d</string>
+    <string name="merchants_count">Merchants: %1$d</string>
+    <string name="error_loading_config">Error loading config: %1$s</string>
+    <string name="payment_stats_header">\n\nPAYMENT STATISTICS:</string>
+    <string name="total_payments_count">Total Payments: %1$d</string>
+    <string name="categorized_count">Categorized: %1$d</string>
+    <string name="uncategorized_count">Uncategorized: %1$d</string>
+    <string name="currencies_label">Currencies: %1$s</string>
+    <string name="totals_label">Totals:</string>
+    <string name="currency_total">%1$s: %2$s</string>
+    <string name="end_of_report">\n\nEnd of Report</string>
+
+    <!-- Check Senders strings -->
+    <string name="senders_check_title">SMS Senders Check Results:\n\n</string>
+    <string name="senders_with_rules_found">Senders with rules found:\n</string>
+    <string name="sender_messages_count">%1$s: %2$d messages\n</string>
+    <string name="no_senders_with_rules_found">No senders with rules found in SMS storage.\n\n</string>
+    <string name="all_sms_senders_without_rules">All SMS senders (without rules):\n</string>
+
+    <!-- SMS Export strings -->
+    <string name="csv_header_sms">Address,Date,Type,Body</string>
+    <string name="csv_header_payments">Amount,Currency,Card,Merchant,Timestamp,Balance,Category,Sender</string>
+    <string name="sms_type_inbox">Inbox</string>
+    <string name="sms_type_sent">Sent</string>
+    <string name="sms_type_draft">Draft</string>
+    <string name="sms_type_outbox">Outbox</string>
+    <string name="sms_type_failed">Failed</string>
+    <string name="sms_type_queued">Queued</string>
+
+    <!-- Regex Builder result strings -->
+    <string name="match_found">MATCH FOUND</string>
+    <string name="no_match">NO MATCH</string>
+    <string name="regex_error">REGEX ERROR</string>
+    <string name="full_match_label">Full match:</string>
+    <string name="captured_groups_label">Captured groups:</string>
+    <string name="group_label">Group %1$d (%2$s):</string>
+    <string name="payment_preview_label">Payment preview:</string>
+    <string name="no_captured_groups">No captured groups.</string>
+    <string name="capture_hint">Use parentheses () to capture groups.</string>
+    <string name="pattern_no_match">The pattern did not match the SMS.</string>
+    <string name="regex_tips">Tips:</string>
+    <string name="tip_typos">- Check for typos in the pattern</string>
+    <string name="tip_wildcard">- Use .* to match any characters</string>
+    <string name="tip_digits">- Use \\d+ for numbers</string>
+    <string name="tip_escape">- Escape special chars: . * + ? [ ] ( ) { } | \\ ^ $</string>
+    <string name="invalid_pattern_error">Invalid regex pattern:</string>
+    <string name="common_issues">Common issues:</string>
+    <string name="issue_parentheses">- Unbalanced parentheses</string>
+    <string name="issue_special">- Unescaped special characters</string>
+    <string name="issue_escape">- Invalid escape sequences</string>
+    <string name="amount_label">Amount:</string>
+    <string name="card_label_regex">Card:</string>
+    <string name="merchant_label">Merchant:</string>
+    <string name="timestamp_label">Timestamp:</string>
+    <string name="balance_label">Balance:</string>
+    <string name="not_captured">(not captured)</string>
+    <string name="invalid_or_missing">(invalid or missing)</string>
+
+    <!-- Pattern List (Feature 4.2) -->
+    <string name="browse_patterns">Browse Existing Patterns</string>
+    <string name="pattern_list_title_short">Patterns</string>
+    <string name="pattern_list_title">Patterns for %1$s (%2$s)</string>
+    <string name="no_patterns_available">No patterns saved for this sender and rule type.</string>
+    <string name="load_into_builder">Load into Builder</string>
+    <string name="delete_pattern_confirm_title">Delete Pattern</string>
+    <string name="delete_pattern_confirm_message">Are you sure you want to delete this pattern?</string>
+    <string name="pattern_deleted">Pattern deleted</string>
+
+    <!-- Personal Data Agreement -->
+    <string name="terms_title">Personal Data Notice</string>
+    <string name="terms_message">This app processes your bank SMS messages to extract and store payment records locally on your device.\n\nAll data stays on your device and is never transmitted to external servers or third parties.\n\nBy tapping \"I Understand\", you acknowledge that SMS messages are read and parsed locally to detect payments.</string>
+    <string name="terms_agree">I Understand</string>
+    <string name="terms_section_title">Privacy</string>
+    <string name="view_privacy_notice">View Privacy Notice</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_welcome_title">Welcome to Bank SMS Tracker</string>
+    <string name="onboarding_welcome_message">This app monitors your bank SMS messages to automatically track your spending and income.\n\nAll data is stored locally on your device.</string>
+    <string name="onboarding_sms_title">SMS Permission</string>
+    <string name="onboarding_sms_message">To receive and read bank SMS messages, the app needs SMS access.\n\nWithout this permission, the app cannot automatically detect new transactions.</string>
+    <string name="onboarding_sms_permissions_list">Permissions needed:\n• Receive SMS\n• Read SMS</string>
+    <string name="onboarding_notifications_title">Notifications</string>
+    <string name="onboarding_notifications_message">When a bank SMS cannot be matched to any known rule, the app can alert you so you can configure a new pattern.\n\nThis is optional — you can skip this step.</string>
+    <string name="onboarding_service_title">Background Service</string>
+    <string name="onboarding_service_message">The background service ensures bank SMS messages are processed even when the app is not open.\n\nThis is strongly recommended for reliable tracking.</string>
+    <string name="onboarding_service_note">You can enable or disable this later in Settings.</string>
+    <string name="onboarding_grant_permission">Grant Permission</string>
+    <string name="onboarding_start_service">Start Background Service</string>
+    <string name="onboarding_permission_granted">Permission granted</string>
+    <string name="onboarding_permission_denied">Permission denied — you can grant it later in system Settings</string>
+    <string name="onboarding_service_started">Background service started</string>
+    <string name="onboarding_notification_unavailable">Notifications permission is not required on this Android version</string>
+    <string name="warning_sms_permission_denied">SMS permission denied — cannot receive bank messages. Grant it in system Settings.</string>
+
+    <!-- Background Service -->
+    <string name="sms_monitor_channel_name">SMS Monitoring</string>
+    <string name="sms_monitor_channel_desc">Keeps the app running to reliably receive bank SMS messages</string>
+    <string name="sms_monitor_notification_text">Monitoring bank SMS messages</string>
+    <string name="background_service_section_title">Background Service</string>
+    <string name="background_service_toggle_label">Enable background SMS monitoring</string>
+
+    <!-- Notifications -->
+    <string name="notifications_section_title">Notifications</string>
+    <string name="notifications_unmatched_sms_label">Unmatched SMS notifications</string>
+    <string name="notifications_sound_label">Sound</string>
+    <string name="notifications_vibration_label">Vibration</string>
+    <string name="unmatched_sms_channel_desc">Alerts when a bank SMS cannot be matched to any payment rule</string>
+    <string name="unmatched_sms_notification_title">Unmatched SMS from %1$s</string>
+
+    <!-- Regex Builder mode toggle -->
+    <string name="regex_builder_show_regex_toggle">Show regex</string>
+    <string name="regex_builder_mode_template">Template</string>
+    <string name="regex_builder_mode_regex">Regex</string>
+
+    <!-- Feature: Multi-category spending statistics (Feature 1) -->
+    <string name="select_categories_for_report">Select Categories for Report</string>
+
+    <!-- Feature: USD/GEL currency conversion (Feature 2) -->
+    <string name="gel_equivalent">≈ %1$s GEL</string>
+    <string name="usd_gel_rate">1 USD = %1$s GEL</string>
+    <string name="total_in_gel">Total (GEL equiv.): %1$s GEL</string>
+
+    <!-- Feature: Merchant display names (Feature 3) -->
+    <string name="merchant_display_name_hint">Display name (optional)</string>
+    <string name="toggle_display_names_on">Names: Display</string>
+    <string name="toggle_display_names_off">Names: Raw</string>
+
+    <!-- Feature: Uncategorized-only filter (Feature 4) -->
+    <string name="uncategorized_only">Uncategorized</string>
+    <string name="categories_n_selected">%1$d categories</string>
+    <string name="categories_button_label">Categories: %1$s</string>
+
+    <!-- Feature: Currency conversion display + paging (Bug 4 / 4.1) -->
+    <string-array name="currency_entries">
+        <item>— original —</item>
+        <item>GEL</item>
+        <item>USD</item>
+        <item>EUR</item>
+        <item>RUB</item>
+    </string-array>
+    <string name="display_currency_label">Display in:</string>
+    <string name="page_prev">&#171; Prev</string>
+    <string name="page_next">Next &#187;</string>
+    <string name="page_indicator">Page %1$d / %2$d</string>
+    <string name="payments_summary_converted">%1$d payments - Total: %2$s %3$s (converted)</string>
+
+    <!-- Feature: Income activity full interface (Feature 5) -->
+    <string name="income_report">Income Report</string>
+    <string name="by_source">By Source:</string>
+    <string name="search_source_hint">Search source…</string>
+    <string name="all_sources">All sources</string>
+    <string name="incomes_summary">%1$d incomes - Total: %2$s %3$s</string>
+    <string name="no_incomes_filtered">No incomes for selected filters</string>
+
+    <!-- Feature: Process SMS type filter (Feature 6) -->
+    <string name="filter_all_types">All</string>
+    <string name="filter_payments_type">Payments</string>
+    <string name="filter_incomes_type">Incomes</string>
+    <string name="filter_failed_type">Failed</string>
+    <string name="filter_ignored_type">Ignored</string>
+    <string name="summary_processed_full">%1$d payments, %2$d incomes, %3$d failed, %4$d ignored</string>
+    <string name="income_item_label">Income: +%1$s %2$s</string>
+    <string name="message_income">Income message</string>
+
+    <!-- Feature: Enhanced currency conversion (Phase 4) -->
+    <string-array name="currency_entries_with_none">
+        <item></item>
+        <item>GEL</item>
+        <item>USD</item>
+        <item>EUR</item>
+        <item>RUB</item>
+    </string-array>
+    <string name="currency_none_label">— original —</string>
+    <string name="exchange_rate_fetch_error">Exchange rate for some dates on the current page neither can be found nor can be downloaded. Check your internet connection and try again.</string>
+    <string name="exchange_rate_prefetch_error">Exchange rates could not be downloaded for some processed dates. Check your internet connection.</string>
+    <string name="exchange_rate_error_title">Exchange Rate Error</string>
+    <string name="exchange_rate_channel_desc">Notifications when exchange rates cannot be downloaded</string>
+    <string name="loading_exchange_rates">Loading exchange rates…</string>
+
+    <!-- ExchangeRatesActivity -->
+    <string name="exchange_rates">Exchange Rates</string>
+    <string name="exchange_rates_title">Stored Exchange Rates</string>
+    <string name="btn_download_missing">Download Missing</string>
+    <string name="btn_select_currencies">Currencies: %1$s</string>
+    <string name="exchange_rate_row">%1$s  |  %2$s  |  %3$s GEL</string>
+    <string name="no_exchange_rates">No exchange rates stored yet</string>
+    <string name="download_missing_done">Download complete: %1$d fetched, %2$d failed</string>
+    <string name="refetch_rate">Re-fetch</string>
+    <string name="exchange_rates_currencies_all">All</string>
 </resources>

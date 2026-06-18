@@ -1,0 +1,352 @@
+[
+  {
+    "id": "tc1",
+    "rawMessage": "64.24 GEL\nMC GOLD (***0123)\nTemu 13/08/2025 00:38:12\nBalance: 16.83 GEL",
+    "address": "TBC",
+    "expected": {
+      "amount": 64.24,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Temu",
+      "timestamp": "13/08/2025 00:38:12",
+      "balance": 16.83,
+      "categoryId": "Marketplaces"
+    }
+  },
+  {
+    "id": "tc2",
+    "rawMessage": "37.00 GEL\nMC GOLD (***0123)\nMEQANIKA 31/08/2025 23:13:12\nBalance: 17.99 GEL",
+    "address": "TBC",
+    "expected": {
+      "amount": 37.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "MEQANIKA",
+      "timestamp": "31/08/2025 23:13:12",
+      "balance": 17.99,
+      "categoryId": "Bars & Restaurants"
+    }
+  },
+  {
+    "id": "tc3",
+    "rawMessage": "8.99 GEL\nMC GOLD (***0123)\nWolt 31/08/2025 16:39:51\nBalance: 17.90 GEL",
+    "address": "TBC",
+    "expected": {
+      "amount": 8.99,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Wolt",
+      "timestamp": "31/08/2025 16:39:51",
+      "balance": 17.90,
+      "categoryId": "Delivery"
+    }
+  },
+  {
+    "id": "tc4",
+    "rawMessage": "12.10 GEL\nMC GOLD (***0123)\nVip Pay*YANDEX.GO 31/08/2025 21:24:33\nBalance: 5.80 GEL",
+    "address": "TBC",
+    "expected": {
+      "amount": 12.10,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Vip Pay*YANDEX.GO",
+      "timestamp": "31/08/2025 21:24:33",
+      "balance": 5.80,
+      "categoryId": "Transport"
+    }
+  },
+  {
+    "id": "tc5",
+    "rawMessage": "9.90 GEL\nMC GOLD (***0123)\nMAGNITI 31/08/2025 14:10:51\nBalance: 27.89 GEL",
+    "address": "TBC",
+    "expected": {
+      "amount": 9.90,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "MAGNITI",
+      "timestamp": "31/08/2025 14:10:51",
+      "balance": 27.89,
+      "categoryId": "Groceries"
+    }
+  },
+  {
+    "id": "tc6",
+    "rawMessage": "50.00 GEL\nMC GOLD (***0123)\nI/M GVANTSA NADARAIA 30/08/2025 13:17:50\nBalance: 25.97 GEL",
+    "address": "TBC",
+    "expected": {
+      "amount": 50.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "I/M GVANTSA NADARAIA",
+      "timestamp": "30/08/2025 13:17:50",
+      "balance": 25.97,
+      "categoryId": "Groceries"
+    }
+  },
+  {
+    "id": "tc7",
+    "rawMessage": "50.00 GEL\nMC GOLD (***0123)\nUncategorized 30/08/2025 00:00:00\nBalance: 25.97 GEL",
+    "address": "TBC",
+    "expected": {
+      "amount": 50.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Uncategorized",
+      "timestamp": "30/08/2025 00:00:00",
+      "balance": 25.97,
+      "categoryId": null
+    }
+  },
+  {
+    "id": "tc8",
+    "rawMessage": "64.24 GEL\nMC GOLD (***0123)\nTemu 13/08/2025 00:38:12\nBalance: 16.83 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 64.24,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Temu",
+      "timestamp": "13/08/2025 00:38:12",
+      "balance": 16.83,
+      "categoryId": "Marketplaces"
+    }
+  },
+  {
+    "id": "tc9",
+    "rawMessage": "37.00 GEL\nMC GOLD (***0123)\nMEQANIKA 31/08/2025 23:13:12\nBalance: 17.99 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 37.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "MEQANIKA",
+      "timestamp": "31/08/2025 23:13:12",
+      "balance": 17.99,
+      "categoryId": "Bars & Restaurants"
+    }
+  },
+  {
+    "id": "tc10",
+    "rawMessage": "8.99 GEL\nMC GOLD (***0123)\nWolt 31/08/2025 16:39:51\nBalance: 17.90 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 8.99,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Wolt",
+      "timestamp": "31/08/2025 16:39:51",
+      "balance": 17.90,
+      "categoryId": "Delivery"
+    }
+  },
+  {
+    "id": "tc11",
+    "rawMessage": "12.10 GEL\nMC GOLD (***0123)\nVip Pay*YANDEX.GO 31/08/2025 21:24:33\nBalance: 5.80 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 12.10,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Vip Pay*YANDEX.GO",
+      "timestamp": "31/08/2025 21:24:33",
+      "balance": 5.80,
+      "categoryId": "Transport"
+    }
+  },
+  {
+    "id": "tc12",
+    "rawMessage": "9.90 GEL\nMC GOLD (***0123)\nMAGNITI 31/08/2025 14:10:51\nBalance: 27.89 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 9.90,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "MAGNITI",
+      "timestamp": "31/08/2025 14:10:51",
+      "balance": 27.89,
+      "categoryId": "Groceries"
+    }
+  },
+  {
+    "id": "tc13",
+    "rawMessage": "50.00 GEL\nMC GOLD (***0123)\nI/M GVANTSA NADARAIA 30/08/2025 13:17:50\nBalance: 25.97 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 50.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "I/M GVANTSA NADARAIA",
+      "timestamp": "30/08/2025 13:17:50",
+      "balance": 25.97,
+      "categoryId": "Groceries"
+    }
+  },
+  {
+    "id": "tc14",
+    "rawMessage": "50.00 GEL\nMC GOLD (***0123)\nUncategorized 30/08/2025 00:00:00\nBalance: 25.97 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 50.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***0123)",
+      "merchant": "Uncategorized",
+      "timestamp": "30/08/2025 00:00:00",
+      "balance": 25.97,
+      "categoryId": null
+    }
+  },
+  {
+    "id": "tc15",
+    "rawMessage": "9.98 GEL\nMC GOLD (***9664)\nMAGNITI 12/01/2026 19:20:58\nBalance: 10.67 GEL \n ",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 9.98,
+      "currency": "GEL",
+      "card": "MC GOLD (***9664)",
+      "merchant": "MAGNITI",
+      "timestamp": "12/01/2026 19:20:58",
+      "balance": 10.67,
+      "categoryId": "Groceries"
+    }
+  },
+  {
+    "id": "tc16",
+    "rawMessage": "0.52 GEL\nMC GOLD (***9664)\nVip Pay*YANDEX.GO 12/01/2026 01:08:43\nBalance: 53.53 GEL \n ",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 0.52,
+      "currency": "GEL",
+      "card": "MC GOLD (***9664)",
+      "merchant": "Vip Pay*YANDEX.GO",
+      "timestamp": "12/01/2026 01:08:43",
+      "balance": 53.53,
+      "categoryId": "Transport"
+    }
+  },
+  {
+    "id": "tc17",
+    "rawMessage": "9.34 GEL\nMC GOLD (***9664)\nPSP 142 11/01/2026 17:32:31\nBalance: 78.77 GEL \nYou've received: 0.05 GEL\nIn Ertguli Piggy bank you have: 0.05 GEL",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 9.34,
+      "currency": "GEL",
+      "card": "MC GOLD (***9664)",
+      "merchant": "PSP 142",
+      "timestamp": "11/01/2026 17:32:31",
+      "balance": 78.77,
+      "categoryId": "Pharmacy"
+    }
+  },
+  {
+    "id": "tc18",
+    "rawMessage": "87.20 GEL\nMC GOLD (***9664)\nclean house jsc 11/01/2026 18:30:17\nBalance: 89.59 GEL \n ",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 87.20,
+      "currency": "GEL",
+      "card": "MC GOLD (***9664)",
+      "merchant": "clean house jsc",
+      "timestamp": "11/01/2026 18:30:17",
+      "balance": 89.59,
+      "categoryId": "Households"
+    }
+  },
+  {
+    "id": "tc19",
+    "rawMessage": "33.29 GEL\nMC GOLD (***9664)\nGOOGLE *YouTube 06/01/2026 02:37:00\nBalance: 17.32 GEL \n ",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 33.29,
+      "currency": "GEL",
+      "card": "MC GOLD (***9664)",
+      "merchant": "GOOGLE *YouTube",
+      "timestamp": "06/01/2026 02:37:00",
+      "balance": 17.32,
+      "categoryId": "Subscriptions"
+    }
+  },
+  {
+    "id": "tc20",
+    "rawMessage": "136.00 GEL\nMC GOLD (***9664)\nzoolife ltd 11/01/2026 18:13:33\nBalance: 66.79 GEL \n ",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 136.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***9664)",
+      "merchant": "zoolife ltd",
+      "timestamp": "11/01/2026 18:13:33",
+      "balance": 66.79,
+      "categoryId": "Pets"
+    }
+  },
+  {
+    "id": "tc21",
+    "rawMessage": "95.00 GEL\nMC GOLD (***9664)\nATM TBC-1383 (Vaja-25) 06/01/2026 22:02:30\nBalance: 14.25 GEL \n ",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 95.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***9664)",
+      "merchant": "ATM TBC-1383 (Vaja-25)",
+      "timestamp": "06/01/2026 22:02:30",
+      "balance": 14.25,
+      "categoryId": "Withdrawal"
+    }
+  },
+  {
+    "id": "tc22",
+    "rawMessage": "300.00 GEL\nMC GOLD (***9664)\nCALIBER 10/01/2026 16:49:21\nBalance: 90.22 GEL \n ",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 300.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***9664)",
+      "merchant": "CALIBER",
+      "timestamp": "10/01/2026 16:49:21",
+      "balance": 90.22,
+      "categoryId": "Leisure & Hobbies"
+    }
+  },
+  {
+    "id": "tc23",
+    "rawMessage": "1.00 GEL\nMC GOLD (***9664)\nTBCTPMTR 02/01/2026 19:20:35\n \nEnjoy a 90-minute free ride on public transport when using the same payment method. The benefit does not apply to cable cars at Rike, Narikala and Turtle Lake. See the terms here: https://link.tbc.ge/-Transport",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 1.00,
+      "currency": "GEL",
+      "card": "MC GOLD (***9664)",
+      "merchant": "TBCTPMTR",
+      "timestamp": "02/01/2026 19:20:35",
+      "balance": null,
+      "categoryId": "Transport"
+    }
+  },
+  {
+    "id": "tc24",
+    "rawMessage": "Payment:\n84.73 GEL\nTELMICO\nID:5784252\nCreation date: 05/01/2026 14:53:01",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 84.73,
+      "currency": "GEL",
+      "card": null,
+      "merchant": "TELMICO",
+      "timestamp": "05/01/2026 14:53:01",
+      "balance": null,
+      "categoryId": "Utilities"
+    }
+  },
+  {
+    "id": "tc25",
+    "rawMessage": "11.99 USD\nMC GOLD (***9664)\nMICROSOFT*MICROSOFT 36 12/01/2026 05:33:10\nBalance: 20.65 GEL \n ",
+    "address": "TBC SMS",
+    "expected": {
+      "amount": 11.99,
+      "currency": "USD",
+      "card": "MC GOLD (***9664)",
+      "merchant": "MICROSOFT*MICROSOFT 36",
+      "timestamp": "12/01/2026 05:33:10",
+      "balance": 20.65,
+      "categoryId": "Subscriptions"
+    }
+  }
+]

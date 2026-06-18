@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Theme-aware colors for dark mode -->
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#FFB0B0B0</color>
+    <color name="text_hint">#FF808080</color>
+    <color name="amount_negative">#FFEF5350</color>
+    <color name="amount_positive">#FF66BB6A</color>
+    <color name="card_background">#FF2D2D2D</color>
+    <color name="surface_background">#FF1E1E1E</color>
+</resources>
