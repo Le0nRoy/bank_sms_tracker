@@ -46,6 +46,7 @@
 - [x] Add Kotlin linter (ktlint)
 - [x] Configure linter for local development (.editorconfig)
 - [x] Create GitHub CI workflow (lint stage only)
+- [x] Add instrumented test CI job (Espresso, API 35 emulator, issue #11)
 
 ### 1.3 Testing Infrastructure
 - [x] Configure JUnit 5 for unit tests
